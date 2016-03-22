@@ -1,0 +1,81 @@
+<application>
+<name>Superquadric-Detection</name>
+
+        <dependencies>
+            <port>/icub/cam/left</port>
+            <port>/icub/cam/right</port>
+            <port>/iKinGazeCtrl/rpc</port>
+        </dependencies>
+
+        <module>
+           <name>SFM</name>
+           <node>localhost</node>
+        </module>
+
+        <module>
+           <name>yarpview</name>
+           <parameters>--name /disp --out /disp/out --p 33</parameters>
+           <node>icub21</node>
+        </module>
+
+        <module>
+           <name>yarpview</name>
+           <parameters>--name /dispSuperq --out /dispSuperq/out --p 33</parameters>
+           <node>icub21</node>
+        </module>
+
+        <connection>
+            <from>/icub/cam/left</from>
+            <to>/SFM/left:i</to>
+            <protocol>tcp</protocol>
+        </connection>
+
+        <connection>
+            <from>/icub/cam/right</from>
+            <to>/SFM/right:i</to>
+            <protocol>tcp</protocol>
+        </connection>
+
+        <connection>
+            <from>/SFM/disp:o</from>
+            <to>/3d-points/disp:i</to>
+            <protocol>tcp</protocol>
+        </connection>
+
+        <connection>
+            <from>/3d-points/SFM:rpc</from>
+            <to>/SFM/rpc</to>
+            <protocol>tcp</protocol>
+        </connection>
+
+        <connection>
+            <from>/icub/cam/left</from>
+            <to>/3d-points/rgb:i</to>
+            <protocol>tcp</protocol>
+        </connection>
+
+        <connection>
+            <from>/3d-points/disp:o</from>
+            <to>/disp</to>
+            <protocol>tcp</protocol>
+        </connection>
+
+        <connection>
+            <from>/disp/out</from>
+            <to>/3d-points/contour:i</to>
+            <protocol>tcp</protocol>
+        </connection>
+
+         <connection>
+            <from>/viewer/img:o</from>
+            <to>/dispSuperq</to>
+            <protocol>tcp</protocol>
+        </connection>
+
+        <connection>
+            <from>/icub/cam/left</from>
+            <to>/viewer/img:i</to>
+            <protocol>tcp</protocol>
+        </connection>
+</application>
+

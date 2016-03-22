@@ -110,20 +110,24 @@ public:
             return false;
 
         }
-        good=computeSuperq();
-        if(good==false)
+  
+        if(good==true)
         {
-            cout<<"Not found a suitable superquadric! "<<endl;
-            return false;
-        }
+            good=computeSuperq();
+            if(good==false)
+            {
+                cout<<"Not found a suitable superquadric! "<<endl;
+                return false;
+            }
 
-        good=showSuperq();
-        if(good==false)
-        {
-            cout<<"Not image available! "<<endl;
-            return false;
+            good=showSuperq();
+            if(good==false)
+            {
+                cout<<"Not image available! "<<endl;
+                return false;
+            }
+            return true;
         }
-        return true;
     }
 
     /***********************************************************************/
@@ -174,8 +178,6 @@ public:
     /***********************************************************************/
     void configSuperq(ResourceFinder &rf)
     {
-        downsampling=std::max(1,rf.check("downsampling",Value(1)).asInt());
-
         tol=rf.check("tol",Value(1e-5)).asDouble();
         acceptable_iter=rf.check("acceptable_iter",Value(0)).asInt();
         max_iter=rf.check("max_iter",Value(2e19)).asInt();
@@ -198,6 +200,7 @@ public:
         app->Initialize();
 
         superQ_nlp= new SuperQuadric_NLP;
+
         superQ_nlp->init();
         superQ_nlp->configure(rf);
 
@@ -330,11 +333,11 @@ public:
         ImageOf<PixelMono> *imgDispIn=portDispIn.read();
         if (imgDispIn==NULL)
             return false;
-
+      
         ImageOf<PixelRgb> *imgIn=portImgIn.read();
         if (imgIn==NULL)
             return false;
-
+        
         ImageOf<PixelRgb> &imgDispOut=portDispOut.prepare();
         imgDispOut.resize(imgDispIn->width(),imgDispIn->height());
 
@@ -346,9 +349,9 @@ public:
         for (size_t i=0; i<floodPoints.size(); i++)
             imgDispOut.pixel(floodPoints[i].x,floodPoints[i].y)=color;
         vector<Vector> points;
-
+        
         if (contour.size()>0)
-        {
+        { 
             vector<vector<cv::Point> > contours;
             contours.push_back(contour);
             cv::drawContours(imgDispOutMat,contours,0,cv::Scalar(255,255,0));
@@ -357,13 +360,12 @@ public:
             cv::rectangle(imgDispOutMat,rect,cv::Scalar(255,50,0));
             points.clear();
 
-            //if (go||flood3d||flood)
-           // {
-
+            if (go||flood3d||flood)
+            {
                 Bottle cmd,reply;
 
-              //  if (go)
-               // {
+                if (go)
+                {
                     cmd.addString("Rect");
                     cmd.addInt(rect.x);     cmd.addInt(rect.y);
                     cmd.addInt(rect.width); cmd.addInt(rect.height);
@@ -396,7 +398,7 @@ public:
                             }
                         }
                     }
-               // }
+                }
                 if (flood3d)
                 {
                     cmd.addString("Flood3D");
@@ -435,32 +437,12 @@ public:
 
                 go=flood3d=false;
 
-
             }
 
-
-       // }
-
-        Vector p;
-        p.resize(3,0.0);
-
-        for (size_t i=0; i<points.size(); i++)
-        {
-            p=points[i];
-
-            Bottle &point_out=portOutPoints.prepare();
-            Bottle &point=point_out.addList();
-            for(size_t j=0; j<3; j++)
-               point.addDouble(p[j]);
-
+            portDispOut.write();
+            if(points.size()>0)
+                return true;
         }
-
-        portOutPoints.write();
-        points.clear();
-
-
-        portDispOut.write();
-        return true;
 
     }
 

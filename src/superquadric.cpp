@@ -94,6 +94,11 @@ public:
             }
         }
         cout<<"points after downsampling "<<points.size()<<endl;
+
+       
+        x0.resize(11,0.0);        
+        computeX0(x0, points);
+
     }
 
     /****************************************************************/
@@ -336,21 +341,6 @@ public:
     /****************************************************************/
     void configure(ResourceFinder &rf)
     {
-        Matrix x0_tmp;
-        x0_tmp.resize(11,1);
-        x0.resize(11,0.0);
-        bool check=readMatrix("x0",x0_tmp,1,rf);
-        if(!check)
-        {
-            computeX0(x0, points);
-
-        }
-        else
-        {
-            for(size_t i=0; i< 11; i++)
-                x0[i]=x0_tmp(i,0);
-        }
-
         bounds.resize(11,2);
         bounds_automatic=1;
 
@@ -358,6 +348,7 @@ public:
             bounds_automatic=1;
         else
             readMatrix("bounds",bounds, 11, rf);
+
     }
 
     /****************************************************************/
