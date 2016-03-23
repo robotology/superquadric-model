@@ -110,24 +110,24 @@ public:
             return false;
 
         }
-  
-        if(good==true)
-        {
-            good=computeSuperq();
-            if(good==false)
-            {
-                cout<<"Not found a suitable superquadric! "<<endl;
-                return false;
-            }
 
-            good=showSuperq();
-            if(good==false)
-            {
-                cout<<"Not image available! "<<endl;
-                return false;
-            }
-            return true;
+        if(points.size()>0)
+            good=computeSuperq();
+        if(good==false)
+        {
+            cout<<"Not found a suitable superquadric! "<<endl;
+            return false;
         }
+
+        if(good)
+            good=showSuperq();
+        if(good==false)
+        {
+            cout<<"Not image available! "<<endl;
+            return false;
+        }
+        return true;
+
     }
 
     /***********************************************************************/
