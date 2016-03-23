@@ -106,24 +106,32 @@ public:
         good=acquirePoints();
         if(good==false)
         {
-            cout<<"Not image available! "<<endl;
+            yError("Not image available! ");
+    
             return false;
 
         }
 
         if(points.size()>0)
+        {
+            yInfo("Number of acquired points not null ");
             good=computeSuperq();
+        }
+
         if(good==false)
         {
-            cout<<"Not found a suitable superquadric! "<<endl;
+            yError("Not found a suitable superquadric! ");
             return false;
         }
 
         if(good)
+        {
+            yInfo("Object superquadric found! ");
             good=showSuperq();
+        }
         if(good==false)
         {
-            cout<<"Not image available! "<<endl;
+            yError("Not image available! ");
             return false;
         }
         return true;
@@ -264,12 +272,13 @@ public:
         t=Time::now()-t0;
         cout<<"t "<<t<<endl;
 
-        superQ_nlp->points.clear();
+        points.clear();
 
         if(status==Ipopt::Solve_Succeeded)
         {
             x=superQ_nlp->get_result();
             cout<<"solution "<<x.toString()<<endl;
+            yInfo("Solution of the optimization problem: %s", x.toString().c_str());
             return true;
         }
         else
@@ -284,44 +293,47 @@ public:
         ImageOf<PixelRgb> *imgIn=portImgIn.read();
         if (imgIn==NULL)
             return false;
-
+        
         ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
         imgOut.resize(imgIn->width(),imgIn->height());
-
+      
         cv::Mat imgInMat=cv::Mat((IplImage*)imgIn->getIplImage());
         cv::Mat imgOutMat=cv::Mat((IplImage*)imgOut.getIplImage());
         imgInMat.copyTo(imgOutMat);
 
         R=euler2dcm(x.subVector(8,10));
+        
+        if(points.size()>0)
+        {       
+            for(double eta=-3.14; eta<3.14; eta=eta+0.4)
+            {
+                 for(double omega=-3.14; omega<3.14;omega=omega+0.4)
+                 {
+                     //point1[0]=point[0]; point1[1]=point[1]; point1[2]=point[2];
 
-        for(double eta=-3.14; eta<3.14; eta=eta+0.4)
-        {
-             for(double omega=-3.14; omega<3.14;omega=omega+0.4)
-             {
-                 //point1[0]=point[0]; point1[1]=point[1]; point1[2]=point[2];
+                     point[0]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(0,0) +
+                                x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3]))* sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(0,1)+
+                                    x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(0,2) + x[5];
 
-                 point[0]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(0,0) +
-                            x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3]))* sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(0,1)+
-                                x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(0,2) + x[5];
+                     point[1]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(1,0) +
+                                x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(1,1)+
+                                    x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(1,2) + x[6];
 
-                 point[1]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(1,0) +
-                            x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(1,1)+
-                                x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(1,2) + x[6];
+                     point[2]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(2,0) +
+                                x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(2,1)+
+                                    x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(2,2) + x[7];
+                    
+                    igaze->get2DPixel(0, point, point2D);
+                    cv::Point target_point(point2D[0],point2D[1]);
+                    //igaze->get2DPixel(0, point1, point2D);
+                    //cv::Point target_point1(point2D[0],point2D[1]);
+                    imgOut.pixel(target_point.x, target_point.y)=color;
+                    //cv::line(imgOutMat,target_point,target_point1,cv::Scalar(255,0,0));
+                 }
 
-                 point[2]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(2,0) +
-                            x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(2,1)+
-                                x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(2,2) + x[7];
-
-                igaze->get2DPixel(0, point, point2D);
-                cv::Point target_point(point2D[0],point2D[1]);
-                //igaze->get2DPixel(0, point1, point2D);
-                //cv::Point target_point1(point2D[0],point2D[1]);
-                imgOut.pixel(target_point.x, target_point.y)=color;
-                //cv::line(imgOutMat,target_point,target_point1,cv::Scalar(255,0,0));
-             }
-
+            }
         }
-
+        
         portImgOut.write();
 
         return true;
@@ -348,30 +360,35 @@ public:
         PixelRgb color(255,255,0);
         for (size_t i=0; i<floodPoints.size(); i++)
             imgDispOut.pixel(floodPoints[i].x,floodPoints[i].y)=color;
-        vector<Vector> points;
+        //vector<Vector> points;
         
         if (contour.size()>0)
         { 
+
             vector<vector<cv::Point> > contours;
             contours.push_back(contour);
             cv::drawContours(imgDispOutMat,contours,0,cv::Scalar(255,255,0));
 
             cv::Rect rect=cv::boundingRect(contour);
             cv::rectangle(imgDispOutMat,rect,cv::Scalar(255,50,0));
-            points.clear();
+            
 
             if (go||flood3d||flood)
             {
+                //points.clear();
+
                 Bottle cmd,reply;
 
                 if (go)
                 {
+
                     cmd.addString("Rect");
                     cmd.addInt(rect.x);     cmd.addInt(rect.y);
                     cmd.addInt(rect.width); cmd.addInt(rect.height);
                     cmd.addInt(downsampling);
                     if (portSFM.write(cmd,reply))
                     {
+
                         int idx=0;
                         for (int x=rect.x; x<rect.x+rect.width; x+=downsampling)
                         {
@@ -439,10 +456,13 @@ public:
 
             }
 
-            portDispOut.write();
-            if(points.size()>0)
-                return true;
+            
+            
         }
+        cout<<"points size "<<points.size()<<endl;
+        portDispOut.write();
+        if(points.size()>0)
+            return true;
 
     }
 

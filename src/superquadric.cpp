@@ -61,11 +61,12 @@ public:
     Vector solution;
     deque<double> t;
     string gradient_comp;
-    deque<Vector> points;
+    deque<Vector> points_down;
 
     /****************************************************************/
     void init()
     {
+        points_down.clear();
         aux_objvalue=0.0;
         first_gof=true;
         first_gogr=true;
@@ -73,13 +74,13 @@ public:
     }
 
     /****************************************************************/
-    void usePoints(deque<Vector> point_cloud)
+    void usePoints(deque<Vector> &point_cloud)
     {
         if(point_cloud.size()<1000)
         {
             for(size_t i=0;i<point_cloud.size();i++)
             {
-                points.push_back(point_cloud[i]);
+                points_down.push_back(point_cloud[i]);
             }
         }
         else
@@ -89,15 +90,15 @@ public:
             point.resize(3,0.0);
             while(i<point_cloud.size())
             {
-                points.push_back(point_cloud[i]);
+                points_down.push_back(point_cloud[i]);
                 i=i+30;
             }
         }
-        cout<<"points after downsampling "<<points.size()<<endl;
+        cout<<"points after downsampling "<<points_down.size()<<endl;
 
        
         x0.resize(11,0.0);        
-        computeX0(x0, points);
+        computeX0(x0, points_down);
 
     }
 
@@ -181,7 +182,7 @@ public:
                     Ipopt::Number &obj_value)
      {
 
-         F(x,points);
+         F(x,points_down);
          obj_value=aux_objvalue;
 
          return true;
@@ -301,11 +302,11 @@ public:
              {
                  x_tmp[j]=x_tmp[j]+eps;
 
-                 grad_p=F_v(x_tmp,points);
+                 grad_p=F_v(x_tmp,points_down);
 
                  x_tmp[j]=x_tmp[j]-eps;
 
-                 grad_n=F_v(x_tmp,points);
+                 grad_n=F_v(x_tmp,points_down);
 
                  aux_gradf[j]=(grad_p-grad_n)/eps;
 

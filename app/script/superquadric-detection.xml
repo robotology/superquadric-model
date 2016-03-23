@@ -15,31 +15,31 @@
         <module>
            <name>yarpview</name>
            <parameters>--name /disp --out /disp/out --p 33</parameters>
-           <node>icub21</node>
+           <node>giulia</node>
         </module>
 
         <module>
            <name>yarpview</name>
            <parameters>--name /dispSuperq --out /dispSuperq/out --p 33</parameters>
-           <node>icub21</node>
+           <node>giulia</node>
         </module>
 
         <connection>
             <from>/icub/cam/left</from>
             <to>/SFM/left:i</to>
-            <protocol>tcp</protocol>
+            <protocol>udp</protocol>
         </connection>
 
         <connection>
             <from>/icub/cam/right</from>
             <to>/SFM/right:i</to>
-            <protocol>tcp</protocol>
+            <protocol>udp</protocol>
         </connection>
 
         <connection>
             <from>/SFM/disp:o</from>
             <to>/3d-points/disp:i</to>
-            <protocol>tcp</protocol>
+            <protocol>udp</protocol>
         </connection>
 
         <connection>
@@ -51,31 +51,31 @@
         <connection>
             <from>/icub/cam/left</from>
             <to>/3d-points/rgb:i</to>
-            <protocol>tcp</protocol>
+            <protocol>udp</protocol>
         </connection>
 
         <connection>
             <from>/3d-points/disp:o</from>
             <to>/disp</to>
-            <protocol>tcp</protocol>
+            <protocol>udp</protocol>
         </connection>
 
         <connection>
             <from>/disp/out</from>
             <to>/3d-points/contour:i</to>
-            <protocol>tcp</protocol>
+            <protocol>udp</protocol>
         </connection>
 
-         <connection>
+        <connection>
             <from>/viewer/img:o</from>
             <to>/dispSuperq</to>
-            <protocol>tcp</protocol>
+            <protocol>udp</protocol>
         </connection>
 
         <connection>
             <from>/icub/cam/left</from>
             <to>/viewer/img:i</to>
-            <protocol>tcp</protocol>
+            <protocol>udp</protocol>
         </connection>
 </application>
 
