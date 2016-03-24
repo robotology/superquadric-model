@@ -4,8 +4,7 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-set(PROJECTNAME Superquadric-Detection)
-project(${PROJECTNAME})
+project(Superquadric-Detection)
 
 find_package(YARP REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
@@ -31,8 +30,8 @@ include_directories(${YARP_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS} ${OpenCV_INCLUDE_D
 add_definitions(${YARP_DEFINES}) 
 add_definitions(-D_USE_MATH_DEFINES)
 
-add_executable(${PROJECTNAME} ${sources})
-target_link_libraries(${PROJECTNAME} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES} ${IPOPT_LIBRARIES} iKin ctrlLib)
+add_executable(${PROJECT_NAME} ${sources})
+target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES} ${IPOPT_LIBRARIES} ctrlLib)
 
 add_subdirectory(app)
 

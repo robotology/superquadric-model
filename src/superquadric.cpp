@@ -51,11 +51,6 @@ class  SuperQuadric_NLP : public Ipopt::TNLP
     Matrix bounds;
     double aux_objvalue;
     Vector aux_gradf;
-    Vector old_x_f;
-    Vector old_x_gr;
-    bool first_gof;
-    bool first_gogr;
-
 
 public:
     Vector solution;
@@ -68,9 +63,6 @@ public:
     {
         points_down.clear();
         aux_objvalue=0.0;
-        first_gof=true;
-        first_gogr=true;
-
     }
 
     /****************************************************************/
@@ -170,8 +162,6 @@ public:
          for(Ipopt::Index i=0;i<n;i++)
         {
              x[i]=x0[i];
-             old_x_f[i]=x[i];
-             old_x_gr[i]=x[i];
         }
 
          return true;
@@ -182,7 +172,7 @@ public:
                     Ipopt::Number &obj_value)
      {
 
-         F(x,points_down);
+         F(x,points_down, new_x);
          obj_value=aux_objvalue;
 
          return true;
@@ -190,16 +180,10 @@ public:
      }
 
      /****************************************************************/
-     void F(const Ipopt::Number *x, deque<Vector> &points)
+     void F(const Ipopt::Number *x, deque<Vector> &points, bool &new_x)
      {
-         Vector x_new(11,0.0);
-
-         for(size_t i=0;i<11;i++)
-             x_new[i]=x[i];
-
-         if(!(x_new==old_x_f)|| first_gof)
+         if(new_x)
          {
-             first_gof=false;
              double value=0.0;
 
              for(size_t i=0;i<points.size();i++)
@@ -207,10 +191,6 @@ public:
 
              value*=x[0]*x[1]*x[2]/points.size();
              aux_objvalue=value;
-
-             for(size_t i=0;i<11;i++)
-                 old_x_f[i]=x[i];
-
          }
      }
 
@@ -284,20 +264,13 @@ public:
      {
          Vector x_tmp;
          double grad_p, grad_n;
-         Vector x_new(11,0.0);
          x_tmp.resize(11,0.0);
          double eps=1e-6;
          gradient_comp="finite differences ";
 
-         for(Ipopt::Index i=0;i<n;i++)
-         {
-            x_tmp[i]=x[i];
-            x_new[i]=x[i];
-         }
 
-         if(!(x_new==old_x_gr)|| first_gogr)
+         if(new_x)
          {
-             first_gogr=false;
              for(Ipopt::Index j=0;j<n;j++)
              {
                  x_tmp[j]=x_tmp[j]+eps;
@@ -309,12 +282,10 @@ public:
                  grad_n=F_v(x_tmp,points_down);
 
                  aux_gradf[j]=(grad_p-grad_n)/eps;
-
-                 old_x_gr[j]=x[j];
-
               }
 
          }
+
          for(Ipopt::Index j=0;j<n;j++)
          {
              grad_f[j]=aux_gradf[j];

@@ -15,15 +15,11 @@
  * Public License for more details
 */
 
-
-#include <csignal>
 #include <cmath>
 #include <limits>
 #include <algorithm>
 #include <string>
 #include <sstream>
-#include <fstream>
-#include <iomanip>
 #include <deque>
 
 #include <IpTNLP.hpp>
@@ -33,12 +29,9 @@
 #include <opencv2/opencv.hpp>
 
 #include <yarp/os/all.h>
+#include <yarp/dev/all.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
-#include <yarp/dev/Drivers.h>
-#include <yarp/dev/GazeControl.h>
-#include <yarp/dev/PolyDriver.h>
-#include <yarp/dev/CartesianControl.h>
 
 #include "superquadric.cpp"
 
@@ -61,16 +54,16 @@ protected:
     bool go,flood3d,flood;
 
     BufferedPort<ImageOf<PixelMono> > portDispIn;
-    BufferedPort<ImageOf<PixelRgb> > portDispOut;
-    BufferedPort<ImageOf<PixelRgb> > portRgbIn;
-    BufferedPort<Bottle>             portOutPoints;
+    BufferedPort<ImageOf<PixelRgb> >  portDispOut;
+    BufferedPort<ImageOf<PixelRgb> >  portRgbIn;
+    BufferedPort<Bottle>              portOutPoints;
     Port portContour;
     RpcClient portSFM;
     RpcServer portRpc;
 
     double tol, sum;
     int acceptable_iter,max_iter;
-    bool good;
+    bool go_on;
 
     string mu_strategy,nlp_scaling_method;
     Ipopt::ApplicationReturnStatus status;
@@ -103,58 +96,57 @@ public:
     /***********************************************************************/
     bool updateModule()
     {
-        good=acquirePoints();
-        if(good==false)
-        {
-            yError("Not image available! ");
-    
-            return false;
+        go_on=acquirePoints();
 
+        if(go_on==false)
+        {
+            yError("Not image available! ");    
+            return false;
         }
 
         if(points.size()>0)
         {
             yInfo("Number of acquired points not null ");
-            good=computeSuperq();
+            go_on=computeSuperq();
         }
 
-        if(good==false)
+        if(go_on==false)
         {
             yError("Not found a suitable superquadric! ");
             return false;
         }
 
-        if(good)
-        {
-            yInfo("Object superquadric found! ");
-            good=showSuperq();
-        }
-        if(good==false)
+        yInfo("Object superquadric found! ");
+        go_on=showSuperq();
+
+        if(go_on==false)
         {
             yError("Not image available! ");
             return false;
         }
-        return true;
 
+        return true;
     }
 
     /***********************************************************************/
     bool configure(ResourceFinder &rf)
     {
-        config3dpoints(rf);
-        configSuperq(rf);
-        configViewer(rf);
+        bool config_ok;
 
-        return true;
+        config_ok=config3dpoints(rf);
+
+        if(config_ok)
+            config_ok=configSuperq(rf);
+
+        if(config_ok)
+            config_ok=configViewer(rf);
+
+        return config_ok;
     }
 
     /***********************************************************************/
     bool interruptModule()
     {
-        //interrupt for viewer
-        portImgIn.interrupt();
-        portImgOut.interrupt();
-
         //interrupt for 3d-points
         portDispIn.interrupt();
         portDispOut.interrupt();
@@ -162,17 +154,17 @@ public:
         portContour.interrupt();
         portSFM.interrupt();
         portRpc.interrupt();
+
+        //interrupt for viewer
+        portImgIn.interrupt();
+        portImgOut.interrupt();
+
         return true;
     }
 
     /***********************************************************************/
     bool close()
     {
-        //close for viewer
-        portImgIn.close();
-        portImgOut.close();
-        clientGazeCtrl.close();
-
         //close for 3d-points
         portDispIn.close();
         portDispOut.close();
@@ -180,15 +172,42 @@ public:
         portContour.close();
         portSFM.close();
         portRpc.close();
+
+        //close for viewer
+        portImgIn.close();
+        portImgOut.close();
+        clientGazeCtrl.close();
         return true;
     }
 
     /***********************************************************************/
-    void configSuperq(ResourceFinder &rf)
+    bool config3dpoints(ResourceFinder &rf)
+    {
+        portDispIn.open("/superquadric-detection/disp:i");
+        portDispOut.open("/superquadric-detection/disp:o");
+        portRgbIn.open("/superquadric-detection/rgb:i");
+        portContour.open("/superquadric-detection/contour:i");
+        portSFM.open("/superquadric-detection/SFM:rpc");
+        portRpc.open("/superquadric-detection/rpc");
+
+        portContour.setReader(*this);
+        attach(portRpc);
+
+        homeContextPath=rf.getHomeContextPath().c_str();
+        downsampling=std::max(1,rf.check("downsampling",Value(1)).asInt());
+        spatial_distance=rf.check("spatial_distance",Value(0.004)).asDouble();
+        color_distance=rf.check("color_distance",Value(6)).asInt();
+        go=flood3d=flood=false;
+
+        return true;
+    }
+
+    /***********************************************************************/
+    bool configSuperq(ResourceFinder &rf)
     {
         tol=rf.check("tol",Value(1e-5)).asDouble();
         acceptable_iter=rf.check("acceptable_iter",Value(0)).asInt();
-        max_iter=rf.check("max_iter",Value(2e19)).asInt();
+        max_iter=rf.check("max_iter",Value(numeric_limits<int>::max())).asInt();
 
         mu_strategy=rf.find("mu_strategy").asString().c_str();
         if(rf.find("mu_strategy").isNull())
@@ -212,132 +231,38 @@ public:
         superQ_nlp->init();
         superQ_nlp->configure(rf);
 
+        return true;
+
     }
 
     /***********************************************************************/
-    void configViewer(ResourceFinder &rf)
+    bool configViewer(ResourceFinder &rf)
     {
         x.resize(11,0.0);
-        portImgIn.open("/viewer/img:i");
-        portImgOut.open("/viewer/img:o");
+        portImgIn.open("/superquadric-detection/img:i");
+        portImgOut.open("/superquadric-detection/img:o");
 
         Property optionG;
         optionG.put("device","gazecontrollerclient");
         optionG.put("remote","/iKinGazeCtrl");
-        optionG.put("local","/client/gaze");
+        optionG.put("local","/superquadric-detection/gaze");
 
         clientGazeCtrl.open(optionG);
         igaze=NULL;
 
         if (!clientGazeCtrl.open(optionG))
-        {
             clientGazeCtrl.view(igaze);
-        }
+        else
+            return false;
 
         R.resize(4,4);
         point2D.resize(2,0.0);
         point.resize(3,0.0);
         point1.resize(3,0.0);
-    }
-
-    /***********************************************************************/
-    void config3dpoints(ResourceFinder &rf)
-    {
-        portDispIn.open("/3d-points/disp:i");
-        portDispOut.open("/3d-points/disp:o");
-        portRgbIn.open("/3d-points/rgb:i");
-        portContour.open("/3d-points/contour:i");
-        portSFM.open("/3d-points/SFM:rpc");
-        portRpc.open("/3d-points/rpc");
-
-        portContour.setReader(*this);
-        attach(portRpc);
-
-        homeContextPath=rf.getHomeContextPath().c_str();
-        downsampling=std::max(1,rf.check("downsampling",Value(1)).asInt());
-        spatial_distance=rf.check("spatial_distance",Value(0.004)).asDouble();
-        color_distance=rf.check("color_distance",Value(6)).asInt();
-        go=flood3d=flood=false;
-
-    }
-
-    /***********************************************************************/
-    bool computeSuperq()
-    {
-        superQ_nlp->usePoints(points);
-        double t,t0;
-        t0=Time::now();
-
-        status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
-        t=Time::now()-t0;
-        cout<<"t "<<t<<endl;
-
-        points.clear();
-
-        if(status==Ipopt::Solve_Succeeded)
-        {
-            x=superQ_nlp->get_result();
-            cout<<"solution "<<x.toString()<<endl;
-            yInfo("Solution of the optimization problem: %s", x.toString().c_str());
-            return true;
-        }
-        else
-            return false;
-    }
-
-    /***********************************************************************/
-    bool showSuperq()
-    {
-        PixelRgb color(255,255,0);
-
-        ImageOf<PixelRgb> *imgIn=portImgIn.read();
-        if (imgIn==NULL)
-            return false;
-        
-        ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
-        imgOut.resize(imgIn->width(),imgIn->height());
-      
-        cv::Mat imgInMat=cv::Mat((IplImage*)imgIn->getIplImage());
-        cv::Mat imgOutMat=cv::Mat((IplImage*)imgOut.getIplImage());
-        imgInMat.copyTo(imgOutMat);
-
-        R=euler2dcm(x.subVector(8,10));
-        
-        if(points.size()>0)
-        {       
-            for(double eta=-3.14; eta<3.14; eta=eta+0.4)
-            {
-                 for(double omega=-3.14; omega<3.14;omega=omega+0.4)
-                 {
-                     //point1[0]=point[0]; point1[1]=point[1]; point1[2]=point[2];
-
-                     point[0]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(0,0) +
-                                x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3]))* sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(0,1)+
-                                    x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(0,2) + x[5];
-
-                     point[1]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(1,0) +
-                                x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(1,1)+
-                                    x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(1,2) + x[6];
-
-                     point[2]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(2,0) +
-                                x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(2,1)+
-                                    x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(2,2) + x[7];
-                    
-                    igaze->get2DPixel(0, point, point2D);
-                    cv::Point target_point(point2D[0],point2D[1]);
-                    //igaze->get2DPixel(0, point1, point2D);
-                    //cv::Point target_point1(point2D[0],point2D[1]);
-                    imgOut.pixel(target_point.x, target_point.y)=color;
-                    //cv::line(imgOutMat,target_point,target_point1,cv::Scalar(255,0,0));
-                 }
-
-            }
-        }
-        
-        portImgOut.write();
 
         return true;
     }
+
 
     /***********************************************************************/
     bool acquirePoints()
@@ -345,11 +270,11 @@ public:
         ImageOf<PixelMono> *imgDispIn=portDispIn.read();
         if (imgDispIn==NULL)
             return false;
-      
+
         ImageOf<PixelRgb> *imgIn=portImgIn.read();
         if (imgIn==NULL)
             return false;
-        
+
         ImageOf<PixelRgb> &imgDispOut=portDispOut.prepare();
         imgDispOut.resize(imgDispIn->width(),imgDispIn->height());
 
@@ -361,9 +286,9 @@ public:
         for (size_t i=0; i<floodPoints.size(); i++)
             imgDispOut.pixel(floodPoints[i].x,floodPoints[i].y)=color;
         //vector<Vector> points;
-        
+
         if (contour.size()>0)
-        { 
+        {
 
             vector<vector<cv::Point> > contours;
             contours.push_back(contour);
@@ -371,7 +296,7 @@ public:
 
             cv::Rect rect=cv::boundingRect(contour);
             cv::rectangle(imgDispOutMat,rect,cv::Scalar(255,50,0));
-            
+
 
             if (go||flood3d||flood)
             {
@@ -456,14 +381,88 @@ public:
 
             }
 
-            
-            
+
+
         }
         cout<<"points size "<<points.size()<<endl;
         portDispOut.write();
         if(points.size()>0)
             return true;
 
+    }
+
+    /***********************************************************************/
+    bool computeSuperq()
+    {
+        superQ_nlp->usePoints(points);
+        double t,t0;
+        t0=Time::now();
+
+        status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
+        t=Time::now()-t0;
+        cout<<"t "<<t<<endl;
+
+        points.clear();
+
+        if(status==Ipopt::Solve_Succeeded)
+        {
+            x=superQ_nlp->get_result();
+            cout<<"solution "<<x.toString()<<endl;
+            yInfo("Solution of the optimization problem: %s", x.toString().c_str());
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /***********************************************************************/
+    bool showSuperq()
+    {
+        PixelRgb color(255,255,0);
+
+        ImageOf<PixelRgb> *imgIn=portImgIn.read(false);
+        if (imgIn==NULL)
+            return false;
+        
+        ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
+        imgOut=imgIn;
+
+        R=euler2dcm(x.subVector(8,10));
+        
+        if(points.size()>0 && go_on==true)
+        {       
+            for(double eta=-M_PI; eta<M_PI; eta+=0.4)
+            {
+                 for(double omega=-M_PI; omega<M_PI;omega+=0.4)
+                 {
+                     //point1[0]=point[0]; point1[1]=point[1]; point1[2]=point[2];
+
+                     point[0]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(0,0) +
+                                x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3]))* sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(0,1)+
+                                    x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(0,2) + x[5];
+
+                     point[1]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(1,0) +
+                                x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(1,1)+
+                                    x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(1,2) + x[6];
+
+                     point[2]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(2,0) +
+                                x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(2,1)+
+                                    x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(2,2) + x[7];
+                    
+                    igaze->get2DPixel(0, point, point2D);
+                    cv::Point target_point(point2D[0],point2D[1]);
+                    //igaze->get2DPixel(0, point1, point2D);
+                    //cv::Point target_point1(point2D[0],point2D[1]);
+                    imgOut.pixel(target_point.x, target_point.y)=color;
+                    //cv::line(imgOutMat,target_point,target_point1,cv::Scalar(255,0,0));
+                 }
+
+            }
+        }
+        
+        portImgOut.write();
+
+        return true;
     }
 
     /*******************************************************************************/
@@ -527,37 +526,38 @@ public:
 
         return true;
    }
-   /*******************************************************************************/
-  bool read(ConnectionReader &connection)
-  {
-      Bottle data; data.read(connection);
-      if (data.size()>=2)
-      {
-          LockGuard lg(mutex);
-          cv::Point point(data.get(0).asInt(),data.get(1).asInt());
-          contour.push_back(point);
-      }
 
-      return true;
-  }
+   /*******************************************************************************/
+   bool read(ConnectionReader &connection)
+   {
+       Bottle data; data.read(connection);
+       if (data.size()>=2)
+       {
+           LockGuard lg(mutex);
+           cv::Point point(data.get(0).asInt(),data.get(1).asInt());
+           contour.push_back(point);
+       }
+
+       return true;
+   }
 
 };
 
 /**********************************************************************/
 int main(int argc,char *argv[])
 {
-Network yarp;
-if (!yarp.checkNetwork())
-{
-    yError("unable to find YARP server!");
-    return 1;
-}
+    Network yarp;
+    if (!yarp.checkNetwork())
+    {
+        yError("unable to find YARP server!");
+        return 1;
+    }
 
-SuperqModule mod;
-ResourceFinder rf;
-rf.setDefaultContext("superquadric");
-rf.configure(argc,argv);
-return mod.runModule(rf);
+    SuperqModule mod;
+    ResourceFinder rf;
+    rf.setDefaultContext("superquadric");
+    rf.configure(argc,argv);
+    return mod.runModule(rf);
 }
 
 
