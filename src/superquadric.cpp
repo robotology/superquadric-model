@@ -68,9 +68,9 @@ public:
     /****************************************************************/
     void usePoints(deque<Vector> &point_cloud)
     {
-        if(point_cloud.size()<1000)
+        if (point_cloud.size()<1000)
         {
-            for(size_t i=0;i<point_cloud.size();i++)
+            for (size_t i=0;i<point_cloud.size();i++)
             {
                 points_down.push_back(point_cloud[i]);
             }
@@ -88,10 +88,8 @@ public:
         }
         cout<<"points after downsampling "<<points_down.size()<<endl;
 
-       
-        x0.resize(11,0.0);        
+        x0.resize(11,0.0);
         computeX0(x0, points_down);
-
     }
 
     /****************************************************************/
@@ -104,13 +102,12 @@ public:
         x_v.resize(11,0.0);
 
         return true;
-
     }
 
     /****************************************************************/
     void computeBounds()
     {
-        if(bounds_automatic==1)
+        if (bounds_automatic==1)
         {
             bounds(0,1)=x0[0]*2;
             bounds(1,1)=x0[1]*2;
@@ -137,7 +134,6 @@ public:
         bounds(8,1)=2*M_PI;
         bounds(9,1)=M_PI;
         bounds(10,1)=2*M_PI;
-
     }
 
     /****************************************************************/
@@ -159,10 +155,10 @@ public:
                                 bool init_z, Ipopt::Number *z_L, Ipopt::Number *z_U,
                                 Ipopt::Index m, bool init_lambda, Ipopt::Number *lambda)
      {
-         for(Ipopt::Index i=0;i<n;i++)
-        {
+         for (Ipopt::Index i=0;i<n;i++)
+         {
              x[i]=x0[i];
-        }
+         }
 
          return true;
      }
@@ -176,13 +172,12 @@ public:
          obj_value=aux_objvalue;
 
          return true;
-
      }
 
      /****************************************************************/
      void F(const Ipopt::Number *x, deque<Vector> &points, bool &new_x)
      {
-         if(new_x)
+         if (new_x)
          {
              double value=0.0;
 
@@ -193,7 +188,6 @@ public:
              aux_objvalue=value;
          }
      }
-
 
       /****************************************************************/
      double f(const Ipopt::Number *x, Vector &point_cloud)
@@ -216,7 +210,6 @@ public:
          double tmp=pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
 
          return pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]));
-
      }
 
 
@@ -225,7 +218,7 @@ public:
      {
          double value=0.0;
 
-         for(size_t i=0;i<points.size();i++)
+         for (size_t i=0;i<points.size();i++)
              value+= pow( pow(f_v(x,points[i]),x[3])-1,2 );
 
          value*=x[0]*x[1]*x[2]/points.size();
@@ -253,9 +246,7 @@ public:
          double tmp;
          tmp= pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
 
-
          return  pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]) );
-
      }
 
      /****************************************************************/
@@ -269,9 +260,9 @@ public:
          gradient_comp="finite differences ";
 
 
-         if(new_x)
+         if (new_x)
          {
-             for(Ipopt::Index j=0;j<n;j++)
+             for (Ipopt::Index j=0;j<n;j++)
              {
                  x_tmp[j]=x_tmp[j]+eps;
 
@@ -286,11 +277,10 @@ public:
 
          }
 
-         for(Ipopt::Index j=0;j<n;j++)
+         for (Ipopt::Index j=0;j<n;j++)
          {
              grad_f[j]=aux_gradf[j];
          }
-
 
          return true;
      }
@@ -311,16 +301,15 @@ public:
      }
 
     /****************************************************************/
-    void configure(ResourceFinder &rf)
+    void configure(ResourceFinder *rf)
     {
         bounds.resize(11,2);
         bounds_automatic=1;
 
-        if(rf.find("bounds_automatic").asString()=="yes")
+        if (rf->find("bounds_automatic").asString()=="yes")
             bounds_automatic=1;
         else
             readMatrix("bounds",bounds, 11, rf);
-
     }
 
     /****************************************************************/
@@ -335,7 +324,7 @@ public:
         Vector point;
         point.resize(3,0.0);
 
-        for(size_t i=0; i<point_cloud.size();i++)
+        for (size_t i=0; i<point_cloud.size();i++)
         {
             point=point_cloud[i];
             x0[5]+=point[0];
@@ -357,7 +346,6 @@ public:
         x0[0]=(-bounding_box(0,0)+bounding_box(0,1))/2;
         x0[1]=(-bounding_box(1,0)+bounding_box(1,1))/2;
         x0[2]=(-bounding_box(2,0)+bounding_box(2,1))/2;
-
     }
 
     /****************************************************************/
@@ -376,7 +364,7 @@ public:
         a.resize(3,0.0);
         s.resize(3,0.0);
 
-        for(size_t i=0;i<point_cloud.size(); i++)
+        for (size_t i=0;i<point_cloud.size(); i++)
         {
             point=point_cloud[i];
             M(0,0)= M(0,0) + (point[1]-x0[6])*(point[1]-x0[6]) + (point[2]-x0[7])*(point[2]-x0[7]);
@@ -430,7 +418,7 @@ public:
         BB(1,1)=point[1];
         BB(2,1)=point[2];
 
-        for(size_t i=0; i<points.size();i++)
+        for (size_t i=0; i<points.size();i++)
         {
             point=points[i];
             point=R3.transposed()*point;
@@ -456,17 +444,16 @@ public:
         return BB;
     }
 
-
     /****************************************************************/
-   bool readMatrix(const string &tag, Matrix &matrix, const int &dimension, ResourceFinder &rf)
+   bool readMatrix(const string &tag, Matrix &matrix, const int &dimension, ResourceFinder *rf)
    {
        string tag_x=tag+"_x";
        string tag_y=tag+"_y";
        bool check_x;
 
-       if(tag=="x0")
+       if (tag=="x0")
        {
-           if (Bottle *b=rf.find(tag.c_str()).asList())
+           if (Bottle *b=rf->find(tag.c_str()).asList())
            {
                Vector col;
                if (b->size()>=dimension)
@@ -481,13 +468,13 @@ public:
        }
        else
        {
-           if(tag=="bounds")
+           if (tag=="bounds")
            {
                tag_x=tag+"_l";
                tag_y=tag+"_u";
            }
 
-           if (Bottle *b=rf.find(tag_x.c_str()).asList())
+           if (Bottle *b=rf->find(tag_x.c_str()).asList())
            {
                Vector col;
                if (b->size()>=dimension)
@@ -500,23 +487,22 @@ public:
                check_x=true;
 
            }
-           if (Bottle *b=rf.find(tag_y.c_str()).asList())
+           if (Bottle *b=rf->find(tag_y.c_str()).asList())
            {
                Vector col;
                if (b->size()>=dimension)
                {
-                   for(size_t i=0; i<b->size();i++)
+                   for (size_t i=0; i<b->size();i++)
                        col.push_back(b->get(i).asDouble());
                    matrix.setCol(1, col);
                }
 
-               if(check_x==true)
+               if (check_x==true)
                    return true;
            }
        }
-   return false;
+       return false;
    }
-
 
    /****************************************************************/
    void finalize_solution(Ipopt::SolverReturn status, Ipopt::Index n,
@@ -536,6 +522,5 @@ public:
    {
        return solution;
    }
-
 };
 

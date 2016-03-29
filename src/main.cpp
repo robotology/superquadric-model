@@ -45,20 +45,19 @@ class SuperqModule : public RFModule, public PortReader
 {
 protected:
     vector<cv::Point> contour;
-    vector<cv::Point> floodPoints;
     string homeContextPath;
     int downsampling;
     double spatial_distance;
     int color_distance;
+    bool go;
     Mutex mutex;
-    bool go,flood3d,flood;
 
     BufferedPort<ImageOf<PixelMono> > portDispIn;
     BufferedPort<ImageOf<PixelRgb> >  portDispOut;
     BufferedPort<ImageOf<PixelRgb> >  portRgbIn;
     BufferedPort<Bottle>              portOutPoints;
     Port portContour;
-    RpcClient portSFM;
+    RpcClient portSFMrpc;
     RpcServer portRpc;
 
     double tol, sum;
@@ -66,23 +65,22 @@ protected:
     bool go_on;
 
     string mu_strategy,nlp_scaling_method;
-    Ipopt::ApplicationReturnStatus status;
-    Ipopt::SmartPtr<Ipopt::IpoptApplication> app;
-    Ipopt::SmartPtr<SuperQuadric_NLP>  superQ_nlp;
-
     deque<Vector> points;
     Vector x;
 
     BufferedPort<ImageOf<PixelRgb> > portImgIn;
     BufferedPort<ImageOf<PixelRgb> > portImgOut;
     BufferedPort<Bottle> portSuperqIn;
+    int eye;
 
-    PolyDriver clientGazeCtrl;
+    PolyDriver GazeCtrl;
     IGazeControl *igaze;
 
     Matrix R;
     Vector point,point1;
     Vector point2D;
+
+    ResourceFinder *rf;
 
 public:
 
@@ -98,19 +96,19 @@ public:
     {
         go_on=acquirePoints();
 
-        if(go_on==false)
+        if (go_on==false)
         {
             yError("Not image available! ");    
             return false;
         }
 
-        if(points.size()>0)
+        if (points.size()>0)
         {
             yInfo("Number of acquired points not null ");
             go_on=computeSuperq();
         }
 
-        if(go_on==false)
+        if (go_on==false)
         {
             yError("Not found a suitable superquadric! ");
             return false;
@@ -119,7 +117,7 @@ public:
         yInfo("Object superquadric found! ");
         go_on=showSuperq();
 
-        if(go_on==false)
+        if (go_on==false)
         {
             yError("Not image available! ");
             return false;
@@ -135,10 +133,10 @@ public:
 
         config_ok=config3dpoints(rf);
 
-        if(config_ok)
+        if (config_ok)
             config_ok=configSuperq(rf);
 
-        if(config_ok)
+        if (config_ok)
             config_ok=configViewer(rf);
 
         return config_ok;
@@ -152,7 +150,7 @@ public:
         portDispOut.interrupt();
         portRgbIn.interrupt();
         portContour.interrupt();
-        portSFM.interrupt();
+        portSFMrpc.interrupt();
         portRpc.interrupt();
 
         //interrupt for viewer
@@ -165,18 +163,33 @@ public:
     /***********************************************************************/
     bool close()
     {
-        //close for 3d-points
-        portDispIn.close();
-        portDispOut.close();
-        portRgbIn.close();
-        portContour.close();
-        portSFM.close();
-        portRpc.close();
+        if (!portDispIn.isClosed())
+            portDispIn.close();
 
-        //close for viewer
-        portImgIn.close();
-        portImgOut.close();
-        clientGazeCtrl.close();
+        if (!portDispOut.isClosed())
+            portDispOut.close();
+
+        if (!portRgbIn.isClosed())
+            portRgbIn.close();
+
+        if (portContour.isOpen())
+            portContour.close();
+
+        if (portSFMrpc.asPort().isOpen())
+            portSFMrpc.close();
+
+        if (portRpc.asPort().isOpen())
+            portRpc.close();
+
+        if (!portImgIn.isClosed())
+            portImgIn.close();
+
+        if (!portImgOut.isClosed())
+            portImgOut.close();
+
+        if (GazeCtrl.isValid())
+            GazeCtrl.close();
+
         return true;
     }
 
@@ -187,7 +200,7 @@ public:
         portDispOut.open("/superquadric-detection/disp:o");
         portRgbIn.open("/superquadric-detection/rgb:i");
         portContour.open("/superquadric-detection/contour:i");
-        portSFM.open("/superquadric-detection/SFM:rpc");
+        portSFMrpc.open("/superquadric-detection/SFM:rpc");
         portRpc.open("/superquadric-detection/rpc");
 
         portContour.setReader(*this);
@@ -197,7 +210,7 @@ public:
         downsampling=std::max(1,rf.check("downsampling",Value(1)).asInt());
         spatial_distance=rf.check("spatial_distance",Value(0.004)).asDouble();
         color_distance=rf.check("color_distance",Value(6)).asInt();
-        go=flood3d=flood=false;
+        go=false;
 
         return true;
     }
@@ -205,34 +218,20 @@ public:
     /***********************************************************************/
     bool configSuperq(ResourceFinder &rf)
     {
+        this->rf=&rf;
+
         tol=rf.check("tol",Value(1e-5)).asDouble();
         acceptable_iter=rf.check("acceptable_iter",Value(0)).asInt();
         max_iter=rf.check("max_iter",Value(numeric_limits<int>::max())).asInt();
 
         mu_strategy=rf.find("mu_strategy").asString().c_str();
-        if(rf.find("mu_strategy").isNull())
+        if (rf.find("mu_strategy").isNull())
             mu_strategy="adaptive";
         nlp_scaling_method=rf.find("nlp_scaling_method").asString().c_str();
-        if(rf.find("nlp_scaling_method").isNull())
+        if (rf.find("nlp_scaling_method").isNull())
             nlp_scaling_method="none";
 
-        app=new Ipopt::IpoptApplication;
-        app->Options()->SetNumericValue("tol",tol);
-        app->Options()->SetIntegerValue("acceptable_iter",acceptable_iter);
-        app->Options()->SetStringValue("mu_strategy",mu_strategy);
-        app->Options()->SetIntegerValue("max_iter",max_iter);
-        app->Options()->SetStringValue("nlp_scaling_method",nlp_scaling_method);
-        app->Options()->SetStringValue("hessian_approximation","limited-memory");
-        app->Options()->SetIntegerValue("print_level",0);
-        app->Initialize();
-
-        superQ_nlp= new SuperQuadric_NLP;
-
-        superQ_nlp->init();
-        superQ_nlp->configure(rf);
-
         return true;
-
     }
 
     /***********************************************************************/
@@ -242,16 +241,18 @@ public:
         portImgIn.open("/superquadric-detection/img:i");
         portImgOut.open("/superquadric-detection/img:o");
 
+        eye=rf.check("eye",Value(0)).asInt();
+
         Property optionG;
         optionG.put("device","gazecontrollerclient");
         optionG.put("remote","/iKinGazeCtrl");
         optionG.put("local","/superquadric-detection/gaze");
 
-        clientGazeCtrl.open(optionG);
+        GazeCtrl.open(optionG);
         igaze=NULL;
 
-        if (!clientGazeCtrl.open(optionG))
-            clientGazeCtrl.view(igaze);
+        if (GazeCtrl.isValid())
+            GazeCtrl.view(igaze);
         else
             return false;
 
@@ -262,7 +263,6 @@ public:
 
         return true;
     }
-
 
     /***********************************************************************/
     bool acquirePoints()
@@ -282,14 +282,8 @@ public:
         cv::Mat imgDispOutMat=cv::cvarrToMat((IplImage*)imgDispOut.getIplImage());
         cv::cvtColor(imgDispInMat,imgDispOutMat,CV_GRAY2RGB);
 
-        PixelRgb color(255,255,0);
-        for (size_t i=0; i<floodPoints.size(); i++)
-            imgDispOut.pixel(floodPoints[i].x,floodPoints[i].y)=color;
-        //vector<Vector> points;
-
         if (contour.size()>0)
         {
-
             vector<vector<cv::Point> > contours;
             contours.push_back(contour);
             cv::drawContours(imgDispOutMat,contours,0,cv::Scalar(255,255,0));
@@ -297,114 +291,82 @@ public:
             cv::Rect rect=cv::boundingRect(contour);
             cv::rectangle(imgDispOutMat,rect,cv::Scalar(255,50,0));
 
-
-            if (go||flood3d||flood)
+            if (go)
             {
-                //points.clear();
-
                 Bottle cmd,reply;
 
-                if (go)
+                cmd.addString("Rect");
+                cmd.addInt(rect.x);     cmd.addInt(rect.y);
+                cmd.addInt(rect.width); cmd.addInt(rect.height);
+                cmd.addInt(downsampling);
+                if (portSFMrpc.write(cmd,reply))
                 {
-
-                    cmd.addString("Rect");
-                    cmd.addInt(rect.x);     cmd.addInt(rect.y);
-                    cmd.addInt(rect.width); cmd.addInt(rect.height);
-                    cmd.addInt(downsampling);
-                    if (portSFM.write(cmd,reply))
+                    int idx=0;
+                    for (int x=rect.x; x<rect.x+rect.width; x+=downsampling)
                     {
-
-                        int idx=0;
-                        for (int x=rect.x; x<rect.x+rect.width; x+=downsampling)
+                        for (int y=rect.y; y<rect.y+rect.height; y+=downsampling)
                         {
-                            for (int y=rect.y; y<rect.y+rect.height; y+=downsampling)
+                            if (cv::pointPolygonTest(contour,cv::Point2f((float)x,(float)y),false)>0.0)
                             {
-                                if (cv::pointPolygonTest(contour,cv::Point2f((float)x,(float)y),false)>0.0)
+                                Vector point(6,0.0);
+                                point[0]=reply.get(idx+0).asDouble();
+                                point[1]=reply.get(idx+1).asDouble();
+                                point[2]=reply.get(idx+2).asDouble();
+                                if (norm(point)>0.0)
                                 {
-                                    Vector point(6,0.0);
-                                    point[0]=reply.get(idx+0).asDouble();
-                                    point[1]=reply.get(idx+1).asDouble();
-                                    point[2]=reply.get(idx+2).asDouble();
-                                    if (norm(point)>0.0)
-                                    {
-                                        PixelRgb px=imgIn->pixel(x,y);
-                                        point[3]=px.r;
-                                        point[4]=px.g;
-                                        point[5]=px.b;
+                                    PixelRgb px=imgIn->pixel(x,y);
+                                    point[3]=px.r;
+                                    point[4]=px.g;
+                                    point[5]=px.b;
 
-                                        points.push_back(point);
-                                    }
+                                    points.push_back(point);
                                 }
-
-                                idx+=3;
                             }
+
+                            idx+=3;
                         }
                     }
                 }
-                if (flood3d)
-                {
-                    cmd.addString("Flood3D");
-                    cmd.addInt(contour.back().x);
-                    cmd.addInt(contour.back().y);
-                    cmd.addDouble(spatial_distance);
-                    if (portSFM.write(cmd,reply))
-                    {
-                        for (int i=0; i<reply.size(); i+=5)
-                        {
-                            int x=reply.get(i+0).asInt();
-                            int y=reply.get(i+1).asInt();
-                            PixelRgb px=imgIn->pixel(x,y);
 
-                            Vector point(6,0.0);
-                            point[0]=reply.get(i+2).asDouble();
-                            point[1]=reply.get(i+3).asDouble();
-                            point[2]=reply.get(i+4).asDouble();
-                            point[3]=px.r;
-                            point[4]=px.g;
-                            point[5]=px.b;
-
-                            points.push_back(point);
-                            floodPoints.push_back(cv::Point(x,y));
-                        }
-                    }
-                }
-                else if (flood)
-                {
-                    cv::Point seed(contour.back().x,contour.back().y);
-                    PixelMono c=imgDispIn->pixel(seed.x,seed.y);
-                    cv::Scalar delta(color_distance);
-                    cv::floodFill(imgDispInMat,seed,cv::Scalar(255),NULL,delta,delta,4|cv::FLOODFILL_FIXED_RANGE);
-                    cv::cvtColor(imgDispInMat,imgDispOutMat,CV_GRAY2RGB);
-                }
-
-                go=flood3d=false;
-
+                go=false;
             }
-
-
-
         }
         cout<<"points size "<<points.size()<<endl;
         portDispOut.write();
-        if(points.size()>0)
-            return true;
 
+        if (points.size()>0)
+            return true;
     }
 
     /***********************************************************************/
     bool computeSuperq()
     {
+        Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
+        app->Options()->SetNumericValue("tol",tol);
+        app->Options()->SetIntegerValue("acceptable_iter",acceptable_iter);
+        app->Options()->SetStringValue("mu_strategy",mu_strategy);
+        app->Options()->SetIntegerValue("max_iter",max_iter);
+        app->Options()->SetStringValue("nlp_scaling_method",nlp_scaling_method);
+        app->Options()->SetStringValue("hessian_approximation","limited-memory");
+        app->Options()->SetIntegerValue("print_level",0);
+        app->Initialize();
+
+        Ipopt::SmartPtr<SuperQuadric_NLP> superQ_nlp= new SuperQuadric_NLP;
+
+        superQ_nlp->init();
+        superQ_nlp->configure(this->rf);
         superQ_nlp->usePoints(points);
+
         double t,t0;
         t0=Time::now();
 
-        status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
+        Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
         t=Time::now()-t0;
         cout<<"t "<<t<<endl;
 
         points.clear();
 
-        if(status==Ipopt::Solve_Succeeded)
+        if (status==Ipopt::Solve_Succeeded)
         {
             x=superQ_nlp->get_result();
             cout<<"solution "<<x.toString()<<endl;
@@ -425,15 +387,15 @@ public:
             return false;
         
         ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
-        imgOut=imgIn;
+        imgOut=*imgIn;
 
         R=euler2dcm(x.subVector(8,10));
         
-        if(points.size()>0 && go_on==true)
+        if ((points.size()>0) && (go_on==true))
         {       
-            for(double eta=-M_PI; eta<M_PI; eta+=0.4)
+            for (double eta=-M_PI; eta<M_PI; eta+=M_PI/8)
             {
-                 for(double omega=-M_PI; omega<M_PI;omega+=0.4)
+                 for (double omega=-M_PI; omega<M_PI;omega+=M_PI/8)
                  {
                      //point1[0]=point[0]; point1[1]=point[1]; point1[2]=point[2];
 
@@ -449,7 +411,7 @@ public:
                                 x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(2,1)+
                                     x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(2,2) + x[7];
                     
-                    igaze->get2DPixel(0, point, point2D);
+                    igaze->get2DPixel(eye, point, point2D);
                     cv::Point target_point(point2D[0],point2D[1]);
                     //igaze->get2DPixel(0, point1, point2D);
                     //cv::Point target_point1(point2D[0],point2D[1]);
@@ -476,50 +438,25 @@ public:
         {
             LockGuard lg(mutex);
             contour.clear();
-            floodPoints.clear();
-            go=flood3d=flood=false;
+            go=false;
             reply.addVocab(ack);
         }
-        else if ((cmd=="go") || (cmd=="flood3d"))
+        else if (cmd=="go")
         {
-            if (portSFM.getOutputCount()==0)
+            if (portSFMrpc.getOutputCount()==0)
                 reply.addVocab(nack);
             else
             {
                 LockGuard lg(mutex);
-                if (cmd=="go")
-                {
-                    if (contour.size()>2)
-                    {
-                        flood=false;
-                        go=true;
-                        reply.addVocab(ack);
-                    }
-                    else
-                        reply.addVocab(nack);
-                }
-                else if (cmd=="flood3d")
-                {
-                    if (command.size()>=2)
-                        spatial_distance=command.get(1).asDouble();
 
-                    contour.clear();
-                    floodPoints.clear();
-                    flood=false;
-                    flood3d=true;
+                if (contour.size()>2)
+                {
+                    go=true;
                     reply.addVocab(ack);
                 }
+                else
+                    reply.addVocab(nack);
             }
-        }
-        else if (cmd=="flood")
-        {
-            if (command.size()>=2)
-                color_distance=command.get(1).asInt();
-
-            contour.clear();
-            floodPoints.clear();
-            flood=true;
-            reply.addVocab(ack);
         }
         else
             RFModule::respond(command,reply);
