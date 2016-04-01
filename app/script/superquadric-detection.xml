@@ -38,43 +38,43 @@
 
         <connection>
             <from>/SFM/disp:o</from>
-            <to>/3d-points/disp:i</to>
+            <to>/superquadric-detection/disp:i</to>
             <protocol>udp</protocol>
         </connection>
 
         <connection>
-            <from>/3d-points/SFM:rpc</from>
+            <from>/superquadric-detection/SFM:rpc</from>
             <to>/SFM/rpc</to>
             <protocol>tcp</protocol>
         </connection>
 
         <connection>
             <from>/icub/cam/left</from>
-            <to>/3d-points/rgb:i</to>
+            <to>/superquadric-detection/rgb:i</to>
             <protocol>udp</protocol>
         </connection>
 
         <connection>
-            <from>/3d-points/disp:o</from>
+            <from>/superquadric-detection/disp:o</from>
             <to>/disp</to>
             <protocol>udp</protocol>
         </connection>
 
         <connection>
             <from>/disp/out</from>
-            <to>/3d-points/contour:i</to>
+            <to>/superquadric-detection/contour:i</to>
             <protocol>udp</protocol>
         </connection>
 
         <connection>
-            <from>/viewer/img:o</from>
+            <from>/superquadric-detection/img:o</from>
             <to>/dispSuperq</to>
             <protocol>udp</protocol>
         </connection>
 
         <connection>
             <from>/icub/cam/left</from>
-            <to>/viewer/img:i</to>
+            <to>/superquadric-detection/img:i</to>
             <protocol>udp</protocol>
         </connection>
 </application>
