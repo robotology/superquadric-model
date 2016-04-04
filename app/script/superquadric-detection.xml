@@ -9,19 +9,24 @@
 
         <module>
            <name>SFM</name>
-           <node>localhost</node>
+           <node>icub21</node>
+        </module>
+        
+        <module>
+           <name>Superquadric-Detection</name>
+           <node>icub21</node>
         </module>
 
         <module>
            <name>yarpview</name>
            <parameters>--name /disp --out /disp/out --p 33</parameters>
-           <node>giulia</node>
+           <node>icub22</node>
         </module>
 
         <module>
            <name>yarpview</name>
            <parameters>--name /dispSuperq --out /dispSuperq/out --p 33</parameters>
-           <node>giulia</node>
+           <node>icub22</node>
         </module>
 
         <connection>

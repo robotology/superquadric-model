@@ -55,7 +55,6 @@ class  SuperQuadric_NLP : public Ipopt::TNLP
 public:
     Vector solution;
     deque<double> t;
-    string gradient_comp;
     deque<Vector> points_down;
 
     /****************************************************************/
@@ -100,6 +99,7 @@ public:
         m=nnz_jac_g=nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
         x_v.resize(11,0.0);
+        aux_gradf.resize(n,0.0);
 
         return true;
     }
@@ -167,7 +167,6 @@ public:
      bool eval_f(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
                     Ipopt::Number &obj_value)
      {
-
          F(x,points_down, new_x);
          obj_value=aux_objvalue;
 
@@ -257,13 +256,13 @@ public:
          double grad_p, grad_n;
          x_tmp.resize(11,0.0);
          double eps=1e-6;
-         gradient_comp="finite differences ";
-
 
          if (new_x)
          {
              for (Ipopt::Index j=0;j<n;j++)
-             {
+                 x_tmp[j]=x[j];
+             for (Ipopt::Index j=0;j<n;j++)
+             {                 
                  x_tmp[j]=x_tmp[j]+eps;
 
                  grad_p=F_v(x_tmp,points_down);
@@ -341,7 +340,6 @@ public:
         Matrix bounding_box;
         bounding_box.resize(3,2);
         bounding_box=computeBoundingBox(point_cloud,x0);
-
 
         x0[0]=(-bounding_box(0,0)+bounding_box(0,1))/2;
         x0[1]=(-bounding_box(1,0)+bounding_box(1,1))/2;

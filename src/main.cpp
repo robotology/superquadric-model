@@ -55,7 +55,6 @@ protected:
     BufferedPort<ImageOf<PixelMono> > portDispIn;
     BufferedPort<ImageOf<PixelRgb> >  portDispOut;
     BufferedPort<ImageOf<PixelRgb> >  portRgbIn;
-    BufferedPort<Bottle>              portOutPoints;
     Port portContour;
     RpcClient portSFMrpc;
     RpcServer portRpc;
@@ -98,13 +97,13 @@ public:
 
         if (go_on==false)
         {
-            yError("Not image available! ");    
+            yError("No image available! ");
             return false;
         }
 
         if (points.size()>0)
         {
-            yInfo("Number of acquired points not null ");
+            yInfo()<<"number of points acquired:"<< points.size();
             go_on=computeSuperq();
         }
 
@@ -114,12 +113,13 @@ public:
             return false;
         }
 
-        yInfo("Object superquadric found! ");
-        go_on=showSuperq();
+        else
+            go_on=showSuperq();
+
 
         if (go_on==false)
         {
-            yError("Not image available! ");
+            yError("No image available! ");
             return false;
         }
 
@@ -220,7 +220,7 @@ public:
     {
         this->rf=&rf;
 
-        tol=rf.check("tol",Value(1e-5)).asDouble();
+        tol=rf.check("tol",Value(1e-2)).asDouble();
         acceptable_iter=rf.check("acceptable_iter",Value(0)).asInt();
         max_iter=rf.check("max_iter",Value(numeric_limits<int>::max())).asInt();
 
@@ -308,19 +308,13 @@ public:
                         {
                             if (cv::pointPolygonTest(contour,cv::Point2f((float)x,(float)y),false)>0.0)
                             {
-                                Vector point(6,0.0);
+                                Vector point(3,0.0);
                                 point[0]=reply.get(idx+0).asDouble();
                                 point[1]=reply.get(idx+1).asDouble();
                                 point[2]=reply.get(idx+2).asDouble();
-                                if (norm(point)>0.0)
-                                {
-                                    PixelRgb px=imgIn->pixel(x,y);
-                                    point[3]=px.r;
-                                    point[4]=px.g;
-                                    point[5]=px.b;
 
-                                    points.push_back(point);
-                                }
+                                points.push_back(point);
+
                             }
 
                             idx+=3;
@@ -331,11 +325,9 @@ public:
                 go=false;
             }
         }
-        cout<<"points size "<<points.size()<<endl;
         portDispOut.write();
 
-        if (points.size()>0)
-            return true;
+        return true;
     }
 
     /***********************************************************************/
@@ -366,15 +358,16 @@ public:
 
         points.clear();
 
-        if (status==Ipopt::Solve_Succeeded)
-        {
+        //if (status==Ipopt::Solve_Succeeded)
+       // {
             x=superQ_nlp->get_result();
             cout<<"solution "<<x.toString()<<endl;
             yInfo("Solution of the optimization problem: %s", x.toString().c_str());
             return true;
-        }
-        else
-            return false;
+       // }
+       // else
+           // return false;
+
     }
 
     /***********************************************************************/
@@ -382,7 +375,7 @@ public:
     {
         PixelRgb color(255,255,0);
 
-        ImageOf<PixelRgb> *imgIn=portImgIn.read(false);
+        ImageOf<PixelRgb> *imgIn=portImgIn.read();
         if (imgIn==NULL)
             return false;
         
@@ -391,8 +384,8 @@ public:
 
         R=euler2dcm(x.subVector(8,10));
         
-        if ((points.size()>0) && (go_on==true))
-        {       
+        if ((norm(x)!=0.0) && (go_on==true))
+        {
             for (double eta=-M_PI; eta<M_PI; eta+=M_PI/8)
             {
                  for (double omega=-M_PI; omega<M_PI;omega+=M_PI/8)
