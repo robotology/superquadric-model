@@ -44,12 +44,16 @@ using namespace yarp::math;
 class SuperqModule : public RFModule, public PortReader
 {
 protected:
-    vector<cv::Point> contour;
-    string homeContextPath;
+    bool go;
+    int r,g,b;
+    int color_distance;
     int downsampling;
     double spatial_distance;
-    int color_distance;
-    bool go;
+    string homeContextPath;
+    vector<cv::Point> contour;
+    deque<Vector> points;
+    deque<Vector> points_toshow;
+
     Mutex mutex;
 
     BufferedPort<ImageOf<PixelMono> > portDispIn;
@@ -59,12 +63,10 @@ protected:
     RpcClient portSFMrpc;
     RpcServer portRpc;
 
-    double tol, sum;
-    int acceptable_iter,max_iter;
     bool go_on;
-
+    double tol, sum;    
+    int acceptable_iter,max_iter;    
     string mu_strategy,nlp_scaling_method;
-    deque<Vector> points;
     Vector x;
 
     BufferedPort<ImageOf<PixelRgb> > portImgIn;
@@ -78,11 +80,11 @@ protected:
     Matrix R;
     Vector point,point1;
     Vector point2D;
+    deque<int> Color;
 
     ResourceFinder *rf;
 
 public:
-
 
     /***********************************************************************/
     double getPeriod()
@@ -95,7 +97,7 @@ public:
     {
         go_on=acquirePoints();
 
-        if (go_on==false)
+        if ((go_on==false) && (!isStopping()))
         {
             yError("No image available! ");
             return false;
@@ -117,7 +119,7 @@ public:
             go_on=showSuperq();
 
 
-        if (go_on==false)
+        if ((go_on==false) && (!isStopping()))
         {
             yError("No image available! ");
             return false;
@@ -187,8 +189,7 @@ public:
         if (!portImgOut.isClosed())
             portImgOut.close();
 
-        if (GazeCtrl.isValid())
-            GazeCtrl.close();
+        GazeCtrl.close();
 
         return true;
     }
@@ -207,7 +208,7 @@ public:
         attach(portRpc);
 
         homeContextPath=rf.getHomeContextPath().c_str();
-        downsampling=std::max(1,rf.check("downsampling",Value(1)).asInt());
+        downsampling=std::max(1,rf.check("downsampling",Value(3)).asInt());
         spatial_distance=rf.check("spatial_distance",Value(0.004)).asDouble();
         color_distance=rf.check("color_distance",Value(6)).asInt();
         go=false;
@@ -243,6 +244,21 @@ public:
 
         eye=rf.check("eye",Value(0)).asInt();
 
+        if (Bottle *B=rf.find("color").asList())
+        {
+            if (B->size()>=3)
+            {
+                for(size_t i=0; i<B->size();i++)
+                    Color.push_back(B->get(i).asInt());
+            }
+
+            r=Color[0]; g=Color[1]; b=Color[2];
+        }
+        else
+        {
+            r=255; g=255; b=0;
+        }
+
         Property optionG;
         optionG.put("device","gazecontrollerclient");
         optionG.put("remote","/iKinGazeCtrl");
@@ -267,6 +283,8 @@ public:
     /***********************************************************************/
     bool acquirePoints()
     {
+        PixelRgb color(r,g,b);
+
         ImageOf<PixelMono> *imgDispIn=portDispIn.read();
         if (imgDispIn==NULL)
             return false;
@@ -295,6 +313,8 @@ public:
             {
                 Bottle cmd,reply;
 
+                points_toshow.clear();
+
                 cmd.addString("Rect");
                 cmd.addInt(rect.x);     cmd.addInt(rect.y);
                 cmd.addInt(rect.width); cmd.addInt(rect.height);
@@ -314,17 +334,26 @@ public:
                                 point[2]=reply.get(idx+2).asDouble();
 
                                 points.push_back(point);
-
+                                points_toshow.push_back(point);
                             }
 
                             idx+=3;
-                        }
+                        }                       
                     }
                 }
 
                 go=false;
             }
         }
+
+        for(size_t i=0;i<points_toshow.size();i+=3)
+        {
+            Vector point=points_toshow[i];
+            igaze->get2DPixel(eye, point, point2D);
+            cv::Point target_point(point2D[0],point2D[1]);
+            imgDispOut.pixel(target_point.x, target_point.y)=color;
+        }
+
         portDispOut.write();
 
         return true;
@@ -352,28 +381,26 @@ public:
         double t,t0;
         t0=Time::now();
 
-        Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
-        t=Time::now()-t0;
-        cout<<"t "<<t<<endl;
-
         points.clear();
 
-        //if (status==Ipopt::Solve_Succeeded)
-       // {
-            x=superQ_nlp->get_result();
-            cout<<"solution "<<x.toString()<<endl;
-            yInfo("Solution of the optimization problem: %s", x.toString().c_str());
-            return true;
-       // }
-       // else
-           // return false;
+        Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
+        t=Time::now()-t0;
 
+        if (status==Ipopt::Solve_Succeeded)
+        {
+            x=superQ_nlp->get_result();
+            yInfo("Solution of the optimization problem: %s", x.toString(3,3).c_str());
+            yInfo("Computed in: %f [s]", t);
+            return true;
+        }
+        else
+            return false;
     }
 
     /***********************************************************************/
     bool showSuperq()
     {
-        PixelRgb color(255,255,0);
+        PixelRgb color(r,g,b);
 
         ImageOf<PixelRgb> *imgIn=portImgIn.read();
         if (imgIn==NULL)
@@ -470,7 +497,6 @@ public:
 
        return true;
    }
-
 };
 
 /**********************************************************************/

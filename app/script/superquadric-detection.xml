@@ -32,19 +32,19 @@
         <connection>
             <from>/icub/cam/left</from>
             <to>/SFM/left:i</to>
-            <protocol>udp</protocol>
+            <protocol>tcp</protocol>
         </connection>
 
         <connection>
             <from>/icub/cam/right</from>
             <to>/SFM/right:i</to>
-            <protocol>udp</protocol>
+            <protocol>tcp</protocol>
         </connection>
 
         <connection>
             <from>/SFM/disp:o</from>
             <to>/superquadric-detection/disp:i</to>
-            <protocol>udp</protocol>
+            <protocol>tcp</protocol>
         </connection>
 
         <connection>
@@ -56,31 +56,31 @@
         <connection>
             <from>/icub/cam/left</from>
             <to>/superquadric-detection/rgb:i</to>
-            <protocol>udp</protocol>
+            <protocol>tcp</protocol>
         </connection>
 
         <connection>
             <from>/superquadric-detection/disp:o</from>
             <to>/disp</to>
-            <protocol>udp</protocol>
+            <protocol>tcp</protocol>
         </connection>
 
         <connection>
             <from>/disp/out</from>
             <to>/superquadric-detection/contour:i</to>
-            <protocol>udp</protocol>
+            <protocol>tcp</protocol>
         </connection>
 
         <connection>
             <from>/superquadric-detection/img:o</from>
             <to>/dispSuperq</to>
-            <protocol>udp</protocol>
+            <protocol>tcp</protocol>
         </connection>
 
         <connection>
             <from>/icub/cam/left</from>
             <to>/superquadric-detection/img:i</to>
-            <protocol>udp</protocol>
+            <protocol>tcp</protocol>
         </connection>
 </application>
 

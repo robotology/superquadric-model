@@ -45,6 +45,7 @@ class  SuperQuadric_NLP : public Ipopt::TNLP
     int i_z;
     double t0;
     int down;
+    int max_num_points;
     int bounds_automatic;
     Vector x_v;
     Vector x0;
@@ -67,7 +68,7 @@ public:
     /****************************************************************/
     void usePoints(deque<Vector> &point_cloud)
     {
-        if (point_cloud.size()<1000)
+        if (point_cloud.size()<100)
         {
             for (size_t i=0;i<point_cloud.size();i++)
             {
@@ -79,13 +80,14 @@ public:
             int i=0;
             Vector point;
             point.resize(3,0.0);
+            int count=point_cloud.size()/max_num_points;
             while(i<point_cloud.size())
             {
                 points_down.push_back(point_cloud[i]);
-                i=i+30;
+                i=i+count;
             }
         }
-        cout<<"points after downsampling "<<points_down.size()<<endl;
+        yInfo("points usable for modeling: %lu ",points_down.size());
 
         x0.resize(11,0.0);
         computeX0(x0, points_down);
@@ -255,14 +257,15 @@ public:
          Vector x_tmp;
          double grad_p, grad_n;
          x_tmp.resize(11,0.0);
-         double eps=1e-6;
+         double eps=1e-8;
 
-         if (new_x)
-         {
+         //if (new_x)
+         //{
              for (Ipopt::Index j=0;j<n;j++)
                  x_tmp[j]=x[j];
+
              for (Ipopt::Index j=0;j<n;j++)
-             {                 
+             {
                  x_tmp[j]=x_tmp[j]+eps;
 
                  grad_p=F_v(x_tmp,points_down);
@@ -273,8 +276,7 @@ public:
 
                  aux_gradf[j]=(grad_p-grad_n)/eps;
               }
-
-         }
+         //}
 
          for (Ipopt::Index j=0;j<n;j++)
          {
@@ -303,12 +305,13 @@ public:
     void configure(ResourceFinder *rf)
     {
         bounds.resize(11,2);
-        bounds_automatic=1;
 
         if (rf->find("bounds_automatic").asString()=="yes")
             bounds_automatic=1;
         else
             readMatrix("bounds",bounds, 11, rf);
+
+        max_num_points=rf->check("max_num_points", Value(80)).asInt();
     }
 
     /****************************************************************/
