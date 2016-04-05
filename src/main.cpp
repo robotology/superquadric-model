@@ -52,7 +52,6 @@ protected:
     string homeContextPath;
     vector<cv::Point> contour;
     deque<Vector> points;
-    deque<Vector> points_toshow;
 
     Mutex mutex;
 
@@ -283,8 +282,6 @@ public:
     /***********************************************************************/
     bool acquirePoints()
     {
-        PixelRgb color(r,g,b);
-
         ImageOf<PixelMono> *imgDispIn=portDispIn.read();
         if (imgDispIn==NULL)
             return false;
@@ -313,8 +310,6 @@ public:
             {
                 Bottle cmd,reply;
 
-                points_toshow.clear();
-
                 cmd.addString("Rect");
                 cmd.addInt(rect.x);     cmd.addInt(rect.y);
                 cmd.addInt(rect.width); cmd.addInt(rect.height);
@@ -334,7 +329,6 @@ public:
                                 point[2]=reply.get(idx+2).asDouble();
 
                                 points.push_back(point);
-                                points_toshow.push_back(point);
                             }
 
                             idx+=3;
@@ -344,14 +338,6 @@ public:
 
                 go=false;
             }
-        }
-
-        for(size_t i=0;i<points_toshow.size();i+=3)
-        {
-            Vector point=points_toshow[i];
-            igaze->get2DPixel(eye, point, point2D);
-            cv::Point target_point(point2D[0],point2D[1]);
-            imgDispOut.pixel(target_point.x, target_point.y)=color;
         }
 
         portDispOut.write();
