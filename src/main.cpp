@@ -76,7 +76,7 @@ protected:
     PolyDriver GazeCtrl;
     IGazeControl *igaze;
 
-    Matrix R;
+    Matrix R,H,K;
     Vector point,point1;
     Vector point2D;
     deque<int> Color;
@@ -256,7 +256,7 @@ public:
         else
         {
             r=255; g=255; b=0;
-        }
+        }        
 
         Property optionG;
         optionG.put("device","gazecontrollerclient");
@@ -271,7 +271,18 @@ public:
         else
             return false;
 
+        Bottle intr_par;
+        igaze->getInfo(intr_par);
+        K.resize(3,3);
+        K.zero();
+        K(0,0)=intr_par.get(0).asDouble();
+        K(0,1)=intr_par.get(1).asDouble();
+        K(0,2)=intr_par.get(2).asDouble();
+        K(1,1)=intr_par.get(3).asDouble();
+        K(1,2)=intr_par.get(4).asDouble();
+
         R.resize(4,4);
+        H.resize(4,4);
         point2D.resize(2,0.0);
         point.resize(3,0.0);
         point1.resize(3,0.0);
@@ -387,6 +398,8 @@ public:
     bool showSuperq()
     {
         PixelRgb color(r,g,b);
+        Vector pos, orient;
+        Stamp* stamp=NULL;
 
         ImageOf<PixelRgb> *imgIn=portImgIn.read();
         if (imgIn==NULL)
@@ -396,6 +409,12 @@ public:
         imgOut=*imgIn;
 
         R=euler2dcm(x.subVector(8,10));
+
+        if(igaze->getLeftEyePose(pos,orient,stamp))
+        {
+            H=axis2dcm(orient);
+            H.setSubcol(pos,0,3);
+        }
         
         if ((norm(x)!=0.0) && (go_on==true))
         {
@@ -417,7 +436,8 @@ public:
                                 x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(2,1)+
                                     x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(2,2) + x[7];
                     
-                    igaze->get2DPixel(eye, point, point2D);
+                    //igaze->get2DPixel(eye, point, point2D);
+                    point2D=from2Dto3D(point);
                     cv::Point target_point(point2D[0],point2D[1]);
                     //igaze->get2DPixel(0, point1, point2D);
                     //cv::Point target_point1(point2D[0],point2D[1]);
@@ -431,6 +451,19 @@ public:
         portImgOut.write();
 
         return true;
+    }
+
+    /*******************************************************************************/
+    Vector from2Dto3D(Vector &point3D)
+    {
+        Vector point2D(3,0.0);
+        Matrix C(3,4);
+        Matrix I(3,3);
+        C.setSubmatrix(I.eye(), 0,0);
+        C.setCol(4,point2D);
+
+        point2D=K*C*H*point3D;
+        return point2D.subVector(0,1);
     }
 
     /*******************************************************************************/

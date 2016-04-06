@@ -259,8 +259,8 @@ public:
          x_tmp.resize(11,0.0);
          double eps=1e-8;
 
-         //if (new_x)
-         //{
+         if (new_x)
+         {
              for (Ipopt::Index j=0;j<n;j++)
                  x_tmp[j]=x[j];
 
@@ -276,7 +276,7 @@ public:
 
                  aux_gradf[j]=(grad_p-grad_n)/eps;
               }
-         //}
+         }
 
          for (Ipopt::Index j=0;j<n;j++)
          {
