@@ -271,15 +271,19 @@ public:
         else
             return false;
 
-        Bottle intr_par;
-        igaze->getInfo(intr_par);
-        K.resize(3,3);
+        Bottle info;
+        igaze->getInfo(info);
+        K.resize(3,4);
         K.zero();
+
+        Bottle intr_par=info.findGroup("camera_intrinsics_left");
+
         K(0,0)=intr_par.get(0).asDouble();
         K(0,1)=intr_par.get(1).asDouble();
         K(0,2)=intr_par.get(2).asDouble();
-        K(1,1)=intr_par.get(3).asDouble();
-        K(1,2)=intr_par.get(4).asDouble();
+        K(1,1)=intr_par.get(5).asDouble();
+        K(1,2)=intr_par.get(6).asDouble();
+        K(2,2)=1;
 
         R.resize(4,4);
         H.resize(4,4);
@@ -457,12 +461,8 @@ public:
     Vector from2Dto3D(Vector &point3D)
     {
         Vector point2D(3,0.0);
-        Matrix C(3,4);
-        Matrix I(3,3);
-        C.setSubmatrix(I.eye(), 0,0);
-        C.setCol(4,point2D);
 
-        point2D=K*C*H*point3D;
+        point2D=K*H*point3D;
         return point2D.subVector(0,1);
     }
 
