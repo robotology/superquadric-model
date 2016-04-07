@@ -77,7 +77,7 @@ protected:
     PolyDriver GazeCtrl;
     IGazeControl *igaze;
 
-    int eye;
+    string eye;
     Matrix R,H,K;
     Vector point,point1;
     Vector point2D;
@@ -243,7 +243,10 @@ public:
         portImgIn.open("/superquadric-detection/img:i");
         portImgOut.open("/superquadric-detection/img:o");
 
-        eye=rf.check("eye", Value(0)).asInt();
+        eye=rf.find("eye").asString().c_str();
+        if (rf.find("eye").isNull())
+            eye="left";
+
 
         if (Bottle *B=rf.find("color").asList())
         {
@@ -280,9 +283,9 @@ public:
 
         Bottle *intr_par;
 
-        if(eye==0)
+        if(eye=="left")
             intr_par=info.find("camera_intrinsics_left").asList();
-        else if(eye==1)
+        else if(eye=="right")
             intr_par=info.find("camera_intrinsics_right").asList();
 
 
