@@ -33,6 +33,8 @@
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 
+#include <lbpExtract_IDLServer.h>
+
 #include "superquadric.cpp"
 
 using namespace std;
@@ -357,6 +359,57 @@ public:
                     }
                 }
 
+                go=false;
+            }
+        }
+
+        portDispOut.write();
+
+        return true;
+    }
+
+    /***********************************************************************/
+    bool acquirePointsFromBlob()
+    {
+        ImageOf<PixelMono> *imgDispIn=portDispIn.read();
+        if (imgDispIn==NULL)
+            return false;
+
+        ImageOf<PixelRgb> *imgIn=portImgIn.read();
+        if (imgIn==NULL)
+            return false;
+
+        ImageOf<PixelRgb> &imgDispOut=portDispOut.prepare();
+        imgDispOut.resize(imgDispIn->width(),imgDispIn->height());
+
+        cv::Mat imgDispInMat=cv::cvarrToMat((IplImage*)imgDispIn->getIplImage());
+        cv::Mat imgDispOutMat=cv::cvarrToMat((IplImage*)imgDispOut.getIplImage());
+        cv::cvtColor(imgDispInMat,imgDispOutMat,CV_GRAY2RGB);
+
+        if (contour.size>0)
+        {
+            Bottle blob_points=get_compontent_around(contour.x, contour.y);
+            Bottle cmd,reply;
+            cmd.addString("Points");
+            cmd.addList();
+
+            for(size_t i=0; i<blob_points.size(); i++)
+                cmd.addInt(blob_points.get(i).asInt());
+
+            if (go)
+            {
+                if(portSFMrpc.write(cmd,reply))
+                {
+                    for(size_t idx=0;idx<reply.size();idx+=3)
+                    {
+                        Vector point(3,0.0);
+                        point[0]=reply.get(idx+0).asDouble();
+                        point[1]=reply.get(idx+1).asDouble();
+                        point[2]=reply.get(idx+2).asDouble();
+
+                        points.push_back(point);
+                    }
+                }
                 go=false;
             }
         }
