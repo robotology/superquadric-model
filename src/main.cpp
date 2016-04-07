@@ -107,7 +107,7 @@ public:
             go_on=computeSuperq();
         }
 
-        if (go_on==false)
+        if ((go_on==false) && (!isStopping()))
         {
             yError("Not found a suitable superquadric! ");
             return false;
@@ -409,13 +409,13 @@ public:
         ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
         imgOut=*imgIn;
 
-        R=euler2dcm(x.subVector(8,10));        
+        R=euler2dcm(x.subVector(8,10));
         
         if ((norm(x)!=0.0) && (go_on==true))
         {
             if(igaze->getLeftEyePose(pos,orient,stamp))
             {
-                H=axis2dcm(orient);
+                H=axis2dcm(orient);                
                 H.setSubcol(pos,0,3);
                 H=SE3inv(H);
             }
@@ -441,7 +441,7 @@ public:
                     //igaze->get2DPixel(, point, point2D);
                     point2D=from3Dto2D(point);
                     cv::Point target_point(point2D[0],point2D[1]);
-                    //igaze->get2DPixel(0, point1, point2D);
+                    igaze->get2DPixel(0, point, point2D);
                     //cv::Point target_point1(point2D[0],point2D[1]);
                     imgOut.pixel(target_point.x, target_point.y)=color;
                     //cv::line(imgOutMat,target_point,target_point1,cv::Scalar(255,0,0));
@@ -463,7 +463,7 @@ public:
         point_aux.setSubvector(0,point3D);
 
         point2D=K*H*point_aux;
-        return point2D.subVector(0,1);
+        return point2D.subVector(0,1)/point2D[2];
     }
 
     /*******************************************************************************/
