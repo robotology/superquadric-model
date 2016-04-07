@@ -71,7 +71,6 @@ protected:
     BufferedPort<ImageOf<PixelRgb> > portImgIn;
     BufferedPort<ImageOf<PixelRgb> > portImgOut;
     BufferedPort<Bottle> portSuperqIn;
-    int eye;
 
     PolyDriver GazeCtrl;
     IGazeControl *igaze;
@@ -241,8 +240,6 @@ public:
         portImgIn.open("/superquadric-detection/img:i");
         portImgOut.open("/superquadric-detection/img:o");
 
-        eye=rf.check("eye",Value(0)).asInt();
-
         if (Bottle *B=rf.find("color").asList())
         {
             if (B->size()>=3)
@@ -276,13 +273,13 @@ public:
         K.resize(3,4);
         K.zero();
 
-        Bottle intr_par=info.findGroup("camera_intrinsics_left");
+        Bottle *intr_par=info.find("camera_intrinsics_left").asList();
 
-        K(0,0)=intr_par.get(0).asDouble();
-        K(0,1)=intr_par.get(1).asDouble();
-        K(0,2)=intr_par.get(2).asDouble();
-        K(1,1)=intr_par.get(5).asDouble();
-        K(1,2)=intr_par.get(6).asDouble();
+        K(0,0)=intr_par->get(0).asDouble();
+        K(0,1)=intr_par->get(1).asDouble();
+        K(0,2)=intr_par->get(2).asDouble();
+        K(1,1)=intr_par->get(5).asDouble();
+        K(1,2)=intr_par->get(6).asDouble();
         K(2,2)=1;
 
         R.resize(4,4);
@@ -412,16 +409,17 @@ public:
         ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
         imgOut=*imgIn;
 
-        R=euler2dcm(x.subVector(8,10));
-
-        if(igaze->getLeftEyePose(pos,orient,stamp))
-        {
-            H=axis2dcm(orient);
-            H.setSubcol(pos,0,3);
-        }
+        R=euler2dcm(x.subVector(8,10));        
         
         if ((norm(x)!=0.0) && (go_on==true))
         {
+            if(igaze->getLeftEyePose(pos,orient,stamp))
+            {
+                H=axis2dcm(orient);
+                H.setSubcol(pos,0,3);
+                H=SE3inv(H);
+            }
+
             for (double eta=-M_PI; eta<M_PI; eta+=M_PI/8)
             {
                  for (double omega=-M_PI; omega<M_PI;omega+=M_PI/8)
@@ -440,8 +438,8 @@ public:
                                 x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(2,1)+
                                     x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(2,2) + x[7];
                     
-                    //igaze->get2DPixel(eye, point, point2D);
-                    point2D=from2Dto3D(point);
+                    //igaze->get2DPixel(, point, point2D);
+                    point2D=from3Dto2D(point);
                     cv::Point target_point(point2D[0],point2D[1]);
                     //igaze->get2DPixel(0, point1, point2D);
                     //cv::Point target_point1(point2D[0],point2D[1]);
@@ -458,11 +456,13 @@ public:
     }
 
     /*******************************************************************************/
-    Vector from2Dto3D(Vector &point3D)
+    Vector from3Dto2D(Vector &point3D)
     {
         Vector point2D(3,0.0);
+        Vector point_aux(4,1.0);
+        point_aux.setSubvector(0,point3D);
 
-        point2D=K*H*point3D;
+        point2D=K*H*point_aux;
         return point2D.subVector(0,1);
     }
 
