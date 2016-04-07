@@ -75,6 +75,7 @@ protected:
     PolyDriver GazeCtrl;
     IGazeControl *igaze;
 
+    int eye;
     Matrix R,H,K;
     Vector point,point1;
     Vector point2D;
@@ -240,6 +241,8 @@ public:
         portImgIn.open("/superquadric-detection/img:i");
         portImgOut.open("/superquadric-detection/img:o");
 
+        eye=rf.check("eye", Value(0)).asInt();
+
         if (Bottle *B=rf.find("color").asList())
         {
             if (B->size()>=3)
@@ -273,7 +276,13 @@ public:
         K.resize(3,4);
         K.zero();
 
-        Bottle *intr_par=info.find("camera_intrinsics_left").asList();
+        Bottle *intr_par;
+
+        if(eye==0)
+            intr_par=info.find("camera_intrinsics_left").asList();
+        else if(eye==1)
+            intr_par=info.find("camera_intrinsics_right").asList();
+
 
         K(0,0)=intr_par->get(0).asDouble();
         K(0,1)=intr_par->get(1).asDouble();
@@ -413,11 +422,23 @@ public:
         
         if ((norm(x)!=0.0) && (go_on==true))
         {
-            if(igaze->getLeftEyePose(pos,orient,stamp))
+            if(eye==0)
             {
-                H=axis2dcm(orient);                
-                H.setSubcol(pos,0,3);
-                H=SE3inv(H);
+                if(igaze->getLeftEyePose(pos,orient,stamp))
+                {
+                    H=axis2dcm(orient);
+                    H.setSubcol(pos,0,3);
+                    H=SE3inv(H);
+                }
+            }
+            else if(eye==1)
+            {
+                if(igaze->getLeftEyePose(pos,orient,stamp))
+                {
+                    H=axis2dcm(orient);
+                    H.setSubcol(pos,0,3);
+                    H=SE3inv(H);
+                }
             }
 
             for (double eta=-M_PI; eta<M_PI; eta+=M_PI/8)
