@@ -447,8 +447,7 @@ public:
 
                         if (points.size()<=1)
                         {
-                            yError("Some problems in point acquisition!");
-                            return false;
+                            yError("Some problems in point acquisition!");                            
                         }
                     }
                     else
@@ -491,8 +490,6 @@ public:
                     if (points.size()<=0)
                     {
                         yError("Some problems in point acquisition!");
-                        return false;
-
                     }
                 }
                 else
@@ -606,7 +603,6 @@ public:
                     if ((target_point.x<0) || (target_point.y<0))
                     {
                         yError("Negative pixels!");
-                        return true;
                     }
                     imgOut.pixel(target_point.x, target_point.y)=color;
 
