@@ -384,6 +384,7 @@ public:
     /***********************************************************************/
     bool acquirePointsFromBlob()
     {
+        PixelRgb color(r,g,b);
         ImageOf<PixelMono> *imgDispIn=portDispIn.read();
         if (imgDispIn==NULL)
             return false;
@@ -402,6 +403,8 @@ public:
         if (contour.size()>0)
         {
             Bottle cmd,reply;
+            blob_points.clear();
+            points.clear();
             cmd.addString("get_component_around");
             cmd.addInt(contour[0].x); cmd.addInt(contour[0].y);
             //cout<<"cont "<<contour[0].x<<" "<<contour[0].y<<endl;
@@ -413,7 +416,9 @@ public:
                 for(size_t i=0; i<blob_list->size();i++)
                 {
                     Bottle *blob_pair=blob_list->get(i).asList();
-                    blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(0).asInt()));
+                    cv:: Point pix=cv::Point(blob_pair->get(0).asInt(),blob_pair->get(0).asInt());
+                    blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt()));
+                    imgDispOut.pixel(pix.x, pix.y)=color;
                 }
 
                 cmd.addString("Points");
@@ -435,17 +440,70 @@ public:
                             Vector point(3,0.0);
                             point[0]=reply.get(idx+0).asDouble();
                             point[1]=reply.get(idx+1).asDouble();
-                            point[2]=reply.get(idx+2).asDouble();
+                            point[2]=reply.get(idx+2).asDouble();                            
 
                             points.push_back(point);
                         }
+
+                        if (points.size()<=1)
+                        {
+                            yError("Some problems in point acquisition!");
+                            return false;
+                        }
                     }
-                    go=false;
+                    else
+                    {
+                        yError("SFM reply is fail!");
+                        return false;
+                    }
+                    contour.clear();
                 //}
             }
+
+        }
+        else if (blob_points.size()>0)
+        {
+            Bottle cmd,reply;
+            cmd.addString("Points");
+
+            for(size_t i=0; i<blob_points.size(); i++)
+            {
+                cv::Point single_point=blob_points[i];
+                cmd.addInt(single_point.x);
+                cmd.addInt(single_point.y);
+                imgDispOut.pixel(single_point.x, single_point.y)=color;
+            }
+
+            //if (go)
+            //{
+                if(portSFMrpc.write(cmd,reply))
+                {
+                    for(size_t idx=0;idx<reply.size();idx+=3)
+                    {
+                        Vector point(3,0.0);
+                        point[0]=reply.get(idx+0).asDouble();
+                        point[1]=reply.get(idx+1).asDouble();
+                        point[2]=reply.get(idx+2).asDouble();
+
+                        points.push_back(point);
+                    }
+
+                    if (points.size()<=0)
+                    {
+                        yError("Some problems in point acquisition!");
+                        return false;
+
+                    }
+                }
+                else
+                {
+                    yError("SFM reply is fail!");
+                    return false;
+                }
+
         }
 
-        portDispOut.write();
+       portDispOut.write();
 
         return true;
     }
@@ -506,7 +564,6 @@ public:
         
         if ((norm(x)!=0.0) && (go_on==true))
         {
-            cout<<"deb 1"<<endl;
             if(eye=="left")
             {
                 if(igaze->getLeftEyePose(pos,orient,stamp))
@@ -525,13 +582,11 @@ public:
                     H=SE3inv(H);
                 }
             }
-             cout<<"deb 2"<<endl;
 
             for (double eta=-M_PI; eta<M_PI; eta+=M_PI/8)
             {
                  for (double omega=-M_PI; omega<M_PI;omega+=M_PI/8)
                  {
-                     //point1[0]=point[0]; point1[1]=point[1]; point1[2]=point[2];
 
                      point[0]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(0,0) +
                                 x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3]))* sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(0,1)+
@@ -544,21 +599,20 @@ public:
                      point[2]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(2,0) +
                                 x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(2,1)+
                                     x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(2,2) + x[7];
-                    
-                    //igaze->get2DPixel(, point, point2D);
+
                     point2D=from3Dto2D(point);
                     cv::Point target_point(point2D[0],point2D[1]);
-                    //igaze->get2DPixel(0, point, point2D);
-                    //cv::Point target_point1(point2D[0],point2D[1]);
-                    cout<<"point "<<point.toString()<<endl;
-                    cout<<"targ "<<target_point.x<<" "<<target_point.y<<endl;
+
+                    if ((target_point.x<0) || (target_point.y<0))
+                    {
+                        yError("Negative pixels!");
+                        return true;
+                    }
                     imgOut.pixel(target_point.x, target_point.y)=color;
 
-                    //cv::line(imgOutMat,target_point,target_point1,cv::Scalar(255,0,0));
                  }
 
             }
-             cout<<"deb 3"<<endl;
         }
         
         portImgOut.write();
