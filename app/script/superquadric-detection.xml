@@ -11,6 +11,11 @@
            <name>SFM</name>
            <node>icub21</node>
         </module>
+
+        <module>
+           <name>lbpExtract</name>
+           <node>icub21</node>
+        </module>
         
         <module>
            <name>Superquadric-Detection</name>
@@ -26,6 +31,12 @@
         <module>
            <name>yarpview</name>
            <parameters>--name /dispSuperq --out /dispSuperq/out --p 33</parameters>
+           <node>icub22</node>
+        </module>
+
+        <module>
+           <name>yarpview</name>
+           <parameters>--name /dispBlobs --out /dispBlobs/out --p 33</parameters>
            <node>icub22</node>
         </module>
 
@@ -48,6 +59,12 @@
         </connection>
 
         <connection>
+            <from>/icub/cam/left</from>
+            <to>/lbpExtract/image:i</to>
+            <protocol>tcp</protocol>
+        </connection>
+
+        <connection>
             <from>/superquadric-detection/SFM:rpc</from>
             <to>/SFM/rpc</to>
             <protocol>tcp</protocol>
@@ -66,7 +83,7 @@
         </connection>
 
         <connection>
-            <from>/disp/out</from>
+            <from>/dispSuperq/out</from>
             <to>/superquadric-detection/contour:i</to>
             <protocol>tcp</protocol>
         </connection>
@@ -80,6 +97,18 @@
         <connection>
             <from>/icub/cam/left</from>
             <to>/superquadric-detection/img:i</to>
+            <protocol>tcp</protocol>
+        </connection>
+
+        <connection>
+            <from>/superquadric-detection/blob:rpc</from>
+            <to>/lbpExtract/rpc:i</to>
+            <protocol>tcp</protocol>
+        </connection>
+
+        <connection>
+            <from>/lbpExtract/segmentedlbp:o</from>
+            <to>/dispBlobs</to>
             <protocol>tcp</protocol>
         </connection>
 </application>

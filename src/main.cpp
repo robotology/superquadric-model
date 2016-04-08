@@ -33,7 +33,7 @@
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 
-#include <lbpExtract_IDLServer.h>
+//#include <lbpExtract_IDLServer.h>
 
 #include "superquadric.cpp"
 
@@ -54,12 +54,15 @@ protected:
     string homeContextPath;
     vector<cv::Point> contour;
     deque<Vector> points;
+    deque<cv::Point> blob_points;
+
 
     Mutex mutex;
 
     BufferedPort<ImageOf<PixelMono> > portDispIn;
     BufferedPort<ImageOf<PixelRgb> >  portDispOut;
     BufferedPort<ImageOf<PixelRgb> >  portRgbIn;
+    RpcClient portBlobRpc;
     Port portContour;
     RpcClient portSFMrpc;
     RpcServer portRpc;
@@ -153,6 +156,7 @@ public:
         portDispIn.interrupt();
         portDispOut.interrupt();
         portRgbIn.interrupt();
+        portBlobRpc.interrupt();
         portContour.interrupt();
         portSFMrpc.interrupt();
         portRpc.interrupt();
@@ -175,6 +179,9 @@ public:
 
         if (!portRgbIn.isClosed())
             portRgbIn.close();
+
+        if (!portBlobRpc.asPort().isOpen())
+            portBlobRpc.close();
 
         if (portContour.isOpen())
             portContour.close();
@@ -202,6 +209,7 @@ public:
         portDispIn.open("/superquadric-detection/disp:i");
         portDispOut.open("/superquadric-detection/disp:o");
         portRgbIn.open("/superquadric-detection/rgb:i");
+        portBlobRpc.open("/superquadric-detection/blob:rpc");
         portContour.open("/superquadric-detection/contour:i");
         portSFMrpc.open("/superquadric-detection/SFM:rpc");
         portRpc.open("/superquadric-detection/rpc");
@@ -341,6 +349,7 @@ public:
                 cmd.addInt(rect.x);     cmd.addInt(rect.y);
                 cmd.addInt(rect.width); cmd.addInt(rect.height);
                 cmd.addInt(downsampling);
+
                 if (portSFMrpc.write(cmd,reply))
                 {
                     int idx=0;
@@ -390,35 +399,49 @@ public:
         cv::Mat imgDispOutMat=cv::cvarrToMat((IplImage*)imgDispOut.getIplImage());
         cv::cvtColor(imgDispInMat,imgDispOutMat,CV_GRAY2RGB);
 
-        if (contour.size>0)
+        if (contour.size()>0)
         {
-            Bottle blob_points=get_compontent_around(contour.x, contour.y);
             Bottle cmd,reply;
-            cmd.addString("Points");
-            cmd.addList();
+            cmd.addString("get_component_around");
+            cmd.addInt(contour[0].x); cmd.addInt(contour[0].y);
+            //cout<<"cont "<<contour[0].x<<" "<<contour[0].y<<endl;
 
-            for(size_t i=0; i<blob_points.size(); i++)
+            if(portBlobRpc.write(cmd,reply))
             {
-                Bottle pair=blob_points.get(i);
-                cmd.addInt(pair.get(0).asInt());
-                cmd.addInt(pair.get(1).asInt());
-            }
+                Bottle *blob_list=reply.get(0).asList();
 
-            if (go)
-            {
-                if(portSFMrpc.write(cmd,reply))
+                for(size_t i=0; i<blob_list->size();i++)
                 {
-                    for(size_t idx=0;idx<reply.size();idx+=3)
-                    {
-                        Vector point(3,0.0);
-                        point[0]=reply.get(idx+0).asDouble();
-                        point[1]=reply.get(idx+1).asDouble();
-                        point[2]=reply.get(idx+2).asDouble();
-
-                        points.push_back(point);
-                    }
+                    Bottle *blob_pair=blob_list->get(i).asList();
+                    blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(0).asInt()));
                 }
-                go=false;
+
+                cmd.addString("Points");
+
+                for(size_t i=0; i<blob_points.size(); i++)
+                {
+                    cv::Point single_point=blob_points[i];
+                    cmd.addInt(single_point.x);
+                    cmd.addInt(single_point.y);
+
+                }
+
+                //if (go)
+                //{
+                    if(portSFMrpc.write(cmd,reply))
+                    {
+                        for(size_t idx=0;idx<reply.size();idx+=3)
+                        {
+                            Vector point(3,0.0);
+                            point[0]=reply.get(idx+0).asDouble();
+                            point[1]=reply.get(idx+1).asDouble();
+                            point[2]=reply.get(idx+2).asDouble();
+
+                            points.push_back(point);
+                        }
+                    }
+                    go=false;
+                //}
             }
         }
 
@@ -483,7 +506,8 @@ public:
         
         if ((norm(x)!=0.0) && (go_on==true))
         {
-            if(eye==0)
+            cout<<"deb 1"<<endl;
+            if(eye=="left")
             {
                 if(igaze->getLeftEyePose(pos,orient,stamp))
                 {
@@ -492,7 +516,7 @@ public:
                     H=SE3inv(H);
                 }
             }
-            else if(eye==1)
+            else if(eye=="right")
             {
                 if(igaze->getLeftEyePose(pos,orient,stamp))
                 {
@@ -501,6 +525,7 @@ public:
                     H=SE3inv(H);
                 }
             }
+             cout<<"deb 2"<<endl;
 
             for (double eta=-M_PI; eta<M_PI; eta+=M_PI/8)
             {
@@ -523,13 +548,17 @@ public:
                     //igaze->get2DPixel(, point, point2D);
                     point2D=from3Dto2D(point);
                     cv::Point target_point(point2D[0],point2D[1]);
-                    igaze->get2DPixel(0, point, point2D);
+                    //igaze->get2DPixel(0, point, point2D);
                     //cv::Point target_point1(point2D[0],point2D[1]);
+                    cout<<"point "<<point.toString()<<endl;
+                    cout<<"targ "<<target_point.x<<" "<<target_point.y<<endl;
                     imgOut.pixel(target_point.x, target_point.y)=color;
+
                     //cv::line(imgOutMat,target_point,target_point1,cv::Scalar(255,0,0));
                  }
 
             }
+             cout<<"deb 3"<<endl;
         }
         
         portImgOut.write();
