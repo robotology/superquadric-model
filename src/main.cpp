@@ -96,7 +96,8 @@ public:
     /***********************************************************************/
     bool updateModule()
     {
-        go_on=acquirePoints();
+        //go_on=acquirePoints();
+        go_on=acquirePointsFromBlob();
 
         if ((go_on==false) && (!isStopping()))
         {
@@ -397,7 +398,11 @@ public:
             cmd.addList();
 
             for(size_t i=0; i<blob_points.size(); i++)
-                cmd.addInt(blob_points.get(i).asInt());
+            {
+                Bottle pair=blob_points.get(i);
+                cmd.addInt(pair.get(0).asInt());
+                cmd.addInt(pair.get(1).asInt());
+            }
 
             if (go)
             {
