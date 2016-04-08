@@ -33,8 +33,6 @@
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 
-//#include <lbpExtract_IDLServer.h>
-
 #include "superquadric.cpp"
 
 using namespace std;
@@ -55,7 +53,6 @@ protected:
     vector<cv::Point> contour;
     deque<Vector> points;
     deque<cv::Point> blob_points;
-
 
     Mutex mutex;
 
@@ -99,7 +96,6 @@ public:
     /***********************************************************************/
     bool updateModule()
     {
-        //go_on=acquirePoints();
         go_on=acquirePointsFromBlob();
 
         if ((go_on==false) && (!isStopping()))
@@ -123,7 +119,6 @@ public:
         else
             go_on=showSuperq();
 
-
         if ((go_on==false) && (!isStopping()))
         {
             yError("No image available! ");
@@ -138,7 +133,7 @@ public:
     {
         bool config_ok;
 
-        config_ok=config3dpoints(rf);
+        config_ok=config3Dpoints(rf);
 
         if (config_ok)
             config_ok=configSuperq(rf);
@@ -152,7 +147,6 @@ public:
     /***********************************************************************/
     bool interruptModule()
     {
-        //interrupt for 3d-points
         portDispIn.interrupt();
         portDispOut.interrupt();
         portRgbIn.interrupt();
@@ -161,7 +155,6 @@ public:
         portSFMrpc.interrupt();
         portRpc.interrupt();
 
-        //interrupt for viewer
         portImgIn.interrupt();
         portImgOut.interrupt();
 
@@ -204,7 +197,7 @@ public:
     }
 
     /***********************************************************************/
-    bool config3dpoints(ResourceFinder &rf)
+    bool config3Dpoints(ResourceFinder &rf)
     {
         portDispIn.open("/superquadric-detection/disp:i");
         portDispOut.open("/superquadric-detection/disp:o");
@@ -296,7 +289,6 @@ public:
             intr_par=info.find("camera_intrinsics_left").asList();
         else if(eye=="right")
             intr_par=info.find("camera_intrinsics_right").asList();
-
 
         K(0,0)=intr_par->get(0).asDouble();
         K(0,1)=intr_par->get(1).asDouble();
@@ -407,7 +399,6 @@ public:
             points.clear();
             cmd.addString("get_component_around");
             cmd.addInt(contour[0].x); cmd.addInt(contour[0].y);
-            //cout<<"cont "<<contour[0].x<<" "<<contour[0].y<<endl;
 
             if(portBlobRpc.write(cmd,reply))
             {
@@ -431,34 +422,30 @@ public:
 
                 }
 
-                //if (go)
-                //{
-                    if(portSFMrpc.write(cmd,reply))
+                if(portSFMrpc.write(cmd,reply))
+                {
+                    for(size_t idx=0;idx<reply.size();idx+=3)
                     {
-                        for(size_t idx=0;idx<reply.size();idx+=3)
-                        {
-                            Vector point(3,0.0);
-                            point[0]=reply.get(idx+0).asDouble();
-                            point[1]=reply.get(idx+1).asDouble();
-                            point[2]=reply.get(idx+2).asDouble();                            
+                        Vector point(3,0.0);
+                        point[0]=reply.get(idx+0).asDouble();
+                        point[1]=reply.get(idx+1).asDouble();
+                        point[2]=reply.get(idx+2).asDouble();
 
-                            points.push_back(point);
-                        }
-
-                        if (points.size()<=1)
-                        {
-                            yError("Some problems in point acquisition!");                            
-                        }
+                        points.push_back(point);
                     }
-                    else
+
+                    if (points.size()<=1)
                     {
-                        yError("SFM reply is fail!");
-                        return false;
+                        yError("Some problems in point acquisition!");
                     }
-                    contour.clear();
-                //}
+                }
+                else
+                {
+                    yError("SFM reply is fail!");
+                    return false;
+                }
+                contour.clear();
             }
-
         }
         else if (blob_points.size()>0)
         {
@@ -473,31 +460,28 @@ public:
                 imgDispOut.pixel(single_point.x, single_point.y)=color;
             }
 
-            //if (go)
-            //{
-                if(portSFMrpc.write(cmd,reply))
+            if(portSFMrpc.write(cmd,reply))
+            {
+                for(size_t idx=0;idx<reply.size();idx+=3)
                 {
-                    for(size_t idx=0;idx<reply.size();idx+=3)
-                    {
-                        Vector point(3,0.0);
-                        point[0]=reply.get(idx+0).asDouble();
-                        point[1]=reply.get(idx+1).asDouble();
-                        point[2]=reply.get(idx+2).asDouble();
+                    Vector point(3,0.0);
+                    point[0]=reply.get(idx+0).asDouble();
+                    point[1]=reply.get(idx+1).asDouble();
+                    point[2]=reply.get(idx+2).asDouble();
 
-                        points.push_back(point);
-                    }
-
-                    if (points.size()<=0)
-                    {
-                        yError("Some problems in point acquisition!");
-                    }
-                }
-                else
-                {
-                    yError("SFM reply is fail!");
-                    return false;
+                    points.push_back(point);
                 }
 
+                if (points.size()<=0)
+                {
+                    yError("Some problems in point acquisition!");
+                }
+            }
+            else
+            {
+                yError("SFM reply is fail!");
+                return false;
+            }
         }
 
        portDispOut.write();
@@ -604,11 +588,11 @@ public:
                     {
                         yError("Negative pixels!");
                     }
+
                     imgOut.pixel(target_point.x, target_point.y)=color;
 
                  }
-
-            }
+             }
         }
         
         portImgOut.write();
