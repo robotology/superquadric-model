@@ -46,7 +46,7 @@ class  SuperQuadric_NLP : public Ipopt::TNLP
     double t0;
     int down;
     int max_num_points;
-    int bounds_automatic;
+    bool bounds_automatic;
     Vector x_v;
     Vector x0;
     Matrix bounds;
@@ -66,7 +66,7 @@ public:
     }
 
     /****************************************************************/
-    void usePoints(deque<Vector> &point_cloud)
+    void usePoints(const deque<Vector> &point_cloud)
     {
         if (point_cloud.size()<100)
         {
@@ -84,7 +84,7 @@ public:
             while(i<point_cloud.size())
             {
                 points_down.push_back(point_cloud[i]);
-                i=i+count;
+                i+=count;
             }
         }
         yInfo("points usable for modeling: %lu ",points_down.size());
@@ -183,7 +183,7 @@ public:
              double value=0.0;
 
              for(size_t i=0;i<points.size();i++)
-                value+= pow( pow(f(x,points[i]),x[3])-1,2 );
+                value+=(pow(f(x,points[i]),x[3])-1)*(pow(f(x,points[i]),x[3])-1);
 
              value*=x[0]*x[1]*x[2]/points.size();
              aux_objvalue=value;
@@ -213,21 +213,20 @@ public:
          return pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]));
      }
 
-
      /****************************************************************/
-     double F_v(Vector &x, deque<Vector> &points)
+     double F_v(const Vector &x, const deque<Vector> &points)
      {
          double value=0.0;
 
          for (size_t i=0;i<points.size();i++)
-             value+= pow( pow(f_v(x,points[i]),x[3])-1,2 );
+             value+=(pow(f_v(x,points[i]),x[3])-1)*(pow(f_v(x,points[i]),x[3])-1) ;
 
          value*=x[0]*x[1]*x[2]/points.size();
          return value;
      }
 
       /****************************************************************/
-     double f_v(Vector &x, Vector &point_cloud)
+     double f_v(const Vector &x, const Vector &point_cloud)
      {
          Vector euler;
          Matrix R;
@@ -306,16 +305,16 @@ public:
     {
         bounds.resize(11,2);
 
-        if (rf->find("bounds_automatic").asString()=="yes")
-            bounds_automatic=1;
-        else
+        bounds_automatic=(rf->check("bounds_automatic",Value("no")).asString()=="yes");
+
+        if (bounds_automatic==false)
             readMatrix("bounds",bounds, 11, rf);
 
         max_num_points=rf->check("max_num_points", Value(80)).asInt();
     }
 
     /****************************************************************/
-    void computeX0(Vector &x0, deque<Vector> &point_cloud)
+    void computeX0(Vector &x0, const deque<Vector> &point_cloud)
     {
         x0[3]=1.0;
         x0[4]=1.0;
@@ -350,7 +349,7 @@ public:
     }
 
     /****************************************************************/
-    void computeInitialOrientation(Vector &x0,deque<Vector> &point_cloud)
+    void computeInitialOrientation(Vector &x0, const deque<Vector> &point_cloud)
     {
         Matrix M,u,v,R;
         M=zeros(3,3);
@@ -400,7 +399,7 @@ public:
     }
 
     /****************************************************************/
-    Matrix computeBoundingBox(deque<Vector> &points, Vector &x0)
+    Matrix computeBoundingBox(const deque<Vector> &points, const Vector &x0)
     {
         Matrix BB, R3;
         BB.resize(3,2);
@@ -459,7 +458,7 @@ public:
                Vector col;
                if (b->size()>=dimension)
                {
-                   for(size_t i=0; i<b->size();i++)
+                   for(int i=0; i<b->size();i++)
                        col.push_back(b->get(i).asDouble());
 
                    matrix.setCol(0, col);
@@ -480,7 +479,7 @@ public:
                Vector col;
                if (b->size()>=dimension)
                {
-                   for(size_t i=0; i<b->size();i++)
+                   for(int i=0; i<b->size();i++)
                        col.push_back(b->get(i).asDouble());
 
                    matrix.setCol(0, col);
@@ -493,7 +492,7 @@ public:
                Vector col;
                if (b->size()>=dimension)
                {
-                   for (size_t i=0; i<b->size();i++)
+                   for (int i=0; i<b->size();i++)
                        col.push_back(b->get(i).asDouble());
                    matrix.setCol(1, col);
                }

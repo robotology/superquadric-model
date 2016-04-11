@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-project(Superquadric-Detection)
+project(superquadric-detection)
 
 find_package(YARP REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
@@ -25,14 +25,19 @@ find_package(IPOPT REQUIRED)
 set(sources src/superquadric.cpp src/main.cpp)
 source_group("Source Files" FILES ${sources})
 
-include_directories(${YARP_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${IPOPT_INCLUDE_DIRS} iKin)
+include_directories(${YARP_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${IPOPT_INCLUDE_DIRS})
 
 add_definitions(${YARP_DEFINES}) 
 add_definitions(-D_USE_MATH_DEFINES)
 
 add_executable(${PROJECT_NAME} ${sources})
-target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES} ${IPOPT_LIBRARIES} ctrlLib)
+target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES} ${IPOPT_LIBRARIES})
 
 add_subdirectory(app)
 
+install(TARGETS ${PROJECTNAME} DESTINATION bin)
 icubcontrib_add_uninstall_target()
+
+# app
+#file(GLOB scripts ${CMAKE_CURRENT_SOURCE_DIR}/app/scripts/*.xml)
+#yarp_install(FILES ${scripts} DESTINATION ${ICUBCONTRIB_APPLICATIONS_TEMPLATES_INSTALL_DIR})

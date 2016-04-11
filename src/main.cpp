@@ -45,7 +45,6 @@ class SuperqModule : public RFModule, public PortReader
 {
 protected:
     bool go;
-    bool get_points;
     int r,g,b;
     int color_distance;
     int downsampling;
@@ -216,7 +215,6 @@ public:
         spatial_distance=rf.check("spatial_distance",Value(0.004)).asDouble();
         color_distance=rf.check("color_distance",Value(6)).asInt();
         go=false;
-        get_points=false;
 
         return true;
     }
@@ -256,7 +254,7 @@ public:
         {
             if (B->size()>=3)
             {
-                for(size_t i=0; i<B->size();i++)
+                for (int i=0; i<B->size();i++)
                     Color.push_back(B->get(i).asInt());
             }
 
@@ -287,9 +285,9 @@ public:
 
         Bottle *intr_par;
 
-        if(eye=="left")
+        if (eye=="left")
             intr_par=info.find("camera_intrinsics_left").asList();
-        else if(eye=="right")
+        else
             intr_par=info.find("camera_intrinsics_right").asList();
 
         K(0,0)=intr_par->get(0).asDouble();
@@ -394,20 +392,19 @@ public:
         cv::Mat imgDispOutMat=cv::cvarrToMat((IplImage*)imgDispOut.getIplImage());
         cv::cvtColor(imgDispInMat,imgDispOutMat,CV_GRAY2RGB);
 
-        if ((contour.size()>0))
+        if (contour.size()>0)
         {
-            get_points==true;
             Bottle cmd,reply;
             blob_points.clear();
             points.clear();
             cmd.addString("get_component_around");
             cmd.addInt(contour[0].x); cmd.addInt(contour[0].y);
 
-            if(portBlobRpc.write(cmd,reply))
+            if (portBlobRpc.write(cmd,reply))
             {
                 Bottle *blob_list=reply.get(0).asList();
 
-                for(size_t i=0; i<blob_list->size();i++)
+                for (int i=0; i<blob_list->size();i++)
                 {
                     Bottle *blob_pair=blob_list->get(i).asList();
                     cv:: Point pix=cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt());
@@ -417,7 +414,7 @@ public:
 
                 cmd.addString("Points");
 
-                for(size_t i=0; i<blob_points.size(); i++)
+                for (size_t i=0; i<blob_points.size(); i++)
                 {
                     cv::Point single_point=blob_points[i];
                     cmd.addInt(single_point.x);
@@ -425,9 +422,9 @@ public:
 
                 }
 
-                if(portSFMrpc.write(cmd,reply))
+                if (portSFMrpc.write(cmd,reply))
                 {
-                    for(size_t idx=0;idx<reply.size();idx+=3)
+                    for (int idx=0;idx<reply.size();idx+=3)
                     {
                         Vector point(3,0.0);
                         point[0]=reply.get(idx+0).asDouble();
@@ -455,7 +452,7 @@ public:
             Bottle cmd,reply;
             cmd.addString("Points");
 
-            for(size_t i=0; i<blob_points.size(); i++)
+            for (size_t i=0; i<blob_points.size(); i++)
             {
                 cv::Point single_point=blob_points[i];
                 cmd.addInt(single_point.x);
@@ -463,9 +460,9 @@ public:
                 imgDispOut.pixel(single_point.x, single_point.y)=color;
             }
 
-            if(portSFMrpc.write(cmd,reply))
+            if (portSFMrpc.write(cmd,reply))
             {
-                for(size_t idx=0;idx<reply.size();idx+=3)
+                for (int idx=0;idx<reply.size();idx+=3)
                 {
                     Vector point(3,0.0);
                     point[0]=reply.get(idx+0).asDouble();
@@ -535,6 +532,7 @@ public:
     {
         PixelRgb color(r,g,b);
         Vector pos, orient;
+        double co,so,ce,se;
         Stamp* stamp=NULL;
 
         ImageOf<PixelRgb> *imgIn=portImgIn.read();
@@ -548,18 +546,18 @@ public:
         
         if ((norm(x)!=0.0) && (go_on==true))
         {
-            if(eye=="left")
+            if (eye=="left")
             {
-                if(igaze->getLeftEyePose(pos,orient,stamp))
+                if (igaze->getLeftEyePose(pos,orient,stamp))
                 {
                     H=axis2dcm(orient);
                     H.setSubcol(pos,0,3);
                     H=SE3inv(H);
                 }
             }
-            else if(eye=="right")
+            else if (eye=="right")
             {
-                if(igaze->getRightEyePose(pos,orient,stamp))
+                if (igaze->getRightEyePose(pos,orient,stamp))
                 {
                     H=axis2dcm(orient);
                     H.setSubcol(pos,0,3);
@@ -567,22 +565,24 @@ public:
                 }
             }
 
-            for (double eta=-M_PI; eta<M_PI; eta+=M_PI/8)
+            for (double eta=-M_PI; eta<M_PI; eta+=M_PI/8.0)
             {
-                 for (double omega=-M_PI; omega<M_PI;omega+=M_PI/8)
+                 for (double omega=-M_PI; omega<M_PI;omega+=M_PI/8.0)
                  {
+                     co=cos(omega); so=sin(omega);
+                     ce=cos(eta); se=sin(eta);
 
-                     point[0]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(0,0) +
-                                x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3]))* sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(0,1)+
-                                    x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(0,2) + x[5];
+                     point[0]=x[0] * sign(ce)*(pow(abs(ce),x[3])) * sign(co)*(pow(abs(co),x[4])) * R(0,0) +
+                                x[1] * sign(ce)*(pow(abs(ce),x[3]))* sign(so)*(pow(abs(so),x[4])) * R(0,1)+
+                                    x[2] * sign(se)*(pow(abs(se),x[3])) * R(0,2) + x[5];
 
-                     point[1]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(1,0) +
-                                x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(1,1)+
-                                    x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(1,2) + x[6];
+                     point[1]=x[0] * sign(ce)*(pow(abs(ce),x[3])) * sign(co)*(pow(abs(co),x[4])) * R(1,0) +
+                                x[1] * sign(ce)*(pow(abs(ce),x[3])) * sign(so)*(pow(abs(so),x[4])) * R(1,1)+
+                                    x[2] * sign(se)*(pow(abs(se),x[3])) * R(1,2) + x[6];
 
-                     point[2]=x[0] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(cos(omega))*(pow(abs(cos(omega)),x[4])) * R(2,0) +
-                                x[1] * sign(cos(eta))*(pow(abs(cos(eta)),x[3])) * sign(sin(omega))*(pow(abs(sin(omega)),x[4])) * R(2,1)+
-                                    x[2] * sign(sin(eta))*(pow(abs(sin(eta)),x[3])) * R(2,2) + x[7];
+                     point[2]=x[0] * sign(ce)*(pow(abs(ce),x[3])) * sign(co)*(pow(abs(co),x[4])) * R(2,0) +
+                                x[1] * sign(ce)*(pow(abs(ce),x[3])) * sign(so)*(pow(abs(so),x[4])) * R(2,1)+
+                                    x[2] * sign(se)*(pow(abs(se),x[3])) * R(2,2) + x[7];
 
                     point2D=from3Dto2D(point);
                     cv::Point target_point(point2D[0],point2D[1]);
@@ -604,7 +604,7 @@ public:
     }
 
     /*******************************************************************************/
-    Vector from3Dto2D(Vector &point3D)
+    Vector from3Dto2D(const Vector &point3D)
     {
         Vector point2D(3,0.0);
         Vector point_aux(4,1.0);
