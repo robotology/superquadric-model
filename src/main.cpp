@@ -45,6 +45,7 @@ class SuperqModule : public RFModule, public PortReader
 {
 protected:
     bool go;
+    bool get_points;
     int r,g,b;
     int color_distance;
     int downsampling;
@@ -215,6 +216,7 @@ public:
         spatial_distance=rf.check("spatial_distance",Value(0.004)).asDouble();
         color_distance=rf.check("color_distance",Value(6)).asInt();
         go=false;
+        get_points=false;
 
         return true;
     }
@@ -392,8 +394,9 @@ public:
         cv::Mat imgDispOutMat=cv::cvarrToMat((IplImage*)imgDispOut.getIplImage());
         cv::cvtColor(imgDispInMat,imgDispOutMat,CV_GRAY2RGB);
 
-        if (contour.size()>0)
+        if ((contour.size()>0))
         {
+            get_points==true;
             Bottle cmd,reply;
             blob_points.clear();
             points.clear();
@@ -407,7 +410,7 @@ public:
                 for(size_t i=0; i<blob_list->size();i++)
                 {
                     Bottle *blob_pair=blob_list->get(i).asList();
-                    cv:: Point pix=cv::Point(blob_pair->get(0).asInt(),blob_pair->get(0).asInt());
+                    cv:: Point pix=cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt());
                     blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt()));
                     imgDispOut.pixel(pix.x, pix.y)=color;
                 }
@@ -556,7 +559,7 @@ public:
             }
             else if(eye=="right")
             {
-                if(igaze->getLeftEyePose(pos,orient,stamp))
+                if(igaze->getRightEyePose(pos,orient,stamp))
                 {
                     H=axis2dcm(orient);
                     H.setSubcol(pos,0,3);

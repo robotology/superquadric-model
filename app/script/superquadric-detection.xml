@@ -2,8 +2,8 @@
 <name>Superquadric-Detection</name>
 
         <dependencies>
-            <port>/icub/cam/left</port>
-            <port>/icub/cam/right</port>
+            <port>/icub/camcalib/left/out</port>
+            <port>/icub/camcalib/right/out</port>
             <port>/iKinGazeCtrl/rpc</port>
         </dependencies>
 
@@ -41,13 +41,13 @@
         </module>
 
         <connection>
-            <from>/icub/cam/left</from>
+            <from>/icub/camcalib/left/out</from>
             <to>/SFM/left:i</to>
             <protocol>tcp</protocol>
         </connection>
 
         <connection>
-            <from>/icub/cam/right</from>
+            <from>/icub/camcalib/right/out</from>
             <to>/SFM/right:i</to>
             <protocol>tcp</protocol>
         </connection>
@@ -71,7 +71,7 @@
         </connection>
 
         <connection>
-            <from>/icub/cam/left</from>
+            <from>/icub/camcalib/left/out</from>
             <to>/superquadric-detection/rgb:i</to>
             <protocol>tcp</protocol>
         </connection>
@@ -95,7 +95,7 @@
         </connection>
 
         <connection>
-            <from>/icub/cam/left</from>
+            <from>/icub/camcalib/left/out</from>
             <to>/superquadric-detection/img:i</to>
             <protocol>tcp</protocol>
         </connection>
