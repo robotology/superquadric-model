@@ -38,6 +38,8 @@ add_subdirectory(app)
 install(TARGETS ${PROJECTNAME} DESTINATION bin)
 icubcontrib_add_uninstall_target()
 
-# app
-#file(GLOB scripts ${CMAKE_CURRENT_SOURCE_DIR}/app/scripts/*.xml)
-#yarp_install(FILES ${scripts} DESTINATION ${ICUBCONTRIB_APPLICATIONS_TEMPLATES_INSTALL_DIR})
+# app and conf
+file(GLOB conf ${CMAKE_CURRENT_SOURCE_DIR}/conf/*.ini)
+yarp_install(FILES ${conf} DESTINATION ${ICUBCONTRIB_CONTEXTS_INSTALL_DIR}/${PROJECTNAME})
+file(GLOB scripts ${CMAKE_CURRENT_SOURCE_DIR}/app/scripts/*.template)
+yarp_install(FILES ${scripts} DESTINATION ${ICUBCONTRIB_APPLICATIONS_TEMPLATES_INSTALL_DIR})
