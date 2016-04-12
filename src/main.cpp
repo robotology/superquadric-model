@@ -141,7 +141,7 @@ public:
         if ((go_on==false) && (!isStopping()))
         {
             yError("Not found a suitable superquadric! ");
-            return false;
+            //return false;
         }
 
         else
@@ -427,49 +427,72 @@ public:
 
             if (portBlobRpc.write(cmd,reply))
             {
-                Bottle *blob_list=reply.get(0).asList();
-
-                for (int i=0; i<blob_list->size();i++)
+                if (Bottle *blob_list=reply.get(0).asList())
                 {
-                    Bottle *blob_pair=blob_list->get(i).asList();
-                    cv:: Point pix=cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt());
-                    blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt()));
-                    imgDispOut.pixel(pix.x, pix.y)=color;
-                }
 
-                cmd.addString("Points");
-
-                for (size_t i=0; i<blob_points.size(); i++)
-                {
-                    cv::Point single_point=blob_points[i];
-                    cmd.addInt(single_point.x);
-                    cmd.addInt(single_point.y);
-
-                }
-
-                if (portSFMrpc.write(cmd,reply))
-                {
-                    for (int idx=0;idx<reply.size();idx+=3)
+                    for (int i=0; i<blob_list->size();i++)
                     {
-                        Vector point(3,0.0);
-                        point[0]=reply.get(idx+0).asDouble();
-                        point[1]=reply.get(idx+1).asDouble();
-                        point[2]=reply.get(idx+2).asDouble();
-
-                        points.push_back(point);
+                        if(Bottle *blob_pair=blob_list->get(i).asList())
+                        {
+                            cv:: Point pix=cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt());
+                            blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt()));
+                            imgDispOut.pixel(pix.x, pix.y)=color;
+                        }
+                        else
+                        {
+                            blob_points.clear();
+                            yError("no valid blob pixels");
+                        }
                     }
 
-                    if (points.size()<=1)
+                    cmd.addString("Points");
+
+                    for (size_t i=0; i<blob_points.size(); i++)
                     {
-                        yError("Some problems in point acquisition!");
+                        cv::Point single_point=blob_points[i];
+                        cmd.addInt(single_point.x);
+                        cmd.addInt(single_point.y);
+
                     }
+
+                    if (portSFMrpc.write(cmd,reply))
+                    {
+                        for (int idx=0;idx<reply.size();idx+=3)
+                        {
+                            Vector point(3,0.0);
+                            point[0]=reply.get(idx+0).asDouble();
+                            point[1]=reply.get(idx+1).asDouble();
+                            point[2]=reply.get(idx+2).asDouble();
+
+                            points.push_back(point);
+                        }
+
+                        if (points.size()<=1)
+                        {
+                            yError("Some problems in point acquisition!");
+                        }
+                    }
+                    else
+                    {
+                        points.clear();
+                        yError("SFM reply is fail!");
+                    }
+
+                    contour.clear();
                 }
                 else
                 {
-                    yError("SFM reply is fail!");
-                    return false;
+                    contour.clear();
+                    points.clear();
+                    yInfo("No new blob provided!");
                 }
+            }
+            else
+            {
                 contour.clear();
+                points.clear();
+                yError("lbpExtract reply is fail!");
+
             }
         }
         else if (blob_points.size()>0)
@@ -505,7 +528,7 @@ public:
             else
             {
                 yError("SFM reply is fail!");
-                return false;
+                points.clear();
             }
         }
 
