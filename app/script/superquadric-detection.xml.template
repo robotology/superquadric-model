@@ -1,24 +1,30 @@
 <application>
-<name>Superquadric-Detection</name>
+    <name>superquadric-detection</name>
+    <doxygen-group></doxygen-group>
+    <description>Object superquadric modeling.</description>
+    <copypolicy>Released under the terms of the GNU GPL v2.0</copypolicy>
+    <version>1.0</version>
+
+    <description-long>
+    This modules allows modeling object through <b>superquadric funcitons</b> and showing the result on the images coming from the cameras.
+
+    The pipeline is the following:
+    - the user can select the object to be modeled in <b>two different ways</b>:
+        1. clicking on it in the view coming from the camera;
+        2. writing the name of the object (collected BY OPC);
+    - the 3D point cloud of the object is used to find the superquadrics which best approximates the object;
+    - the superquadrics is visualized overlapped to the object on the camera image. 
+ 
+    </description-long>
 
         <dependencies>
             <port>/icub/camcalib/left/out</port>
             <port>/icub/camcalib/right/out</port>
             <port>/iKinGazeCtrl/rpc</port>
         </dependencies>
-
-        <module>
-           <name>SFM</name>
-           <node>icub21</node>
-        </module>
-
-        <module>
-           <name>lbpExtract</name>
-           <node>icub21</node>
-        </module>
         
         <module>
-           <name>Superquadric-Detection</name>
+           <name>superquadric-detection</name>
            <node>icub21</node>
         </module>
 
