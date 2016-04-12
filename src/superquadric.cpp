@@ -42,9 +42,6 @@ using namespace yarp::math;
 
 class  SuperQuadric_NLP : public Ipopt::TNLP
 {
-    int i_z;
-    double t0;
-    int down;
     int max_num_points;
     bool bounds_automatic;
     Vector x_v;
@@ -55,37 +52,37 @@ class  SuperQuadric_NLP : public Ipopt::TNLP
 
 public:
     Vector solution;
-    deque<double> t;
-    deque<Vector> points_down;
+    deque<Vector> points_downsampled;
 
     /****************************************************************/
     void init()
     {
-        points_down.clear();
+        points_downsampled.clear();
         aux_objvalue=0.0;
     }
 
     /****************************************************************/
     void usePoints(const deque<Vector> &point_cloud)
     {
-        if (point_cloud.size()<100)
+        if (point_cloud.size()<max_num_points)
         {
             for (size_t i=0;i<point_cloud.size();i++)
             {
-                points_down.push_back(point_cloud[i]);
+                points_downsampled.push_back(point_cloud[i]);
             }
         }
         else
         {
-            int i=0;
             int count=point_cloud.size()/max_num_points;
+
             for (int i=0; i<point_cloud.size(); i+=count)
-                points_down.push_back(point_cloud[i]);
+                points_downsampled.push_back(point_cloud[i]);
         }
-        yInfo("points usable for modeling: %lu ",points_down.size());
+
+        yInfo("points usable for modeling: %lu ",points_downsampled.size());
 
         x0.resize(11,0.0);
-        computeX0(x0, points_down);
+        computeX0(x0, points_downsampled);
     }
 
     /****************************************************************/
@@ -95,7 +92,7 @@ public:
         n=11;
         m=nnz_jac_g=nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
-        x_v.resize(11,0.0);
+        x_v.resize(n,0.0);
         aux_gradf.resize(n,0.0);
 
         return true;
@@ -104,7 +101,7 @@ public:
     /****************************************************************/
     void computeBounds()
     {
-        if (bounds_automatic==1)
+        if (bounds_automatic==true)
         {
             bounds(0,1)=x0[0]*2;
             bounds(1,1)=x0[1]*2;
@@ -164,7 +161,7 @@ public:
      bool eval_f(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
                     Ipopt::Number &obj_value)
      {
-         F(x,points_down, new_x);
+         F(x,points_downsampled, new_x);
          obj_value=aux_objvalue;
 
          return true;
@@ -188,11 +185,9 @@ public:
       /****************************************************************/
      double f(const Ipopt::Number *x, Vector &point_cloud)
      {
-         Vector euler;
-         Matrix R;
-         R.resize(4,4);
+         Vector euler(3,0.0);
+         Matrix R(4,4);
 
-         euler.resize(3,0.0);
          euler[0]=x[8];
          euler[1]=x[9];
          euler[2]=x[10];
@@ -223,11 +218,9 @@ public:
       /****************************************************************/
      double f_v(const Vector &x, const Vector &point_cloud)
      {
-         Vector euler;
-         Matrix R;
-         R.resize(4,4);
+         Vector euler(3,0.0);
+         Matrix R(4,4);
 
-         euler.resize(3,0.0);
          euler[0]=x[8];
          euler[1]=x[9];
          euler[2]=x[10];
@@ -241,16 +234,15 @@ public:
          double tmp;
          tmp= pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
 
-         return  pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]) );
+         return pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]) );
      }
 
      /****************************************************************/
      bool eval_grad_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
                           Ipopt::Number *grad_f)
      {
-         Vector x_tmp;
+         Vector x_tmp(n,0.0);
          double grad_p, grad_n;
-         x_tmp.resize(11,0.0);
          double eps=1e-8;
 
         // if (new_x)
@@ -262,20 +254,18 @@ public:
              {
                  x_tmp[j]=x_tmp[j]+eps;
 
-                 grad_p=F_v(x_tmp,points_down);
+                 grad_p=F_v(x_tmp,points_downsampled);
 
                  x_tmp[j]=x_tmp[j]-eps;
 
-                 grad_n=F_v(x_tmp,points_down);
+                 grad_n=F_v(x_tmp,points_downsampled);
 
                  aux_gradf[j]=(grad_p-grad_n)/eps;
               }
         // }
 
          for (Ipopt::Index j=0;j<n;j++)
-         {
-             grad_f[j]=aux_gradf[j];
-         }
+            grad_f[j]=aux_gradf[j];
 
          return true;
      }
@@ -320,8 +310,6 @@ public:
         for (size_t i=0; i<point_cloud.size();i++)
         {
             Vector &point=point_cloud[i];
-            x0[5]+=point[0];
-            x0[6]+=point[1];
             x0[7]+=point[2];
         }
 
@@ -331,8 +319,7 @@ public:
 
         computeInitialOrientation(x0,point_cloud);
 
-        Matrix bounding_box;
-        bounding_box.resize(3,2);
+        Matrix bounding_box(3,2);
         bounding_box=computeBoundingBox(point_cloud,x0);
 
         x0[0]=(-bounding_box(0,0)+bounding_box(0,1))/2;
@@ -341,24 +328,22 @@ public:
     }
 
     /****************************************************************/
-    void computeInitialOrientation(Vector &x0, const deque<Vector> &point_cloud)
+    void computeInitialOrientation(Vector &x0,deque<Vector> &point_cloud)
     {
-        Matrix M,u,v,R;
+        Matrix M;
         M=zeros(3,3);
-        R.resize(3,3);
-        u.resize(3,3);
-        v.resize(3,3);
+        Matrix R(3,3);
+        Matrix u(3,3);
+        Matrix v(3,3);
 
-        Vector  point,s,n,o,a;
-        point.resize(3,0.0);
-        n.resize(3,0.0);
-        o.resize(3,0.0);
-        a.resize(3,0.0);
-        s.resize(3,0.0);
+        Vector s(3,0.0);
+        Vector n(3,0.0);
+        Vector o(3,0.0);
+        Vector a(3,0.0);
 
         for (size_t i=0;i<point_cloud.size(); i++)
         {
-            point=point_cloud[i];
+            Vector &point=point_cloud[i];
             M(0,0)= M(0,0) + (point[1]-x0[6])*(point[1]-x0[6]) + (point[2]-x0[7])*(point[2]-x0[7]);
             M(0,1)= M(0,1) - (point[1]-x0[6])*(point[0]-x0[5]);
             M(0,2)= M(0,2) - (point[2]-x0[7])*(point[0]-x0[5]);
@@ -391,16 +376,14 @@ public:
     }
 
     /****************************************************************/
-    Matrix computeBoundingBox(const deque<Vector> &points, const Vector &x0)
+    Matrix computeBoundingBox(deque<Vector> &points, const Vector &x0)
     {
-        Matrix BB, R3;
-        BB.resize(3,2);
-        R3.resize(3,3);
+        Matrix BB(3,2);
+        Matrix R3(3,3);
 
         R3=euler2dcm(x0.subVector(8,10)).submatrix(0,2,0,2);
 
-        Vector point;
-        point.resize(3,0.0);
+        Vector point(3,0.0);
         point=R3.transposed()*points[0];
 
         BB(0,0)=point[0];
@@ -412,8 +395,8 @@ public:
 
         for (size_t i=0; i<points.size();i++)
         {
-            point=points[i];
-            point=R3.transposed()*point;
+            Vector &pnt=points[i];
+            point=R3.transposed()*pnt;
             if(BB(0,0)>point[0])
                BB(0,0)=point[0];
 

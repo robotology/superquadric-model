@@ -27,8 +27,7 @@ source_group("Source Files" FILES ${sources})
 
 include_directories(${YARP_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${IPOPT_INCLUDE_DIRS})
 
-add_definitions(${YARP_DEFINES}) 
-add_definitions(-D_USE_MATH_DEFINES)
+add_definitions(${YARP_DEFINES} ${IPOPT_DEFINITIONS} -D_USE_MATH_DEFINES)
 
 add_executable(${PROJECT_NAME} ${sources})
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES} ${IPOPT_LIBRARIES})

@@ -77,10 +77,7 @@ class SuperqModule : public RFModule, public PortReader
 protected:
     bool go;
     int r,g,b;
-    int color_distance;
     int downsampling;
-    double spatial_distance;
-    string homeContextPath;
     vector<cv::Point> contour;
     deque<Vector> points;
     deque<cv::Point> blob_points;
@@ -241,10 +238,7 @@ public:
         portContour.setReader(*this);
         attach(portRpc);
 
-        homeContextPath=rf.getHomeContextPath().c_str();
         downsampling=std::max(1,rf.check("downsampling",Value(3)).asInt());
-        spatial_distance=rf.check("spatial_distance",Value(0.004)).asDouble();
-        color_distance=rf.check("color_distance",Value(6)).asInt();
         go=false;
 
         return true;
@@ -586,7 +580,7 @@ public:
                     H=SE3inv(H);
                 }
             }
-            else if (eye=="right")
+            else
             {
                 if (igaze->getRightEyePose(pos,orient,stamp))
                 {
