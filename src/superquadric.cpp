@@ -78,14 +78,9 @@ public:
         else
         {
             int i=0;
-            Vector point;
-            point.resize(3,0.0);
             int count=point_cloud.size()/max_num_points;
-            while(i<point_cloud.size())
-            {
+            for (int i=0; i<point_cloud.size(); i+=count)
                 points_down.push_back(point_cloud[i]);
-                i+=count;
-            }
         }
         yInfo("points usable for modeling: %lu ",points_down.size());
 
@@ -314,7 +309,7 @@ public:
     }
 
     /****************************************************************/
-    void computeX0(Vector &x0, const deque<Vector> &point_cloud)
+    void computeX0(Vector &x0, deque<Vector> &point_cloud)
     {
         x0[3]=1.0;
         x0[4]=1.0;
@@ -322,12 +317,9 @@ public:
         x0[6]=0.0;
         x0[7]=0.0;
 
-        Vector point;
-        point.resize(3,0.0);
-
         for (size_t i=0; i<point_cloud.size();i++)
         {
-            point=point_cloud[i];
+            Vector &point=point_cloud[i];
             x0[5]+=point[0];
             x0[6]+=point[1];
             x0[7]+=point[2];
