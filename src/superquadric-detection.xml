@@ -39,13 +39,6 @@
       </description>
   </input>
   <input>
-      <type>std::vector of Point</type>
-      <port carrier="tcp">/superquadric-detection/contour:i</port>
-      <description>
-        receive xy-coordinates of the pixel clicked on the image from the camera.
-      </description>
-  </input>
-  <input>
       <type>yarp::sig::ImageOfPixelRgb</type>
       <port carrier="tcp">/superquadric-detection/img:i</port>
       <description>
