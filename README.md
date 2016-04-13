@@ -36,6 +36,19 @@ compensated by the multiplication with the term _&lambda;1, &lambda;2, &lambda;3
 - [IPOPT](https://projects.coin-or.org/Ipopt)
 - [OpenCV](http://opencv.org/) 
 
+## Module pipeline
+There are two different possibilities for selecting the object to be detected and modeled:
+
+- selecting a seed point by clicking on the image coming from the camera;
+- typing the object name;
+
+
+
+<img src="https://github.com/giuliavezzani/superquadric-detection/blob/master/img/pipeline.png" width=1011 height=297> 
+
+Then, all the points belonging to the object blob are processed and used for the superquadric computation. In the end, the superquadric model is overlapped on the image coming from the cameras
+
+
 ## Documentation
 Online documentation is available here:  http://giuliavezzani.github.com/superquadric-detection [work in progress]
 
