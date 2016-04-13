@@ -5,7 +5,7 @@ Framework for modeling, detecting and visualizing objects through superquadric f
 The **superquadric-detection** framework is based on the idea that _low-dimensional_, _compact_, _mathematical_ representation of objects
 can provide computational and theoretical advantages in hard problems trackled in robotics, such as trajectory planning for exploration, grasping and approaching towards objects.
 It takes inspiration from theories conceived during the 90's and 2000's (Jaklic, A., Leonardis, A., Solina, F., **Segmentation and Recovery of Superquadrics**, Ch. no.
-2, Springer, 2000 (1)) since it uses **superquadric functions** as a _mathematical and low dimensional model_ for representing objects. The novelty of the superquadric-detection module consists in the implemention of the standard optimization problem provided by (1) by exploiting the **Ipopt** software pacakge (for software documentation: [Ipopt](https://projects.coin-or.org/Ipopt), for the theroetical background: A. Watcher, L.T.Biegler, **On the Implementation of an Interior-Point Filter Line-Search
+2, Springer, 2000 (1)) since it uses **superquadric functions** as a _mathematical and low dimensional model_ for representing objects. The novelty of the superquadric-detection module consists in the implemention of the standard optimization problem provided by (1) by exploiting the **Ipopt** software pacakge (for software documentation: [Ipopt](https://projects.coin-or.org/Ipopt), for theroetical background: A. Watcher, L.T.Biegler, **On the Implementation of an Interior-Point Filter Line-Search
 Algorithm for Large-Scale Nonlinear Programming**, 2004 (2)). Furthermore, the reconstructed superquadric is overlapped in _real-time_ on the real scene seen by the robot's cameras.
 
 The so called _inside-outside_ superquadric function is given by:
@@ -37,10 +37,10 @@ compensated by the multiplication with the term _&lambda;1, &lambda;2, &lambda;3
 - [OpenCV](http://opencv.org/) 
 
 ## Module pipeline
-There are two different possibilities for selecting the object to be detected and modeled:
+There are <b>two different possibilities</b> for <b>selecting the object</b> to be detected and modeled:
 
-- selecting a seed point by clicking on the image coming from the camera;
-- typing the object name;
+- selecting a seed point by clicking <b>on the image</b> coming from the camera;
+- typing the <b>object name</b>;
 
 
 
@@ -55,7 +55,9 @@ Online documentation is available here:  http://giuliavezzani.github.com/superqu
 ## Code snippets
 In order to use the superquadric-detection module, you need to launch the following modules:
 - [lbpExtract](http://robotology.github.io/segmentation/doxygen/doc/html/group__lbpExtract.html), for blob extraction given the seed point;
-- [IOL](https://github.com/robotology/iol), for object selection through its name.
+- [IOL](https://github.com/robotology/iol), for object selection through its name,
+
+since a _RPC_ communication with these modules is required.
 
 ## License
 Material included here is Copyright of _iCub Facility - Istituto Italiano di Tecnologia_
