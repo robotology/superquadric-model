@@ -32,28 +32,28 @@
 
   <data>
   <input>
-      <type>std::vector<Point></type>
+      <type>std::vector of Point</type>
       <port carrier="tcp">/superquadric-detection/contour:i</port>
       <description>
         receive xy-coordinates of the pixel clicked on the image from the camera.
       </description>
   </input>
   <input>
-      <type>std::vector<Point></type>
+      <type>std::vector of Point</type>
       <port carrier="tcp">/superquadric-detection/contour:i</port>
       <description>
         receive xy-coordinates of the pixel clicked on the image from the camera.
       </description>
   </input>
   <input>
-      <type>yarp::sig::ImageOf<PixelRgb></type>
+      <type>yarp::sig::ImageOfPixelRgb</type>
       <port carrier="tcp">/superquadric-detection/img:i</port>
       <description>
         receive the image from the left camera.
       </description>
   </input>
     <output>
-      <type>yarp::sig::ImageOf<PixelMono></type>
+      <type>yarp::sig::ImageOfPixelMono</type>
       <port carrier="tcp">/superquadric-detection/disp:o</port>
       <description>
         send disparity map with the overlapped selected blob.
@@ -61,7 +61,7 @@
     </output>
 
      <output>
-      <type>yarp::sig::ImageOf<PixelRgb></type>
+      <type>yarp::sig::ImageOfPixelRgb</type>
       <port carrier="tcp">/superquadric-detection/img:o</port>
       <description>
         send the image coming from the cameras overlapping the reconstructed superquadric.
