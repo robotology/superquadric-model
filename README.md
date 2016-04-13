@@ -46,13 +46,16 @@ There are two different possibilities for selecting the object to be detected an
 
 <img src="https://github.com/giuliavezzani/superquadric-detection/blob/master/img/pipeline.png" width=1011 height=297> 
 
-Then, all the points belonging to the object blob are processed and used for the superquadric computation. In the end, the superquadric model is overlapped on the image coming from the cameras
+Then, all the points belonging to the object blob are processed and used for the superquadric computation. In the end, the superquadric model is overlapped on the image coming from the cameras.
 
 
 ## Documentation
 Online documentation is available here:  http://giuliavezzani.github.com/superquadric-detection [work in progress]
 
 ## Code snippets
+In order to use the superquadric-detection module, you need to launch the following modules:
+- [lbpExtract](http://robotology.github.io/segmentation/doxygen/doc/html/group__lbpExtract.html), for blob extraction given the seed point;
+- [IOL](https://github.com/robotology/iol), for object selection through its name.
 
 ## License
 Material included here is Copyright of _iCub Facility - Istituto Italiano di Tecnologia_
