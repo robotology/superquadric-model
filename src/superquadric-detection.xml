@@ -10,19 +10,20 @@
   <version>1.0</version>
   
   <description-long>
-    Bla bla bla
+    This module allows object detection and modelling in real-time.
+
+    To correctly launch the module, do the following:
+    - Put an <b>object</b> in the robot's sight and make sure that the <b>eye vergence</b> is set to <b>5.0 degrees</b>.
+    - Launch , <b>SFM</B>, <b>IOL</b> and <b>lpbExtract</b> modules and make sure that SFM is giving a good disparity map (otherwise calibrate it thorugh the proper rpc port).
+    - Launch <b>superquadric-detection</b> module.
+    - Make all the <b>connections</b>.
+    - Use the <b>rpc port</b> to play with this module.
+
   </description-long>
 
   <arguments>
-    <param default="iolReachingCalibration" desc="select the current context.">context</param>
+    <param default="superquadric-detection" desc="select the current context.">context</param>
     <param default="config.ini" desc="configuration file name.">from</param>
-    <param default="calibration.ini" desc="file containing the calibration data.">calibration-file</param>
-    <param default="actionsRenderingEngine" desc="ARE context.">are-context</param>
-    <param default="config.ini" desc="ARE configuration file.">are-config-file</param>
-    <param default="icub" desc="name of the robot to connect to.">robot</param>
-    <param default="off" desc="enable test mode.">test-mode</param>
-    <param default="10" desc="specify how many 3D location queries should be done for the averaging.">object-location-iterations</param>
-    <param default="0.0" desc="specify how much the hand should be lifted on top of the object before initiating the calibration.">z-offset</param>
   </arguments>
  
   <authors>
@@ -30,28 +31,50 @@
   </authors>
 
   <data>
-    <output>
-      <type>yarp::os::Bottle</type>
-      <port carrier="tcp">/iolReachingCalibration/opc</port>
+  <input>
+      <type>std::vector<cv::Point></type>
+      <port carrier="tcp">/superquadric-detection/contour:i</port>
       <description>
-        send requests to OPC for retrieving objects 3D locations.
+        receive xy-coordinates of the pixel clicked on the image from the camera.
+      </description>
+  </input>
+  <input>
+      <type>std::vector<cv::Point></type>
+      <port carrier="tcp">/superquadric-detection/contour:i</port>
+      <description>
+        receive xy-coordinates of the pixel clicked on the image from the camera.
+      </description>
+  </input>
+  <input>
+      <type>yarp::sig::ImageOf<PixelRgb>></type>
+      <port carrier="tcp">/superquadric-detection/img:i</port>
+      <description>
+        receive the image from the left camera.
+      </description>
+  </input>
+    <output>
+      <type>yarp::sig::ImageOf<PixelMono> ></type>
+      <port carrier="tcp">/superquadric-detection/disp:o</port>
+      <description>
+        send disparity map with the overlapped selected blob.
       </description>
     </output>
 
-    <output>
-      <type>yarp::os::Bottle</type>
-      <port carrier="tcp">/iolReachingCalibration/are</port>
+     <output>
+      <type>yarp::sig::ImageOf<PixelRgb>></type>
+      <port carrier="tcp">/superquadric-detection/img:o</port>
       <description>
-        send requests to ARE for commencing actions.
+        send the image coming from the cameras overlapping the reconstructed superquadric.
       </description>
     </output>
+
   </data>
  
   <services>
     <server>
-      <type>iolReachingCalibration_IDL</type>
+      <type>superquadricDetectionServer_IDL</type>
       <idl>idl.thrift</idl>
-      <port>/iolReachingCalibration/rpc</port>
+      <port>/superquadric-detection/rpc</port>
       <description>service port</description>
     </server>
   </services>
