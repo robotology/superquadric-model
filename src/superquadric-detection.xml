@@ -14,7 +14,7 @@
 
     To correctly launch the module, do the following:
     - Put an <b>object</b> in the robot's sight and make sure that the <b>eye vergence</b> is set to <b>5.0 degrees</b>.
-    - Launch , <b>SFM</B>, <b>IOL</b> and <b>lpbExtract</b> modules and make sure that SFM is giving a good disparity map (otherwise calibrate it thorugh the proper rpc port).
+    - Launch , <b>SFM</b>, <b>IOL</b> and <b>lpbExtract</b> modules and make sure that SFM is giving a good disparity map (otherwise calibrate it thorugh the proper rpc port).
     - Launch <b>superquadric-detection</b> module.
     - Make all the <b>connections</b>.
     - Use the <b>rpc port</b> to play with this module.
@@ -32,28 +32,28 @@
 
   <data>
   <input>
-      <type>std::vector<cv::Point></type>
+      <type>std::vector<Point></type>
       <port carrier="tcp">/superquadric-detection/contour:i</port>
       <description>
         receive xy-coordinates of the pixel clicked on the image from the camera.
       </description>
   </input>
   <input>
-      <type>std::vector<cv::Point></type>
+      <type>std::vector<Point></type>
       <port carrier="tcp">/superquadric-detection/contour:i</port>
       <description>
         receive xy-coordinates of the pixel clicked on the image from the camera.
       </description>
   </input>
   <input>
-      <type>yarp::sig::ImageOf<PixelRgb>></type>
+      <type>yarp::sig::ImageOf<PixelRgb></type>
       <port carrier="tcp">/superquadric-detection/img:i</port>
       <description>
         receive the image from the left camera.
       </description>
   </input>
     <output>
-      <type>yarp::sig::ImageOf<PixelMono> ></type>
+      <type>yarp::sig::ImageOf<PixelMono></type>
       <port carrier="tcp">/superquadric-detection/disp:o</port>
       <description>
         send disparity map with the overlapped selected blob.
@@ -61,7 +61,7 @@
     </output>
 
      <output>
-      <type>yarp::sig::ImageOf<PixelRgb>></type>
+      <type>yarp::sig::ImageOf<PixelRgb></type>
       <port carrier="tcp">/superquadric-detection/img:o</port>
       <description>
         send the image coming from the cameras overlapping the reconstructed superquadric.
