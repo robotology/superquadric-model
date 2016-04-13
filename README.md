@@ -20,6 +20,8 @@ The inside-outside function can be used for superquadric recovery. Suppose we ha
 We want to find such values for the 11 parameters _&Lambda;_ ( _&lambda;j_, _j = 1, .. 11 )_ that most of the _n_ 3D points will lay on, or close to the superquadric surface.
 The problem can be solved by minimizing the following quantity:
 
+<img src="https://github.com/giuliavezzani/superquadric-detection/blob/master/img/min-eq.jpg" width=646 height=91> 
+
 The _F_ function is raised to the power of _&epsilon;1_ in order to make the error metric independent from the shape of the superquadric and provide faster convergence. This change causes a bias towards larger superquadrics. This effect is 
 compensated by the multiplication with the term _&lambda;1, &lambda;2, &lambda;3_ which is proportional to the volume of the superquadric.
 
