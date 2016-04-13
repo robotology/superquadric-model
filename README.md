@@ -8,7 +8,7 @@ It takes inspiration from theories conceived during the 90's and 2000's (Jaklic,
 2, Springer, 2000 (1)) since it uses **superquadric functions** as a _mathematical and low dimensional model_ for representing objects. The novelty of the superquadric-detection module consists in the implementing of the standard optimization problem provided by (1) by exploiting the **Ipopt** software pacakge (for software documentation: [Ipopt](https://projects.coin-or.org/Ipopt), for the theroetical background: A. Watcher, L.T.Biegler, **On the Implementation of an Interior-Point Filter Line-Search
 Algorithm for Large-Scale Nonlinear Programming**, 2004 (2)). Furthermore, the reconstructed superquadric is overlapped in _real-time_ on the real scene seen by the robot's cameras.
 
-![](https://github.com/giuliavezzani/superquadric-detection/blob/master/img/superq-eq.jpg)
+<p> <img src=https://github.com/giuliavezzani/superquadric-detection/blob/master/img/superq-eq.jpg"> (zoom:0.5)</p>
 
 ## Dependencies
 - [YARP](https://github.com/robotology/yarp)
