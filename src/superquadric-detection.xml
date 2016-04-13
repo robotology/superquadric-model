@@ -1,31 +1,13 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
- 
-<module>
-  <name>iolReachingCalibration</name>
+
   <doxygen-group></doxygen-group>
-  <description>IOL Table Top Reaching Calibration.</description>
+  <description>Framework for object detecting and modeling.</description>
   <copypolicy>Released under the terms of the GNU GPL v2.0</copypolicy>
   <version>1.0</version>
   
   <description-long>
-    This module allows better calibrating reaching in a table top scenario.
-
-    Calibration is always <b>arm dependent</b> and can be run also in a <b>object specific</b> way,
-    though it is advisable within the IOL framework to keep only two calibration maps,
-    one per arm.
-
-    To calibrate for example the <i>left arm</i> do the following:
-    - Put an object (e.g. the Octopus) in robot's sight in the location you want
-      to calibrate against.
-    - Issue: <b>calibration_start left Octopus iol-left</b>.
-    - The input location is retrieved by vision and stored in memory. Then,
-      the left arm will move towards the object and stops whenever it gets in touch
-      with it or you decide to conveniently stop it.
-    - You can freely move the left arm which is now in torque mode.
-    - When the most suitable position is found, issue: <b>calibration_stop</b>. The new
-      location is used to pair the input location.
-    - You need to calibrate aginst at least <b>3 locations</b> per arm to get a usable map.
+    Bla bla bla
   </description-long>
 
   <arguments>
@@ -41,7 +23,7 @@
   </arguments>
  
   <authors>
-    <author email="ugo.pattacini@iit.it"> Ugo Pattacini </author>
+    <author email="giulia.vezzani@iit.it"> Giulia Vezzani </author>
   </authors>
 
   <data>
@@ -70,5 +52,4 @@
       <description>service port</description>
     </server>
   </services>
- 
-</module>
+
