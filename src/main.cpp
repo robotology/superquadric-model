@@ -15,37 +15,6 @@
  * Public License for more details
 */
 
-/**
-  A module for showing the superquadric model reconstructed from stereo vision system on the image provided by the robot cameras.
-
-    Copyright (C) 2011 RobotCub Consortium
-
-    Author: Giulia Vezzani
-
-    Date: 12/04/2016
-
-    CopyPolicy: Released under the terms of the GNU GPL v2.0.
-
-    \section intro_sec Description
-
-    \section lib_sec Libraries
-
-     YARP libraries, Ipopt and OpenCV
-
-    \section Parameters
-
-    \section Input ports
-
-    \section Output ports
-
-    \section Services
-
-    \section Tested OS
-
-    \section Author
-    Giulia Vezzani
- */
-
 #include <cmath>
 #include <limits>
 #include <algorithm>
