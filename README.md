@@ -17,6 +17,8 @@ the point lies outside the superquadric.
 
 The inside-outside function can be used for superquadric recovery. Suppose we have a set of _3D_ surface points, for example coming from a stereo video system, _( xi, yi, zi ), i = 1, .., n_. The superquadric in general position is defined by the following equation:
 
+<img src="https://github.com/giuliavezzani/superquadric-detection/blob/master/img/fgen-eq.jpg" width=469 height=75> 
+
 We want to find such values for the 11 parameters _&Lambda;_ ( _&lambda;j_, _j = 1, .. 11 )_ that most of the _n_ 3D points will lay on, or close to the superquadric surface.
 The problem can be solved by minimizing the following quantity:
 
