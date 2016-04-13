@@ -8,7 +8,22 @@ It takes inspiration from theories conceived during the 90's and 2000's (Jaklic,
 2, Springer, 2000 (1)) since it uses **superquadric functions** as a _mathematical and low dimensional model_ for representing objects. The novelty of the superquadric-detection module consists in the implementing of the standard optimization problem provided by (1) by exploiting the **Ipopt** software pacakge (for software documentation: [Ipopt](https://projects.coin-or.org/Ipopt), for the theroetical background: A. Watcher, L.T.Biegler, **On the Implementation of an Interior-Point Filter Line-Search
 Algorithm for Large-Scale Nonlinear Programming**, 2004 (2)). Furthermore, the reconstructed superquadric is overlapped in _real-time_ on the real scene seen by the robot's cameras.
 
-<p> <img src=https://github.com/giuliavezzani/superquadric-detection/blob/master/img/superq-eq.jpg"/> (zoom:50%)</p>
+The so called _inside-outside_ superquadric function is given by:
+
+<img src="https://github.com/giuliavezzani/superquadric-detection/blob/master/img/superq-eq.jpg" width=486 height=97> 
+
+and it provides a simple test whether a given point lies inside or outside the superquadric. If _F < 1_, the given point _( x, y, z)_ is inside the superquadric, if _F = 1_ the corresponding point lies on the surface of the superquadric, and if _F > 1_
+the point lies outside the superquadric.
+
+The inside-outside function can be used for superquadric recovery. Suppose we have a set of _3D_ surface points, for example coming from a stereo video system, _( xi, yi, zi ), i = 1, .., n_. The superquadric in general position is defined by the following equation:
+
+We want to find such values for the 11 parameters _&Lambda;_ ( _&lambda;j_, _j = 1, .. 11 )_ that most of the _n_ 3D points will lay on, or close to the superquadric surface.
+The problem can be solved by minimizing the following quantity:
+
+The _F_ function is raised to the power of _&epsilon;1_ in order to make the error metric independent from the shape of the superquadric and provide faster convergence. This change causes a bias towards larger superquadrics. This effect is 
+compensated by the multiplication with the term _&lambda;1, &lambda;2, &lambda;3_ which is proportional to the volume of the superquadric.
+
+
 
 ## Dependencies
 - [YARP](https://github.com/robotology/yarp)
