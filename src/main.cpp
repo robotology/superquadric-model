@@ -35,18 +35,24 @@
 
 #include "superquadric.cpp"
 
+#include "../idl_dox/superquadricDetection_IDL.h"
+
+
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
 
-class SuperqModule : public RFModule, public PortReader
+class SuperqModule : public RFModule,
+                     public superquadricDetection_IDL
 {
 protected:
     bool go;
     int r,g,b;
     int downsampling;
+    string objname;
+    string method;
     vector<cv::Point> contour;
     deque<Vector> points;
     deque<cv::Point> blob_points;
@@ -74,6 +80,7 @@ protected:
     PolyDriver GazeCtrl;
     IGazeControl *igaze;
 
+    int vis_points;
     string eye;
     Matrix R,H,K;
     Vector point,point1;
@@ -81,6 +88,124 @@ protected:
     deque<int> Color;
 
     ResourceFinder *rf;
+
+    /************************************************************************/
+    bool attach(RpcServer &source)
+    {
+        return this->yarp().attachAsServer(source);
+    }
+
+    /************************************************************************/
+    bool object_name(const string &object_name)
+    {
+        objname=object_name;
+        method="name";
+        return true;
+    }
+
+    /************************************************************************/
+    bool seed_point()
+    {
+        method="point";
+        return true;
+    }
+
+    /************************************************************************/
+    string which_object()
+    {
+        return objname;
+    }
+
+    /************************************************************************/
+    string name_or_not()
+    {
+        return method;
+    }
+
+    /************************************************************************/
+    int get_downsampling()
+    {
+        return downsampling;
+    }
+
+    /************************************************************************/
+    bool set_downsampling(const int32_t d)
+    {
+        if((d>0) && (d<100))
+        {
+            downsampling=d;
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /************************************************************************/
+    vector<int> get_rgb()
+    {
+        vector<int> rgb;
+        rgb.clear();
+        rgb.push_back(r);
+        rgb.push_back(g);
+        rgb.push_back(b);
+        return rgb;
+    }
+
+    /**********************************************************************/
+    bool set_rgb(const int32_t &red, const int32_t &green, const int32_t &blue)
+    {
+        if((r<255) && (g<255) && (b<255))
+        {
+            r=red;
+            g=green;
+            b=blue;
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**********************************************************************/
+    string get_eye()
+    {
+        return eye;
+    }
+
+    /**********************************************************************/
+    bool set_eye(const string &e)
+    {
+        if(e=="left" || e=="right")
+        {
+            eye=e;
+            return true;
+        }
+        else
+            return true;
+    }
+
+    /**********************************************************************/
+    int get_visualized_points()
+    {
+        return vis_points;
+    }
+
+    /**********************************************************************/
+    bool set_visualized_points(const int32_t v)
+    {
+        if((v>10) && (v<1000))
+        {
+            vis_points=v;
+            return true;
+        }
+        else
+            return false;
+
+    }
+
+
+
+
+
 
 public:
 
@@ -204,11 +329,11 @@ public:
         portSFMrpc.open("/superquadric-detection/SFM:rpc");
         portRpc.open("/superquadric-detection/rpc");
 
-        portContour.setReader(*this);
         attach(portRpc);
 
         downsampling=std::max(1,rf.check("downsampling",Value(3)).asInt());
         go=false;
+        vis_points=16;
 
         return true;
     }
@@ -582,9 +707,11 @@ public:
                 }
             }
 
-            for (double eta=-M_PI; eta<M_PI; eta+=M_PI/8.0)
+            double step=2*M_PI/vis_points;
+
+            for (double eta=-M_PI; eta<M_PI; eta+=M_PI/step)
             {
-                 for (double omega=-M_PI; omega<M_PI;omega+=M_PI/8.0)
+                 for (double omega=-M_PI; omega<M_PI;omega+=M_PI/step)
                  {
                      co=cos(omega); so=sin(omega);
                      ce=cos(eta); se=sin(eta);
@@ -630,57 +757,6 @@ public:
         point2D=K*H*point_aux;
         return point2D.subVector(0,1)/point2D[2];
     }
-
-    /*******************************************************************************/
-    bool respond(const Bottle &command, Bottle &reply)
-    {
-        string cmd=command.get(0).asString().c_str();
-        int ack=Vocab::encode("ack");
-        int nack=Vocab::encode("nack");
-
-        if (cmd=="clear")
-        {
-            LockGuard lg(mutex);
-            contour.clear();
-            go=false;
-            reply.addVocab(ack);
-        }
-        else if (cmd=="go")
-        {
-            if (portSFMrpc.getOutputCount()==0)
-                reply.addVocab(nack);
-            else
-            {
-                LockGuard lg(mutex);
-
-                if (contour.size()>2)
-                {
-                    go=true;
-                    reply.addVocab(ack);
-                }
-                else
-                    reply.addVocab(nack);
-            }
-        }
-        else
-            RFModule::respond(command,reply);
-
-        return true;
-   }
-
-   /*******************************************************************************/
-   bool read(ConnectionReader &connection)
-   {
-       Bottle data; data.read(connection);
-       if (data.size()>=2)
-       {
-           LockGuard lg(mutex);
-           cv::Point point(data.get(0).asInt(),data.get(1).asInt());
-           contour.push_back(point);
-       }
-
-       return true;
-   }
 };
 
 /**********************************************************************/
