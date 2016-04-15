@@ -53,3 +53,16 @@
       </description>
     </output>
 
+</data>
+ 
+  <services>
+    <server>
+      <type>iolReachingCalibration_IDL</type>
+      <idl>idl.thrift</idl>
+      <port>/iolReachingCalibration/rpc</port>
+      <description>service port</description>
+    </server>
+  </services>
+ 
+</module>
+
