@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2015 iCub Facility - Istituto Italiano di Tecnologia
  * Author: Giulia Vezzani
  * email:  giulia.vezzani@iit.it
@@ -65,6 +65,7 @@ protected:
     RpcClient portBlobRpc;
     Port portContour;
     RpcClient portSFMrpc;
+    RpcClient portOPCrpc;
     RpcServer portRpc;
 
     bool go_on;
@@ -180,7 +181,7 @@ protected:
             return true;
         }
         else
-            return true;
+            return false;
     }
 
     /**********************************************************************/
@@ -199,16 +200,9 @@ protected:
         }
         else
             return false;
-
     }
 
-
-
-
-
-
 public:
-
     /***********************************************************************/
     double getPeriod()
     {
@@ -327,7 +321,10 @@ public:
         portBlobRpc.open("/superquadric-detection/blob:rpc");
         portContour.open("/superquadric-detection/contour:i");
         portSFMrpc.open("/superquadric-detection/SFM:rpc");
+        portOPCrpc.open("/superquadric-detection/OPC:rpc");
         portRpc.open("/superquadric-detection/rpc");
+
+        portContour.setReader(*this);
 
         attach(portRpc);
 
@@ -367,7 +364,6 @@ public:
         eye=rf.find("eye").asString().c_str();
         if (rf.find("eye").isNull())
             eye="left";
-
 
         if (Bottle *B=rf.find("color").asList())
         {
@@ -426,73 +422,6 @@ public:
     }
 
     /***********************************************************************/
-    bool acquirePoints()
-    {
-        ImageOf<PixelMono> *imgDispIn=portDispIn.read();
-        if (imgDispIn==NULL)
-            return false;
-
-        ImageOf<PixelRgb> *imgIn=portImgIn.read();
-        if (imgIn==NULL)
-            return false;
-
-        ImageOf<PixelRgb> &imgDispOut=portDispOut.prepare();
-        imgDispOut.resize(imgDispIn->width(),imgDispIn->height());
-
-        cv::Mat imgDispInMat=cv::cvarrToMat((IplImage*)imgDispIn->getIplImage());
-        cv::Mat imgDispOutMat=cv::cvarrToMat((IplImage*)imgDispOut.getIplImage());
-        cv::cvtColor(imgDispInMat,imgDispOutMat,CV_GRAY2RGB);
-
-        if (contour.size()>0)
-        {
-            vector<vector<cv::Point> > contours;
-            contours.push_back(contour);
-            cv::drawContours(imgDispOutMat,contours,0,cv::Scalar(255,255,0));
-
-            cv::Rect rect=cv::boundingRect(contour);
-            cv::rectangle(imgDispOutMat,rect,cv::Scalar(255,50,0));
-
-            if (go)
-            {
-                Bottle cmd,reply;
-
-                cmd.addString("Rect");
-                cmd.addInt(rect.x);     cmd.addInt(rect.y);
-                cmd.addInt(rect.width); cmd.addInt(rect.height);
-                cmd.addInt(downsampling);
-
-                if (portSFMrpc.write(cmd,reply))
-                {
-                    int idx=0;
-                    for (int x=rect.x; x<rect.x+rect.width; x+=downsampling)
-                    {
-                        for (int y=rect.y; y<rect.y+rect.height; y+=downsampling)
-                        {
-                            if (cv::pointPolygonTest(contour,cv::Point2f((float)x,(float)y),false)>0.0)
-                            {
-                                Vector point(3,0.0);
-                                point[0]=reply.get(idx+0).asDouble();
-                                point[1]=reply.get(idx+1).asDouble();
-                                point[2]=reply.get(idx+2).asDouble();
-
-                                points.push_back(point);
-                            }
-
-                            idx+=3;
-                        }                       
-                    }
-                }
-
-                go=false;
-            }
-        }
-
-        portDispOut.write();
-
-        return true;
-    }
-
-    /***********************************************************************/
     bool acquirePointsFromBlob()
     {
         PixelRgb color(r,g,b);
@@ -511,124 +440,161 @@ public:
         cv::Mat imgDispOutMat=cv::cvarrToMat((IplImage*)imgDispOut.getIplImage());
         cv::cvtColor(imgDispInMat,imgDispOutMat,CV_GRAY2RGB);
 
-        if (contour.size()>0)
+        if (method=="seed_point")
         {
-            Bottle cmd,reply;
-            blob_points.clear();
-            points.clear();
-            cmd.addString("get_component_around");
-            cmd.addInt(contour[0].x); cmd.addInt(contour[0].y);
-
-            if (portBlobRpc.write(cmd,reply))
+            if (contour.size()>0)
             {
-                if (Bottle *blob_list=reply.get(0).asList())
-                {
-
-                    for (int i=0; i<blob_list->size();i++)
-                    {
-                        if(Bottle *blob_pair=blob_list->get(i).asList())
-                        {
-                            cv:: Point pix=cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt());
-                            blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt()));
-                            imgDispOut.pixel(pix.x, pix.y)=color;
-                        }
-                        else
-                        {
-                            blob_points.clear();
-                            yError("no valid blob pixels");
-                        }
-                    }
-
-                    cmd.addString("Points");
-
-                    for (size_t i=0; i<blob_points.size(); i++)
-                    {
-                        cv::Point single_point=blob_points[i];
-                        cmd.addInt(single_point.x);
-                        cmd.addInt(single_point.y);
-
-                    }
-
-                    if (portSFMrpc.write(cmd,reply))
-                    {
-                        for (int idx=0;idx<reply.size();idx+=3)
-                        {
-                            Vector point(3,0.0);
-                            point[0]=reply.get(idx+0).asDouble();
-                            point[1]=reply.get(idx+1).asDouble();
-                            point[2]=reply.get(idx+2).asDouble();
-
-                            points.push_back(point);
-                        }
-
-                        if (points.size()<=1)
-                        {
-                            yError("Some problems in point acquisition!");
-                        }
-                    }
-                    else
-                    {
-                        points.clear();
-                        yError("SFM reply is fail!");
-                    }
-
-                    contour.clear();
-                }
-                else
-                {
-                    contour.clear();
-                    points.clear();
-                    yInfo("No new blob provided!");
-                }
+                getBlob(imgDispOut,color);
             }
-            else
+            else if (blob_points.size()>0)
             {
-                contour.clear();
-                points.clear();
-                yError("lbpExtract reply is fail!");
-
+                get3Dpoints(imgDispOut, color);
             }
         }
-        else if (blob_points.size()>0)
+        else if (method=="name")
         {
-            Bottle cmd,reply;
-            cmd.addString("Points");
+            if ( objname.empty())
+                pointFromName();
 
-            for (size_t i=0; i<blob_points.size(); i++)
+            if (contour.size()>0)
             {
-                cv::Point single_point=blob_points[i];
-                cmd.addInt(single_point.x);
-                cmd.addInt(single_point.y);
-                imgDispOut.pixel(single_point.x, single_point.y)=color;
+                getBlob(imgDispOut,color);
             }
-
-            if (portSFMrpc.write(cmd,reply))
+            else if (blob_points.size()>0)
             {
-                for (int idx=0;idx<reply.size();idx+=3)
-                {
-                    Vector point(3,0.0);
-                    point[0]=reply.get(idx+0).asDouble();
-                    point[1]=reply.get(idx+1).asDouble();
-                    point[2]=reply.get(idx+2).asDouble();
-
-                    points.push_back(point);
-                }
-
-                if (points.size()<=0)
-                {
-                    yError("Some problems in point acquisition!");
-                }
-            }
-            else
-            {
-                yError("SFM reply is fail!");
-                points.clear();
+                get3Dpoints(imgDispOut, color);
             }
         }
 
-       portDispOut.write();
+        portDispOut.write();
 
         return true;
+    }
+
+    /***********************************************************************/
+    void getBlob(ImageOf<PixelRgb> &imgDispOut,PixelRgb &color)
+    {
+        Bottle cmd,reply;
+        blob_points.clear();
+        points.clear();
+        cmd.addString("get_component_around");
+        cmd.addInt(contour[0].x); cmd.addInt(contour[0].y);
+
+        if (portBlobRpc.write(cmd,reply))
+        {
+            get3Dpoints(imgDispOut,color);
+        }
+        else
+        {
+            contour.clear();
+            points.clear();
+            yError("lbpExtract reply is fail!");
+        }
+    }
+
+    /***********************************************************************/
+    void get3Dpoints(ImageOf<PixelRgb> &imgDispOut, PixelRgb &color)
+    {
+        Bottle cmd,reply;
+        cmd.addString("Points");
+
+        for (size_t i=0; i<blob_points.size(); i++)
+        {
+            cv::Point single_point=blob_points[i];
+            cmd.addInt(single_point.x);
+            cmd.addInt(single_point.y);
+            imgDispOut.pixel(single_point.x, single_point.y)=color;
+        }
+
+        if (portSFMrpc.write(cmd,reply))
+        {
+            for (int idx=0;idx<reply.size();idx+=3)
+            {
+                Vector point(3,0.0);
+                point[0]=reply.get(idx+0).asDouble();
+                point[1]=reply.get(idx+1).asDouble();
+                point[2]=reply.get(idx+2).asDouble();
+
+                points.push_back(point);
+            }
+
+            if (points.size()<=0)
+            {
+                yError("Some problems in point acquisition!");
+            }
+        }
+        else
+        {
+            yError("SFM reply is fail!");
+            points.clear();
+        }
+    }
+
+    /***********************************************************************/
+    void pointFromName()
+    {
+        Bottle cmd,reply;
+        blob_points.clear();
+        points.clear();
+        contour.clear();
+        cmd.addString("ask");
+        cmd.addList();
+        cmd.addList();
+        cmd.addString("name");
+        cmd.addString("==");
+        cmd.addString(objname);
+
+        if (portOPCrpc.write(cmd,reply))
+        {
+            if (Bottle *b=reply.get(0).asList())
+            {
+                if (Bottle *b1=b->get(1).asList())
+                {
+                    int id=b1->get(0).asInt();
+                    cmd.clear();
+                    cmd.addString("get");
+                    cmd.addList();
+                    cmd.addList();
+                    cmd.addString("id");
+                    cmd.addInt(id);
+                    cmd.addList();
+                    cmd.addString("proSet");
+                    cmd.addList();
+                    cmd.addString("position_2D_left");
+                }
+                else
+                    yInfo("no object id provided by OPC!");
+            }
+            else
+                yInfo("uncorrect reply from OPC!");
+
+            if (portOPCrpc.write(cmd,reply))
+            {
+                if (Bottle *b=reply.get(0).asList())
+                {
+                    if (Bottle *b1=b->get(0).asList())
+                    {
+                        if (Bottle *b2=b1->get(1).asList())
+                        {
+                            cv::Point p;
+                            p.x=b2->get(0).asInt();
+                            p.y=b2->get(0).asInt();
+                            contour.push_back(p);
+                        }
+                        else
+                            yInfo("no good seed point from OPC!");
+                    }
+                    else
+                        yInfo("no seed point from OPC!");
+                }
+                else
+                    yInfo("uncorrect seed point info received!");
+            }
+            else
+                yInfo("no reply dealing with seed point from OPC!");
+        }
+        else
+            yInfo("no reply dealing with object name from OPC!");
     }
 
     /***********************************************************************/
@@ -756,6 +722,20 @@ public:
 
         point2D=K*H*point_aux;
         return point2D.subVector(0,1)/point2D[2];
+    }
+
+    /*******************************************************************************/
+    bool read(ConnectionReader &connection)
+    {
+        Bottle data; data.read(connection);
+        if (data.size()>=2)
+        {
+            LockGuard lg(mutex);
+            cv::Point point(data.get(0).asInt(),data.get(1).asInt());
+            contour.push_back(point);
+       }
+
+        return true;
     }
 };
 

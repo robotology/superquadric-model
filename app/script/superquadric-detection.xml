@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
 
-
 <module>
   <name>superquadric-detection</name>
   <doxygen-group></doxygen-group>
@@ -53,13 +52,15 @@
       </description>
     </output>
 
-</data>
+  </data>
  
   <services>
+    <server>
       <type>superquadricDetection_IDL</type>
       <idl>idl.thrift</idl>
       <port>/superquadric-detection/rpc</port>
       <description>service port</description>
+    </server>
   </services>
  
 </module>

@@ -11,7 +11,6 @@
 
 service superquadricDetection_IDL
 {
-
     /**
     * Set the name of the object
     * to be detected and modeled

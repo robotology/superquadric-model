@@ -117,5 +117,11 @@
             <to>/dispBlobs</to>
             <protocol>tcp</protocol>
         </connection>
+
+        <connection>
+            <from>/memory/rpc</from>
+            <to>/superquadric-detection/OPC:rpc</to>
+            <protocol>tcp</protocol>
+        </connection>
 </application>
 
