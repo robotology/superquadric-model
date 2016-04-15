@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="yarpmanifest.xsl"?>
+
+
+<module>
+  <name>superquadric-detection</name>
+  <doxygen-group></doxygen-group>
+  <description>Framework for object detecting and modeling.</description>
+  <copypolicy>Released under the terms of the GNU GPL v2.0</copypolicy>
+  <version>1.0</version>
+  
+  <description-long>
+    This module allows object detection and modelling in real-time.
+
+    To correctly launch the module, do the following:
+    - Put an <b>object</b> in the robot's sight and make sure that the <b>eye vergence</b> is set to <b>5.0 degrees</b>.
+    - Launch , <b>SFM</b>, <b>IOL</b> and <b>lpbExtract</b> modules and make sure that SFM is giving a good disparity map (otherwise calibrate it thorugh the proper rpc port).
+    - Launch <b>superquadric-detection</b> module.
+    - Make all the <b>connections</b>.
+    - Use the <b>rpc port</b> to play with this module.
+
+  </description-long>
+
+  <arguments>
+    <param default="superquadric-detection" desc="select the current context.">context</param>
+    <param default="config.ini" desc="configuration file name.">from</param>
+  </arguments>
+ 
+  <authors>
+    <author email="giulia.vezzani@iit.it"> Giulia Vezzani </author>
+  </authors>
+
+  <data>
+  <input>
+      <type>std::vector of Point</type>
+      <port carrier="tcp">/superquadric-detection/contour:i</port>
+      <description>
+        receive xy-coordinates of the pixel clicked on the image from the camera.
+      </description>
+  </input>
+  <input>
+      <type>yarp::sig::ImageOfPixelRgb</type>
+      <port carrier="tcp">/superquadric-detection/img:i</port>
+      <description>
+        receive the image from the left camera.
+      </description>
+  </input>
+    <output>
+      <type>yarp::sig::ImageOfPixelMono</type>
+      <port carrier="tcp">/superquadric-detection/disp:o</port>
+      <description>
+        send disparity map with the overlapped selected blob.
+      </description>
+    </output>
+
