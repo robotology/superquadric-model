@@ -57,9 +57,9 @@
  
   <services>
     <server>
-      <type>iolReachingCalibration_IDL</type>
+      <type>superquadricDetection_IDL</type>
       <idl>idl.thrift</idl>
-      <port>/iolReachingCalibration/rpc</port>
+      <port>/superquadric-detection/rpc</port>
       <description>service port</description>
     </server>
   </services>
