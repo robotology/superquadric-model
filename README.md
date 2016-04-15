@@ -50,7 +50,7 @@ Then, all the points belonging to the object blob are processed and used for the
 
 
 ## Documentation
-Online documentation is available here:  http://giuliavezzani.github.com/superquadric-detection [work in progress]
+Online documentation is available here:  [http://giuliavezzani.github.com/superquadric-detection](http://giuliavezzani.github.com/superquadric-detection) [work in progress]
 
 ## Code snippets
 In order to use the superquadric-detection module, you need to launch the following modules:
