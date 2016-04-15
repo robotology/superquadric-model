@@ -56,12 +56,10 @@
 </data>
  
   <services>
-    <server>
       <type>superquadricDetection_IDL</type>
       <idl>idl.thrift</idl>
       <port>/superquadric-detection/rpc</port>
       <description>service port</description>
-    </server>
   </services>
  
 </module>
