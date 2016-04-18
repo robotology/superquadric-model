@@ -453,7 +453,7 @@ public:
         }
         else if (method=="name")
         {
-            if ( objname.empty())
+            //if ( objname.empty())
                 pointFromName();
 
             if (contour.size()>0)
@@ -537,13 +537,16 @@ public:
         blob_points.clear();
         points.clear();
         contour.clear();
+        cmd.clear();
         cmd.addString("ask");
-        cmd.addList();
-        cmd.addList();
-        cmd.addString("name");
-        cmd.addString("==");
-        cmd.addString(objname);
+        Bottle &option=cmd.addList();
+        Bottle &option2=option.addList();
+        option2.addString("name");
+        option2.addString("==".c_str());
 
+        option2.addString(objname);
+
+        cout<<"cmd 1 "<<cmd.toString()<<endl;
         if (portOPCrpc.write(cmd,reply))
         {
             if (Bottle *b=reply.get(0).asList())
@@ -551,16 +554,18 @@ public:
                 if (Bottle *b1=b->get(1).asList())
                 {
                     int id=b1->get(0).asInt();
+                    cout<<"id "<<id<<endl;
                     cmd.clear();
                     cmd.addString("get");
-                    cmd.addList();
-                    cmd.addList();
-                    cmd.addString("id");
-                    cmd.addInt(id);
-                    cmd.addList();
-                    cmd.addString("proSet");
-                    cmd.addList();
-                    cmd.addString("position_2D_left");
+                    Bottle &info=cmd.addList();
+                    Bottle &info2=info.addList();
+                    info2.addString("id");
+                    info2.addInt(id);
+                    Bottle &info3=info.addList();
+                    info3.addString("proSet");
+                    Bottle &info4=info3.addList();
+                    info4.addString("position_2D_left");
+                    cout<<"cmd 2 "<<cmd.toString()<<endl;
                 }
                 else
                     yInfo("no object id provided by OPC!");
@@ -579,6 +584,7 @@ public:
                             cv::Point p;
                             p.x=b2->get(0).asInt();
                             p.y=b2->get(0).asInt();
+                            cout<<"px and py "<<p.x<<" "<<p.y<<endl;
                             contour.push_back(p);
                         }
                         else
@@ -725,7 +731,7 @@ public:
     }
 
     /*******************************************************************************/
-    bool read(ConnectionReader &connection)
+  /**  bool read(ConnectionReader &connection)
     {
         Bottle data; data.read(connection);
         if (data.size()>=2)
@@ -736,7 +742,7 @@ public:
        }
 
         return true;
-    }
+    }*/
 };
 
 /**********************************************************************/

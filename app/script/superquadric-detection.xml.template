@@ -1,127 +1,111 @@
 <application>
     <name>superquadric-detection</name>
-    <doxygen-group></doxygen-group>
-    <description>Object superquadric modeling.</description>
-    <copypolicy>Released under the terms of the GNU GPL v2.0</copypolicy>
-    <version>1.0</version>
 
-    <description-long>
-    This modules allows modeling object through <b>superquadric funcitons</b> and showing the result on the images coming from the cameras.
+    <dependencies>
+        <port>/icub/camcalib/left/out</port>
+        <port>/icub/camcalib/right/out</port>
+        <port>/iKinGazeCtrl/rpc</port>
+    </dependencies>
+    
+    <module>
+       <name>superquadric-detection</name>
+       <node>icub21</node>
+    </module>
 
-    The pipeline is the following:
-    - the user can select the object to be modeled in <b>two different ways</b>:
-        1. clicking on it in the view coming from the camera;
-        2. writing the name of the object (collected BY OPC);
-    - the 3D point cloud of the object is used to find the superquadrics which best approximates the object;
-    - the superquadrics is visualized overlapped to the object on the camera image. 
- 
-    </description-long>
+    <module>
+       <name>yarpview</name>
+       <parameters>--name /disp --out /disp/out --p 33</parameters>
+       <node>icub22</node>
+    </module>
 
-        <dependencies>
-            <port>/icub/camcalib/left/out</port>
-            <port>/icub/camcalib/right/out</port>
-            <port>/iKinGazeCtrl/rpc</port>
-        </dependencies>
-        
-        <module>
-           <name>superquadric-detection</name>
-           <node>icub21</node>
-        </module>
+    <module>
+       <name>yarpview</name>
+       <parameters>--name /dispSuperq --out /dispSuperq/out --p 33</parameters>
+       <node>icub22</node>
+    </module>
 
-        <module>
-           <name>yarpview</name>
-           <parameters>--name /disp --out /disp/out --p 33</parameters>
-           <node>icub22</node>
-        </module>
+    <module>
+       <name>yarpview</name>
+       <parameters>--name /dispBlobs --out /dispBlobs/out --p 33</parameters>
+       <node>icub22</node>
+    </module>
 
-        <module>
-           <name>yarpview</name>
-           <parameters>--name /dispSuperq --out /dispSuperq/out --p 33</parameters>
-           <node>icub22</node>
-        </module>
+    <connection>
+        <from>/icub/camcalib/left/out</from>
+        <to>/SFM/left:i</to>
+        <protocol>tcp</protocol>
+    </connection>
 
-        <module>
-           <name>yarpview</name>
-           <parameters>--name /dispBlobs --out /dispBlobs/out --p 33</parameters>
-           <node>icub22</node>
-        </module>
+    <connection>
+        <from>/icub/camcalib/right/out</from>
+        <to>/SFM/right:i</to>
+        <protocol>tcp</protocol>
+    </connection>
 
-        <connection>
-            <from>/icub/camcalib/left/out</from>
-            <to>/SFM/left:i</to>
-            <protocol>tcp</protocol>
-        </connection>
+    <connection>
+        <from>/SFM/disp:o</from>
+        <to>/superquadric-detection/disp:i</to>
+        <protocol>tcp</protocol>
+    </connection>
 
-        <connection>
-            <from>/icub/camcalib/right/out</from>
-            <to>/SFM/right:i</to>
-            <protocol>tcp</protocol>
-        </connection>
+    <connection>
+        <from>/icub/cam/left</from>
+        <to>/lbpExtract/image:i</to>
+        <protocol>tcp</protocol>
+    </connection>
 
-        <connection>
-            <from>/SFM/disp:o</from>
-            <to>/superquadric-detection/disp:i</to>
-            <protocol>tcp</protocol>
-        </connection>
+    <connection>
+        <from>/superquadric-detection/SFM:rpc</from>
+        <to>/SFM/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
 
-        <connection>
-            <from>/icub/cam/left</from>
-            <to>/lbpExtract/image:i</to>
-            <protocol>tcp</protocol>
-        </connection>
+    <connection>
+        <from>/icub/camcalib/left/out</from>
+        <to>/superquadric-detection/rgb:i</to>
+        <protocol>tcp</protocol>
+    </connection>
 
-        <connection>
-            <from>/superquadric-detection/SFM:rpc</from>
-            <to>/SFM/rpc</to>
-            <protocol>tcp</protocol>
-        </connection>
+    <connection>
+        <from>/superquadric-detection/disp:o</from>
+        <to>/disp</to>
+        <protocol>tcp</protocol>
+    </connection>
 
-        <connection>
-            <from>/icub/camcalib/left/out</from>
-            <to>/superquadric-detection/rgb:i</to>
-            <protocol>tcp</protocol>
-        </connection>
+    <connection>
+        <from>/dispSuperq/out</from>
+        <to>/superquadric-detection/contour:i</to>
+        <protocol>tcp</protocol>
+    </connection>
 
-        <connection>
-            <from>/superquadric-detection/disp:o</from>
-            <to>/disp</to>
-            <protocol>tcp</protocol>
-        </connection>
+    <connection>
+        <from>/superquadric-detection/img:o</from>
+        <to>/dispSuperq</to>
+        <protocol>tcp</protocol>
+    </connection>
 
-        <connection>
-            <from>/dispSuperq/out</from>
-            <to>/superquadric-detection/contour:i</to>
-            <protocol>tcp</protocol>
-        </connection>
+    <connection>
+        <from>/icub/camcalib/left/out</from>
+        <to>/superquadric-detection/img:i</to>
+        <protocol>tcp</protocol>
+    </connection>
 
-        <connection>
-            <from>/superquadric-detection/img:o</from>
-            <to>/dispSuperq</to>
-            <protocol>tcp</protocol>
-        </connection>
+    <connection>
+        <from>/superquadric-detection/blob:rpc</from>
+        <to>/lbpExtract/rpc:i</to>
+        <protocol>tcp</protocol>
+    </connection>
 
-        <connection>
-            <from>/icub/camcalib/left/out</from>
-            <to>/superquadric-detection/img:i</to>
-            <protocol>tcp</protocol>
-        </connection>
+    <connection>
+        <from>/lbpExtract/segmentedlbp:o</from>
+        <to>/dispBlobs</to>
+        <protocol>tcp</protocol>
+    </connection>
 
-        <connection>
-            <from>/superquadric-detection/blob:rpc</from>
-            <to>/lbpExtract/rpc:i</to>
-            <protocol>tcp</protocol>
-        </connection>
-
-        <connection>
-            <from>/lbpExtract/segmentedlbp:o</from>
-            <to>/dispBlobs</to>
-            <protocol>tcp</protocol>
-        </connection>
-
-        <connection>
-            <from>/memory/rpc</from>
-            <to>/superquadric-detection/OPC:rpc</to>
-            <protocol>tcp</protocol>
-        </connection>
+    <connection>
+        <from>/superquadric-detection/OPC:rpc</from>
+        <to>/memory/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
 </application>
 
