@@ -54,7 +54,6 @@ Online documentation is available here:  [http://giuliavezzani.github.com/superq
 
 ## Code snippets
 In order to use the superquadric-detection module, you need to launch the following modules:
-- [lbpExtract](http://robotology.github.io/segmentation/doxygen/doc/html/group__lbpExtract.html), for blob extraction given the seed point;
 - [IOL](https://github.com/robotology/iol), for object selection through its name,
 
 since a _RPC_ communication with these modules is required.
