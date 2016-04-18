@@ -540,7 +540,6 @@ public:
         blob_points.clear();
         points.clear();
         contour.clear();
-        cmd.clear();
         cmd.addVocab(Vocab::encode("ask"));
         Bottle &content=cmd.addList();
         Bottle &cond_1=content.addList();
@@ -553,20 +552,17 @@ public:
         cond_2.addString("==");
         cond_2.addString(objname);
 
-
         cout<<"cmd 1 "<<cmd.toString()<<endl;
         portOPCrpc.write(cmd,reply);
         if(reply.size()>1)
         {
             if(reply.get(0).asVocab()==Vocab::encode("ack"))
             {
-
                 if (Bottle *b=reply.get(1).asList())
                 {
                     if (Bottle *b1=b->get(1).asList())
                     {
                         int id=b1->get(0).asInt();
-                        cout<<"id "<<id<<endl;
                         Bottle cmd;
                         cmd.addVocab(Vocab::encode("get"));
                         Bottle &info=cmd.addList();
@@ -585,35 +581,43 @@ public:
                 else
                     yInfo("uncorrect reply from OPC!");
 
-                if (portOPCrpc.write(cmd,reply))
+                portOPCrpc.write(cmd,reply);
+                if(reply.size()>1)
                 {
-                    if (Bottle *b=reply.get(0).asList())
+                    if(reply.get(0).asVocab()==Vocab::encode("ack"))
                     {
-                        if (Bottle *b1=b->get(0).asList())
+                        if (Bottle *b=reply.get(1).asList())
                         {
-                            if (Bottle *b2=b1->get(1).asList())
+                            if (Bottle *b1=b->get(0).asList())
                             {
-                                cv::Point p;
-                                p.x=b2->get(0).asInt();
-                                p.y=b2->get(0).asInt();
-                                cout<<"px and py "<<p.x<<" "<<p.y<<endl;
-                                contour.push_back(p);
+                                if (Bottle *b2=b1->find("position_2D").asList())
+                                {
+                                    cv::Point p;
+                                    p.x=b2->get(0).asInt();
+                                    p.y=b2->get(1).asInt();
+                                    cout<<"px and py "<<p.x<<" "<<p.y<<endl;
+                                    contour.push_back(p);
+                                }
+                                else
+                                    yInfo("position_2D field not found in the OPC reply!");
                             }
                             else
-                                yInfo("no good seed point from OPC!");
+                                yInfo("uncorrect reply structure received!");
                         }
                         else
-                            yInfo("no seed point from OPC!");
+                            yInfo("uncorrect reply structure received!");
                     }
                     else
-                        yInfo("uncorrect seed point info received!");
+                        yInfo("Failure in reply for object 2D point!");
                 }
                 else
-                    yInfo("no reply dealing with seed point from OPC!");
+                    yInfo("reply size for 2D point less than 1!");
             }
+            else
+                yInfo("Failure in reply for object id!");
         }
         else
-            yInfo("no reply dealing with object name from OPC!");
+            yInfo("reply size for object id less than 1!");
     }
 
     /***********************************************************************/
