@@ -16,11 +16,14 @@
 */
 
 #include <cmath>
-#include <limits>
 #include <algorithm>
 #include <string>
 #include <sstream>
 #include <deque>
+#include <map>
+#include <set>
+#include <fstream>
+#include <iomanip>
 
 #include <IpTNLP.hpp>
 #include <IpIpoptApplication.hpp>
@@ -155,7 +158,7 @@ protected:
     /**********************************************************************/
     bool set_rgb(const int32_t &red, const int32_t &green, const int32_t &blue)
     {
-        if((r<255) && (g<255) && (b<255))
+        if ((r<255) && (g<255) && (b<255))
         {
             r=red;
             g=green;
@@ -175,7 +178,7 @@ protected:
     /**********************************************************************/
     bool set_eye(const string &e)
     {
-        if(e=="left" || e=="right")
+        if ((e=="left") || (e=="right"))
         {
             eye=e;
             return true;
@@ -193,7 +196,7 @@ protected:
     /**********************************************************************/
     bool set_visualized_points(const int32_t v)
     {
-        if((v>10) && (v<1000))
+        if ((v>10) && (v<1000))
         {
             vis_points=v;
             return true;
@@ -538,66 +541,76 @@ public:
         points.clear();
         contour.clear();
         cmd.clear();
-        cmd.addString("ask");
-        Bottle &option=cmd.addList();
-        Bottle &option2=option.addList();
-        option2.addString("name");
-        option2.addString("==".c_str());
+        cmd.addVocab(Vocab::encode("ask"));
+        Bottle &content=cmd.addList();
+        Bottle &cond_1=content.addList();
+        cond_1.addString("entity");
+        cond_1.addString("==");
+        cond_1.addString("object");
+        content.addString("&&");
+        Bottle &cond_2=content.addList();
+        cond_2.addString("name");
+        cond_2.addString("==");
+        cond_2.addString(objname);
 
-        option2.addString(objname);
 
         cout<<"cmd 1 "<<cmd.toString()<<endl;
-        if (portOPCrpc.write(cmd,reply))
+        portOPCrpc.write(cmd,reply);
+        if(reply.size()>1)
         {
-            if (Bottle *b=reply.get(0).asList())
+            if(reply.get(0).asVocab()==Vocab::encode("ack"))
             {
-                if (Bottle *b1=b->get(1).asList())
-                {
-                    int id=b1->get(0).asInt();
-                    cout<<"id "<<id<<endl;
-                    cmd.clear();
-                    cmd.addString("get");
-                    Bottle &info=cmd.addList();
-                    Bottle &info2=info.addList();
-                    info2.addString("id");
-                    info2.addInt(id);
-                    Bottle &info3=info.addList();
-                    info3.addString("proSet");
-                    Bottle &info4=info3.addList();
-                    info4.addString("position_2D_left");
-                    cout<<"cmd 2 "<<cmd.toString()<<endl;
-                }
-                else
-                    yInfo("no object id provided by OPC!");
-            }
-            else
-                yInfo("uncorrect reply from OPC!");
 
-            if (portOPCrpc.write(cmd,reply))
-            {
-                if (Bottle *b=reply.get(0).asList())
+                if (Bottle *b=reply.get(1).asList())
                 {
-                    if (Bottle *b1=b->get(0).asList())
+                    if (Bottle *b1=b->get(1).asList())
                     {
-                        if (Bottle *b2=b1->get(1).asList())
-                        {
-                            cv::Point p;
-                            p.x=b2->get(0).asInt();
-                            p.y=b2->get(0).asInt();
-                            cout<<"px and py "<<p.x<<" "<<p.y<<endl;
-                            contour.push_back(p);
-                        }
-                        else
-                            yInfo("no good seed point from OPC!");
+                        int id=b1->get(0).asInt();
+                        cout<<"id "<<id<<endl;
+                        Bottle cmd;
+                        cmd.addVocab(Vocab::encode("get"));
+                        Bottle &info=cmd.addList();
+                        info.addString("id");
+                        Bottle &info2=info.addList();
+                        info2.addInt(id);
+                        Bottle &info3=cmd.addList();
+                        info3.addString("proSet");
+                        Bottle &info4=info3.addList();
+                        info4.addList().addString("position_2D");
+                        cout<<"cmd 2 "<<cmd.toString()<<endl;
                     }
                     else
-                        yInfo("no seed point from OPC!");
+                        yInfo("no object id provided by OPC!");
                 }
                 else
-                    yInfo("uncorrect seed point info received!");
+                    yInfo("uncorrect reply from OPC!");
+
+                if (portOPCrpc.write(cmd,reply))
+                {
+                    if (Bottle *b=reply.get(0).asList())
+                    {
+                        if (Bottle *b1=b->get(0).asList())
+                        {
+                            if (Bottle *b2=b1->get(1).asList())
+                            {
+                                cv::Point p;
+                                p.x=b2->get(0).asInt();
+                                p.y=b2->get(0).asInt();
+                                cout<<"px and py "<<p.x<<" "<<p.y<<endl;
+                                contour.push_back(p);
+                            }
+                            else
+                                yInfo("no good seed point from OPC!");
+                        }
+                        else
+                            yInfo("no seed point from OPC!");
+                    }
+                    else
+                        yInfo("uncorrect seed point info received!");
+                }
+                else
+                    yInfo("no reply dealing with seed point from OPC!");
             }
-            else
-                yInfo("no reply dealing with seed point from OPC!");
         }
         else
             yInfo("no reply dealing with object name from OPC!");
