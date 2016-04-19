@@ -23,26 +23,28 @@ public:
    * @param name of the object
    * @return true/false is the object is known/unknown
    */
-  virtual bool object_name(const std::string& entry = "");
+  virtual bool set_object_name(const std::string& entry = "");
   /**
-   * Say to wait for a click on the
-   * camera, without using the name object
+   * Get the seed point of the object
+   * without using the name object
+   * @param x pixel value of the object seed point
+   * @param y pixel value of the object seed point
    * return true/false on success/failure.
    */
-  virtual bool seed_point();
+  virtual bool seed_point(const int32_t x_pixel, const int32_t y_pixel);
   /**
    * Return the name of the object that is
    * being detected and modeled
    * @return the name of the object
    */
-  virtual std::string which_object();
+  virtual std::string get_object_name();
   /**
    * Say which method is set for getting
    * blob
    * @return "name" if you have to type the name
    * "point" if you have to click on the camera
    */
-  virtual std::string name_or_not();
+  virtual std::string get_method();
   /**
    * Get downsampling value
    * @return int value for the downsampling
@@ -50,6 +52,7 @@ public:
   virtual int32_t get_downsampling();
   /**
    * Set downsampling value
+   * @param downsampling value
    * @return true/false for success/failure
    */
   virtual bool set_downsampling(const int32_t d);
@@ -60,9 +63,11 @@ public:
    */
   virtual std::vector<int32_t>  get_rgb();
   /**
-   * Set RGB values
-   * @return set the RGB values of the superquadric
+   * Set the RGB values of the superquadric
    * and blob visualization
+   * @param red values in [0,255]
+   * @param green values in [0,255]
+   * @param blue values in [0,255]
    * @return true/false on success/failure
    */
   virtual bool set_rgb(const int32_t r, const int32_t g, const int32_t b);
@@ -77,6 +82,7 @@ public:
    * Set the eye used for projection of the
    * 3D points on the superquadric surface
    * to the 2D pixels
+   * @param string left or right for selecting the left or right eye
    * @return true/false on success/failure
    */
   virtual bool set_eye(const std::string& eye = "");
@@ -89,6 +95,7 @@ public:
   /**
    * Set the maximum number of points used
    * for the superquadric reconstruction
+   * @param maxixum number of points for superquadric reconstruction
    * @return true/false on success/failure
    */
   virtual bool set_max_num_points(const int32_t max);
@@ -101,6 +108,7 @@ public:
   /**
    * Set max number of visualized points
    * on superquadric surface
+   * @param number of points to be visualized
    * @return true/false on success/failure
    */
   virtual bool set_visualized_points(const int32_t vis);
