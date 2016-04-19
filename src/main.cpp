@@ -38,8 +38,7 @@
 
 #include "superquadric.cpp"
 
-#include "../idl_dox/superquadricDetection_IDL.h"
-
+#include "src/superquadricDetection_IDL.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -59,8 +58,6 @@ protected:
     vector<cv::Point> contour;
     deque<Vector> points;
     deque<cv::Point> blob_points;
-
-    Mutex mutex;
 
     BufferedPort<ImageOf<PixelMono> > portDispIn;
     BufferedPort<ImageOf<PixelRgb> >  portDispOut;
@@ -100,7 +97,7 @@ protected:
     }
 
     /************************************************************************/
-    bool object_name(const string &object_name)
+    bool set_object_name(const string &object_name)
     {
         objname=object_name;
         method="name";
@@ -108,20 +105,27 @@ protected:
     }
 
     /************************************************************************/
-    bool seed_point()
+    bool seed_point(const int &x, const int &y)
     {
+        if ((x>0) && (y>0))
+        {
+            cv::Point p;
+            p.x=x;
+            p.y=y;
+            contour.push_back(p);
+        }
         method="point";
         return true;
     }
 
     /************************************************************************/
-    string which_object()
+    string get_object_name()
     {
         return objname;
     }
 
     /************************************************************************/
-    string name_or_not()
+    string get_method()
     {
         return method;
     }
@@ -135,7 +139,7 @@ protected:
     /************************************************************************/
     bool set_downsampling(const int d)
     {
-        if((d>0) && (d<100))
+        if ((d>0) && (d<100))
         {
             downsampling=d;
             return true;
@@ -158,7 +162,7 @@ protected:
     /**********************************************************************/
     bool set_rgb(const int &red, const int &green, const int &blue)
     {
-        if ((r<255) && (g<255) && (b<255))
+        if ((r<=255) && (g<=255) && (b<=255) && (r>=0) && (g>=0) && (b>=0))
         {
             r=red;
             g=green;
@@ -196,7 +200,7 @@ protected:
     /**********************************************************************/
     bool set_visualized_points(const int v)
     {
-        if ((v>10) && (v<1000))
+        if ((v>=10) && (v<=1000))
         {
             vis_points=v;
             return true;
@@ -234,8 +238,7 @@ public:
             yError("Not found a suitable superquadric! ");
             //return false;
         }
-
-        else
+        else if (go_on==true)
             go_on=showSuperq();
 
         if ((go_on==false) && (!isStopping()))
@@ -364,8 +367,6 @@ public:
         portImgOut.open("/superquadric-detection/img:o");
 
         eye=rf.check("eye", Value("left")).asString();
-        //if (rf.find("eye").isNull())
-           // eye="left";
 
         if (Bottle *B=rf.find("color").asList())
         {
@@ -442,7 +443,7 @@ public:
         cv::Mat imgDispOutMat=cv::cvarrToMat((IplImage*)imgDispOut.getIplImage());
         cv::cvtColor(imgDispInMat,imgDispOutMat,CV_GRAY2RGB);
 
-        if (method=="seed_point")
+        if (method=="point")
         {
             if (contour.size()>0)
             {
@@ -455,7 +456,7 @@ public:
         }
         else if (method=="name")
         {
-            //if ( objname.isEmpty() || objname!=NULL)
+            if ( objname.length()==0)
                 pointFromName();
 
             if (contour.size()>0)
@@ -474,7 +475,7 @@ public:
     }
 
     /***********************************************************************/
-    void getBlob(ImageOf<PixelRgb> &imgDispOut,PixelRgb &color)
+    void getBlob(ImageOf<PixelRgb> &imgDispOut,const PixelRgb &color)
     {
         Bottle cmd,reply;
         blob_points.clear();
@@ -504,7 +505,7 @@ public:
     }
 
     /***********************************************************************/
-    void get3Dpoints(ImageOf<PixelRgb> &imgDispOut, PixelRgb &color)
+    void get3Dpoints(ImageOf<PixelRgb> &imgDispOut, const PixelRgb &color)
     {
         Bottle cmd,reply;
         cmd.addString("Points");
@@ -571,7 +572,6 @@ public:
                     {
                         cmd.clear();
                         int id=b1->get(0).asInt();
-                        cout<<"id"<<id<<endl;
                         cmd.addVocab(Vocab::encode("get"));
                         Bottle &info=cmd.addList();
                         Bottle &info2=info.addList();
@@ -581,7 +581,6 @@ public:
                         info3.addString("propSet");
                         Bottle &info4=info3.addList();
                         info4.addString("position_2d_left");
-                        cout<<"cmd 2 "<<cmd.toString()<<endl;
                     }
                     else
                         yInfo("no object id provided by OPC!");
@@ -591,10 +590,9 @@ public:
 
                 Bottle reply;
                 portOPCrpc.write(cmd,reply);
-                if(reply.size()>1)
+                if (reply.size()>1)
                 {
-                    cout<<"reply 2 "<<reply.toString()<<endl;
-                    if(reply.get(0).asVocab()==Vocab::encode("ack"))
+                    if (reply.get(0).asVocab()==Vocab::encode("ack"))
                     {
                         if (Bottle *b=reply.get(1).asList())
                         {                           
@@ -607,7 +605,6 @@ public:
                                 p2.y=b1->get(3).asInt();
                                 p.x=p1.x+(p2.x-p1.x)/2;
                                 p.y=p1.y+(p2.y-p1.y)/2;
-                                cout<<"p "<<p.x<<" "<<p.y<<endl;
                                 contour.clear();
                                 contour.push_back(p);
                             }
@@ -650,12 +647,11 @@ public:
         superQ_nlp->usePoints(points);
 
         double t,t0;
-        t0=Time::now();
-
-        points.clear();
+        t0=Time::now();        
 
         Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
         t=Time::now()-t0;
+        points.clear();
 
         if (status==Ipopt::Solve_Succeeded)
         {
@@ -674,7 +670,6 @@ public:
         PixelRgb color(r,g,b);
         Vector pos, orient;
         double co,so,ce,se;
-        Stamp* stamp=NULL;
 
         ImageOf<PixelRgb> *imgIn=portImgIn.read();
         if (imgIn==NULL)
@@ -685,11 +680,11 @@ public:
 
         R=euler2dcm(x.subVector(8,10));
         
-        if ((norm(x)>0.0) && (go_on==true))
+        if ((norm(x)>0.0))
         {
             if (eye=="left")
             {
-                if (igaze->getLeftEyePose(pos,orient,stamp))
+                if (igaze->getLeftEyePose(pos,orient))
                 {
                     H=axis2dcm(orient);
                     H.setSubcol(pos,0,3);
@@ -698,7 +693,7 @@ public:
             }
             else
             {
-                if (igaze->getRightEyePose(pos,orient,stamp))
+                if (igaze->getRightEyePose(pos,orient))
                 {
                     H=axis2dcm(orient);
                     H.setSubcol(pos,0,3);
@@ -756,20 +751,6 @@ public:
         point2D=K*H*point_aux;
         return point2D.subVector(0,1)/point2D[2];
     }
-
-    /*******************************************************************************/
-  /**  bool read(ConnectionReader &connection)
-    {
-        Bottle data; data.read(connection);
-        if (data.size()>=2)
-        {
-            LockGuard lg(mutex);
-            cv::Point point(data.get(0).asInt(),data.get(1).asInt());
-            contour.push_back(point);
-       }
-
-        return true;
-    }*/
 };
 
 /**********************************************************************/
@@ -784,7 +765,7 @@ int main(int argc,char *argv[])
 
     SuperqModule mod;
     ResourceFinder rf;
-    rf.setDefaultContext("superquadric");
+    rf.setDefaultContext("superquadric-detection");
     rf.configure(argc,argv);
     return mod.runModule(rf);
 }

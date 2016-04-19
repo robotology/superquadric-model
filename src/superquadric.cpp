@@ -330,8 +330,7 @@ public:
     /****************************************************************/
     void computeInitialOrientation(Vector &x0,deque<Vector> &point_cloud)
     {
-        Matrix M;
-        M=zeros(3,3);
+        Matrix M=zeros(3,3);
         Matrix R(3,3);
         Matrix u(3,3);
         Matrix v(3,3);

@@ -17,21 +17,23 @@ service superquadricDetection_IDL
     * @param name of the object
     * @return true/false is the object is known/unknown
     */
-    bool object_name(1:string entry="");
+    bool set_object_name(1:string entry="");
 
     /**
-    * Say to wait for a click on the
-    * camera, without using the name object
+    * Get the seed point of the object
+    * without using the name object
+    * @param x pixel value of the object seed point
+    * @param y pixel value of the object seed point
     * return true/false on success/failure.
     */
-    bool seed_point();
+    bool seed_point(1:i32 x_pixel, 2:i32 y_pixel);
 
     /**
     * Return the name of the object that is
     * being detected and modeled
     * @return the name of the object
     */
-    string which_object();
+    string get_object_name();
 
     /**
     * Say which method is set for getting
@@ -39,7 +41,7 @@ service superquadricDetection_IDL
     * @return "name" if you have to type the name
     * "point" if you have to click on the camera
     */
-    string name_or_not();
+    string get_method();
 
     /**
     * Get downsampling value
@@ -49,6 +51,7 @@ service superquadricDetection_IDL
 
     /**
     * Set downsampling value
+    * @param downsampling value
     * @return true/false for success/failure
     */
     bool set_downsampling(1: i32 d);
@@ -61,9 +64,11 @@ service superquadricDetection_IDL
     list<i32> get_rgb()
 
     /**
-    * Set RGB values
-    * @return set the RGB values of the superquadric
+    * Set the RGB values of the superquadric
     * and blob visualization
+    * @param red values in [0,255] 
+    * @param green values in [0,255]
+    * @param blue values in [0,255]  
     * @return true/false on success/failure
     */
     bool set_rgb(1:i32 r, 2:i32 g, 3:i32 b)
@@ -80,6 +85,7 @@ service superquadricDetection_IDL
     * Set the eye used for projection of the
     * 3D points on the superquadric surface
     * to the 2D pixels
+    * @param string left or right for selecting the left or right eye
     * @return true/false on success/failure
     */
     bool set_eye(1:string eye="")
@@ -94,6 +100,7 @@ service superquadricDetection_IDL
     /**
     * Set the maximum number of points used
     * for the superquadric reconstruction
+    * @param maxixum number of points for superquadric reconstruction
     * @return true/false on success/failure
     */
     bool set_max_num_points(1:i32 max)
@@ -108,6 +115,7 @@ service superquadricDetection_IDL
     /**
     * Set max number of visualized points
     * on superquadric surface
+    * @param number of points to be visualized
     * @return true/false on success/failure
     */
     bool set_visualized_points(1:i32 vis)

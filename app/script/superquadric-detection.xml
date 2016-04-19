@@ -23,6 +23,13 @@
   <arguments>
     <param default="superquadric-detection" desc="select the current context.">context</param>
     <param default="config.ini" desc="configuration file name.">from</param>
+    <param default="left" desc="eye used for projection of the 3D points on the superquadric surface to the 2D pixels">eye</param>
+    <param default="3" desc="downsampling value">downsampling</param>
+    <param default="0.01" desc="IPOPT objective function tollerance">tol</param>
+    <param default="0" desc="IPOPT acceptable iter">acceptable_iter</param>
+    <param default="max numeric limit" desc="IPOPT maximum iteration">max_iter</param>
+    <param default="adaptive" desc="IPOPT mu strategy">mu_strategy</param> 
+    <param default="none" desc="IPOPT nlp_scaling_method">nlp_scaling_method</param>
   </arguments>
  
   <authors>
