@@ -14,7 +14,7 @@ service superquadricDetection_IDL
     /**
     * Set the name of the object
     * to be detected and modeled
-    * @param name of the object
+    * @param entry is the name of the object
     * @return true/false is the object is known/unknown
     */
     bool set_object_name(1:string entry="");
@@ -22,8 +22,8 @@ service superquadricDetection_IDL
     /**
     * Get the seed point of the object
     * without using the name object
-    * @param x pixel value of the object seed point
-    * @param y pixel value of the object seed point
+    * @param x_pixel is the x pixel value of the object seed point
+    * @param y_pixel is the x pixel value of the object seed point
     * return true/false on success/failure.
     */
     bool seed_point(1:i32 x_pixel, 2:i32 y_pixel);
@@ -51,7 +51,7 @@ service superquadricDetection_IDL
 
     /**
     * Set downsampling value
-    * @param downsampling value
+    * @param d is the downsampling value
     * @return true/false for success/failure
     */
     bool set_downsampling(1: i32 d);
@@ -66,9 +66,9 @@ service superquadricDetection_IDL
     /**
     * Set the RGB values of the superquadric
     * and blob visualization
-    * @param red values in [0,255] 
-    * @param green values in [0,255]
-    * @param blue values in [0,255]  
+    * @param r is red value in [0,255] 
+    * @param g is green value in [0,255]
+    * @param b is blue value in [0,255]  
     * @return true/false on success/failure
     */
     bool set_rgb(1:i32 r, 2:i32 g, 3:i32 b)
@@ -85,7 +85,7 @@ service superquadricDetection_IDL
     * Set the eye used for projection of the
     * 3D points on the superquadric surface
     * to the 2D pixels
-    * @param string left or right for selecting the left or right eye
+    * @param eye is a string "left" or "right" for selecting the left or right eye
     * @return true/false on success/failure
     */
     bool set_eye(1:string eye="")
@@ -100,7 +100,7 @@ service superquadricDetection_IDL
     /**
     * Set the maximum number of points used
     * for the superquadric reconstruction
-    * @param maxixum number of points for superquadric reconstruction
+    * @param max is the number of points for superquadric reconstruction
     * @return true/false on success/failure
     */
     bool set_max_num_points(1:i32 max)
@@ -115,7 +115,7 @@ service superquadricDetection_IDL
     /**
     * Set max number of visualized points
     * on superquadric surface
-    * @param number of points to be visualized
+    * @param vis is the number of points to be visualized
     * @return true/false on success/failure
     */
     bool set_visualized_points(1:i32 vis)
