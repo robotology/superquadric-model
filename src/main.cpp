@@ -51,7 +51,7 @@ class SuperqModule : public RFModule,
                      public superquadricDetection_IDL
 {
 protected:
-    bool go;
+
     int r,g,b;
     int downsampling;
     string objname;
@@ -133,7 +133,7 @@ protected:
     }
 
     /************************************************************************/
-    bool set_downsampling(const int32_t d)
+    bool set_downsampling(const int d)
     {
         if((d>0) && (d<100))
         {
@@ -156,7 +156,7 @@ protected:
     }
 
     /**********************************************************************/
-    bool set_rgb(const int32_t &red, const int32_t &green, const int32_t &blue)
+    bool set_rgb(const int &red, const int &green, const int &blue)
     {
         if ((r<255) && (g<255) && (b<255))
         {
@@ -194,7 +194,7 @@ protected:
     }
 
     /**********************************************************************/
-    bool set_visualized_points(const int32_t v)
+    bool set_visualized_points(const int v)
     {
         if ((v>10) && (v<1000))
         {
@@ -209,7 +209,7 @@ public:
     /***********************************************************************/
     double getPeriod()
     {
-        return 0.1;
+        return 0.0;
     }
 
     /***********************************************************************/
@@ -332,7 +332,6 @@ public:
         attach(portRpc);
 
         downsampling=std::max(1,rf.check("downsampling",Value(3)).asInt());
-        go=false;
         vis_points=16;
 
         return true;
@@ -364,9 +363,9 @@ public:
         portImgIn.open("/superquadric-detection/img:i");
         portImgOut.open("/superquadric-detection/img:o");
 
-        eye=rf.find("eye").asString().c_str();
-        if (rf.find("eye").isNull())
-            eye="left";
+        eye=rf.check("eye", Value("left")).asString();
+        //if (rf.find("eye").isNull())
+           // eye="left";
 
         if (Bottle *B=rf.find("color").asList())
         {
@@ -456,7 +455,7 @@ public:
         }
         else if (method=="name")
         {
-            //if ( objname.empty())
+            //if ( objname.isEmpty() || objname!=NULL)
                 pointFromName();
 
             if (contour.size()>0)
@@ -485,6 +484,15 @@ public:
 
         if (portBlobRpc.write(cmd,reply))
         {
+            Bottle *blob_list=reply.get(0).asList();
+            for (int i=0; i<blob_list->size();i++)
+            {
+                Bottle *blob_pair=blob_list->get(i).asList();
+                cv:: Point pix=cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt());
+                blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt()));
+                imgDispOut.pixel(pix.x, pix.y)=color;
+            }
+
             get3Dpoints(imgDispOut,color);
         }
         else
@@ -550,9 +558,8 @@ public:
         Bottle &cond_2=content.addList();
         cond_2.addString("name");
         cond_2.addString("==");
-        cond_2.addString(objname);
+        cond_2.addString(objname);        
 
-        cout<<"cmd 1 "<<cmd.toString()<<endl;
         portOPCrpc.write(cmd,reply);
         if(reply.size()>1)
         {
@@ -562,17 +569,18 @@ public:
                 {
                     if (Bottle *b1=b->get(1).asList())
                     {
+                        cmd.clear();
                         int id=b1->get(0).asInt();
-                        Bottle cmd;
+                        cout<<"id"<<id<<endl;
                         cmd.addVocab(Vocab::encode("get"));
                         Bottle &info=cmd.addList();
-                        info.addString("id");
                         Bottle &info2=info.addList();
+                        info2.addString("id");
                         info2.addInt(id);
-                        Bottle &info3=cmd.addList();
-                        info3.addString("proSet");
+                        Bottle &info3=info.addList();
+                        info3.addString("propSet");
                         Bottle &info4=info3.addList();
-                        info4.addList().addString("position_2D");
+                        info4.addString("position_2d_left");
                         cout<<"cmd 2 "<<cmd.toString()<<endl;
                     }
                     else
@@ -581,28 +589,30 @@ public:
                 else
                     yInfo("uncorrect reply from OPC!");
 
+                Bottle reply;
                 portOPCrpc.write(cmd,reply);
                 if(reply.size()>1)
                 {
+                    cout<<"reply 2 "<<reply.toString()<<endl;
                     if(reply.get(0).asVocab()==Vocab::encode("ack"))
                     {
                         if (Bottle *b=reply.get(1).asList())
-                        {
-                            if (Bottle *b1=b->get(0).asList())
+                        {                           
+                            if (Bottle *b1=b->find("position_2d_left").asList())
                             {
-                                if (Bottle *b2=b1->find("position_2D").asList())
-                                {
-                                    cv::Point p;
-                                    p.x=b2->get(0).asInt();
-                                    p.y=b2->get(1).asInt();
-                                    cout<<"px and py "<<p.x<<" "<<p.y<<endl;
-                                    contour.push_back(p);
-                                }
-                                else
-                                    yInfo("position_2D field not found in the OPC reply!");
+                                cv::Point p1,p2,p;
+                                p1.x=b1->get(0).asInt();
+                                p1.y=b1->get(1).asInt();
+                                p2.x=b1->get(2).asInt();
+                                p2.y=b1->get(3).asInt();
+                                p.x=p1.x+(p2.x-p1.x)/2;
+                                p.y=p1.y+(p2.y-p1.y)/2;
+                                cout<<"p "<<p.x<<" "<<p.y<<endl;
+                                contour.clear();
+                                contour.push_back(p);
                             }
                             else
-                                yInfo("uncorrect reply structure received!");
+                                yInfo("position_2d_left field not found in the OPC reply!");
                         }
                         else
                             yInfo("uncorrect reply structure received!");
@@ -675,7 +685,7 @@ public:
 
         R=euler2dcm(x.subVector(8,10));
         
-        if ((norm(x)!=0.0) && (go_on==true))
+        if ((norm(x)>0.0) && (go_on==true))
         {
             if (eye=="left")
             {
