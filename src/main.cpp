@@ -274,6 +274,7 @@ public:
         portBlobRpc.interrupt();
         portContour.interrupt();
         portSFMrpc.interrupt();
+        portOPCrpc.interrupt();
         portRpc.interrupt();
 
         portImgIn.interrupt();
@@ -301,6 +302,9 @@ public:
             portContour.close();
 
         if (portSFMrpc.asPort().isOpen())
+            portSFMrpc.close();
+
+        if (portOPCrpc.asPort().isOpen())
             portSFMrpc.close();
 
         if (portRpc.asPort().isOpen())
@@ -724,14 +728,15 @@ public:
                                     x[2] * sign(se)*(pow(abs(se),x[3])) * R(2,2) + x[7];
 
                      point2D=from3Dto2D(point);
+
                      cv::Point target_point(point2D[0],point2D[1]);
 
-                     if ((target_point.x<0) || (target_point.y<0))
+                     if ((target_point.x<0) || (target_point.y<0) || (target_point.x>320) || (target_point.y>240))
                      {
-                         yError("Negative pixels!");
+                         yError("Not acceptable pixels!");
                      }
-
-                     imgOut.pixel(target_point.x, target_point.y)=color;
+                     else
+                        imgOut.pixel(target_point.x, target_point.y)=color;
 
                  }
              }

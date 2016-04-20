@@ -20,13 +20,13 @@
 
     <module>
        <name>yarpview</name>
-       <parameters>--name /dispSuperq --out /dispSuperq/out --p 33</parameters>
+       <parameters>--name /dispSuperq --out /dispSuperq/out --x 1600 --y 0 --p 33</parameters>
        <node>icub22</node>
     </module>
 
     <module>
        <name>yarpview</name>
-       <parameters>--name /dispBlobs --out /dispBlobs/out --p 33</parameters>
+       <parameters>--name /dispBlobs --out /dispBlobs/out --x 1600 --y 370 --w 600 --h 600 --p 33</parameters>
        <node>icub22</node>
     </module>
 
@@ -93,12 +93,6 @@
     <connection>
         <from>/superquadric-detection/blob:rpc</from>
         <to>/lbpExtract/rpc:i</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/lbpExtract/segmentedlbp:o</from>
-        <to>/dispBlobs</to>
         <protocol>tcp</protocol>
     </connection>
 
