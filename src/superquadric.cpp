@@ -310,6 +310,8 @@ public:
         for (size_t i=0; i<point_cloud.size();i++)
         {
             Vector &point=point_cloud[i];
+            x0[5]+=point[0];
+            x0[6]+=point[1];
             x0[7]+=point[2];
         }
 

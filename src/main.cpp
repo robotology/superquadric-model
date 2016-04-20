@@ -236,7 +236,6 @@ public:
         if ((go_on==false) && (!isStopping()))
         {
             yError("Not found a suitable superquadric! ");
-            //return false;
         }
         else if (go_on==true)
             go_on=showSuperq();
@@ -448,24 +447,25 @@ public:
             if (contour.size()>0)
             {
                 getBlob(imgDispOut,color);
-            }
-            else if (blob_points.size()>0)
-            {
-                get3Dpoints(imgDispOut, color);
+
+                if (blob_points.size()>0)
+                {
+                    get3Dpoints(imgDispOut, color);
+                }
             }
         }
         else if (method=="name")
         {
-            if ( objname.length()==0)
-                pointFromName();
+            pointFromName();
 
             if (contour.size()>0)
             {
                 getBlob(imgDispOut,color);
-            }
-            else if (blob_points.size()>0)
-            {
-                get3Dpoints(imgDispOut, color);
+
+                if (blob_points.size()>0)
+                {
+                    get3Dpoints(imgDispOut, color);
+                }
             }
         }
 
@@ -498,7 +498,7 @@ public:
         }
         else
         {
-            contour.clear();
+            //contour.clear();
             points.clear();
             yError("lbpExtract reply is fail!");
         }
@@ -605,7 +605,7 @@ public:
                                 p2.y=b1->get(3).asInt();
                                 p.x=p1.x+(p2.x-p1.x)/2;
                                 p.y=p1.y+(p2.y-p1.y)/2;
-                                contour.clear();
+                                //contour.clear();
                                 contour.push_back(p);
                             }
                             else
@@ -647,7 +647,7 @@ public:
         superQ_nlp->usePoints(points);
 
         double t,t0;
-        t0=Time::now();        
+        t0=Time::now();
 
         Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
         t=Time::now()-t0;
@@ -670,21 +670,22 @@ public:
         PixelRgb color(r,g,b);
         Vector pos, orient;
         double co,so,ce,se;
+        Stamp *stamp=NULL;
 
         ImageOf<PixelRgb> *imgIn=portImgIn.read();
         if (imgIn==NULL)
             return false;
-        
+
         ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
         imgOut=*imgIn;
 
         R=euler2dcm(x.subVector(8,10));
-        
+
         if ((norm(x)>0.0))
         {
             if (eye=="left")
             {
-                if (igaze->getLeftEyePose(pos,orient))
+                if (igaze->getLeftEyePose(pos,orient,stamp))
                 {
                     H=axis2dcm(orient);
                     H.setSubcol(pos,0,3);
@@ -693,7 +694,7 @@ public:
             }
             else
             {
-                if (igaze->getRightEyePose(pos,orient))
+                if (igaze->getRightEyePose(pos,orient,stamp))
                 {
                     H=axis2dcm(orient);
                     H.setSubcol(pos,0,3);
@@ -703,9 +704,9 @@ public:
 
             double step=2*M_PI/vis_points;
 
-            for (double eta=-M_PI; eta<M_PI; eta+=M_PI/step)
+            for (double eta=-M_PI; eta<M_PI; eta+=step)
             {
-                 for (double omega=-M_PI; omega<M_PI;omega+=M_PI/step)
+                 for (double omega=-M_PI; omega<M_PI;omega+=step)
                  {
                      co=cos(omega); so=sin(omega);
                      ce=cos(eta); se=sin(eta);
@@ -722,15 +723,15 @@ public:
                                 x[1] * sign(ce)*(pow(abs(ce),x[3])) * sign(so)*(pow(abs(so),x[4])) * R(2,1)+
                                     x[2] * sign(se)*(pow(abs(se),x[3])) * R(2,2) + x[7];
 
-                    point2D=from3Dto2D(point);
-                    cv::Point target_point(point2D[0],point2D[1]);
+                     point2D=from3Dto2D(point);
+                     cv::Point target_point(point2D[0],point2D[1]);
 
-                    if ((target_point.x<0) || (target_point.y<0))
-                    {
-                        yError("Negative pixels!");
-                    }
+                     if ((target_point.x<0) || (target_point.y<0))
+                     {
+                         yError("Negative pixels!");
+                     }
 
-                    imgOut.pixel(target_point.x, target_point.y)=color;
+                     imgOut.pixel(target_point.x, target_point.y)=color;
 
                  }
              }
@@ -747,7 +748,6 @@ public:
         Vector point2D(3,0.0);
         Vector point_aux(4,1.0);
         point_aux.setSubvector(0,point3D);
-
         point2D=K*H*point_aux;
         return point2D.subVector(0,1)/point2D[2];
     }
