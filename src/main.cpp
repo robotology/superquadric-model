@@ -52,9 +52,11 @@ class SuperqModule : public RFModule,
 protected:
 
     int r,g,b;
+    int count;
     int downsampling;
     string objname;
     string method;
+    string homeContextPath;
     vector<cv::Point> contour;
     deque<Vector> points;
     deque<cv::Point> blob_points;
@@ -69,7 +71,8 @@ protected:
     RpcServer portRpc;
 
     bool go_on;
-    double tol, sum;    
+    double tol, sum;
+    double max_cpu_time;
     int acceptable_iter,max_iter;    
     string mu_strategy,nlp_scaling_method;
     Vector x;
@@ -87,6 +90,7 @@ protected:
     Vector point,point1;
     Vector point2D;
     deque<int> Color;
+    deque<double> times;
 
     ResourceFinder *rf;
 
@@ -219,6 +223,9 @@ public:
     /***********************************************************************/
     bool updateModule()
     {
+        double t,t0;
+        t0=Time::now();
+
         go_on=acquirePointsFromBlob();
 
         if ((go_on==false) && (!isStopping()))
@@ -245,6 +252,10 @@ public:
             yError("No image available! ");
             return false;
         }
+
+        t=Time::now()-t0;
+        times.push_back(t);
+        yInfo("Update module runs in %f",t);
 
         return true;
     }
@@ -286,6 +297,11 @@ public:
     /***********************************************************************/
     bool close()
     {
+        for(size_t i=0; i<times.size(); i++)
+            sum+=times[i];
+
+        yInfo("Average updateModule execution time: %f",sum/times.size());
+
         if (!portDispIn.isClosed())
             portDispIn.close();
 
@@ -337,8 +353,10 @@ public:
 
         attach(portRpc);
 
+        homeContextPath=rf.getHomeContextPath().c_str();
         downsampling=std::max(1,rf.check("downsampling",Value(3)).asInt());
         vis_points=16;
+        count=0;
 
         return true;
     }
@@ -351,6 +369,7 @@ public:
         tol=rf.check("tol",Value(1e-2)).asDouble();
         acceptable_iter=rf.check("acceptable_iter",Value(0)).asInt();
         max_iter=rf.check("max_iter",Value(numeric_limits<int>::max())).asInt();
+        max_cpu_time=rf.check("max_cpu_time", Value(0.3)).asDouble();
 
         mu_strategy=rf.find("mu_strategy").asString().c_str();
         if (rf.find("mu_strategy").isNull())
@@ -531,12 +550,17 @@ public:
                 point[1]=reply.get(idx+1).asDouble();
                 point[2]=reply.get(idx+2).asDouble();
 
-                points.push_back(point);
+                if (norm(point)>0)
+                    points.push_back(point);
             }
 
             if (points.size()<=0)
             {
                 yError("Some problems in point acquisition!");
+            }
+            else
+            {
+                savePoints();
             }
         }
         else
@@ -631,6 +655,28 @@ public:
             yInfo("reply size for object id less than 1!");
     }
 
+
+    /***********************************************************************/
+    void savePoints()
+    {
+        ofstream fout;
+        count++;
+        fout.open((homeContextPath+"/test-3d-points"+count+".off").c_str());
+        if (fout.is_open())
+        {
+            fout<<"OFF"<<endl;
+            fout<<points.size()<<" 0 0"<<endl;
+            fout<<endl;
+            for (size_t i=0; i<points.size(); i++)
+            {
+                fout<<points[i].subVector(0,2).toString(3,4).c_str()<<endl;
+            }
+            fout<<endl;
+        }
+        fout.close();
+
+    }
+
     /***********************************************************************/
     bool computeSuperq()
     {
@@ -639,6 +685,7 @@ public:
         app->Options()->SetIntegerValue("acceptable_iter",acceptable_iter);
         app->Options()->SetStringValue("mu_strategy",mu_strategy);
         app->Options()->SetIntegerValue("max_iter",max_iter);
+        app->Options()->SetNumericValue("max_cpu_time",max_cpu_time);
         app->Options()->SetStringValue("nlp_scaling_method",nlp_scaling_method);
         app->Options()->SetStringValue("hessian_approximation","limited-memory");
         app->Options()->SetIntegerValue("print_level",0);
@@ -650,18 +697,20 @@ public:
         superQ_nlp->configure(this->rf);
         superQ_nlp->usePoints(points);
 
-        double t,t0;
-        t0=Time::now();
-
         Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
-        t=Time::now()-t0;
+
         points.clear();
 
         if (status==Ipopt::Solve_Succeeded)
         {
             x=superQ_nlp->get_result();
             yInfo("Solution of the optimization problem: %s", x.toString(3,3).c_str());
-            yInfo("Computed in: %f [s]", t);
+            return true;
+        }
+        else if(status==Ipopt::Maximum_CpuTime_Exceeded)
+        {
+            x=superQ_nlp->get_result();
+            yError("Solution after maximum time exceeded: %s", x.toString(3,3).c_str());
             return true;
         }
         else
