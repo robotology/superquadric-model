@@ -120,5 +120,14 @@ service superquadricDetection_IDL
     */
     bool set_visualized_points(1:i32 vis)
 
+    /**
+    * Get the parameters of the reconstructed
+    * superquadric 
+    * @param name of the object of which we want the superquadric
+    * @return the 11 parameters on the current superquadric
+    */
+    list<double> get_superq(1:string name="")
+
+
 }
 

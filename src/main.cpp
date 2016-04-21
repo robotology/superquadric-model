@@ -213,6 +213,21 @@ protected:
             return false;
     }
 
+    /**********************************************************************/
+    vector<double> get_superq(const string &name)
+    {
+        vector<double> parameters;
+        parameters.clear();
+
+        if (name==objname)
+        {
+            for (size_t i=0; i<x.size(); i++)
+                parameters.push_back(x[i]);
+        }
+
+        return parameters;
+    }
+
 public:
     /***********************************************************************/
     double getPeriod()
