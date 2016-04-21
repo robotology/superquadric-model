@@ -112,6 +112,13 @@ public:
    * @return true/false on success/failure
    */
   virtual bool set_visualized_points(const int32_t vis);
+  /**
+   * Get the parameters of the reconstructed
+   * superquadric
+   * @param name of the object of which we want the superquadric
+   * @return the 11 parameters on the current superquadric
+   */
+  virtual std::vector<double>  get_superq(const std::string& name = "");
   virtual bool read(yarp::os::ConnectionReader& connection);
   virtual std::vector<std::string> help(const std::string& functionName="--all");
 };
