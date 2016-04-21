@@ -731,7 +731,7 @@ public:
 
                      cv::Point target_point(point2D[0],point2D[1]);
 
-                     if ((target_point.x<0) || (target_point.y<0) || (target_point.x>320) || (target_point.y>240))
+                     if ((target_point.x<0) || (target_point.y<0) || (target_point.x>=320) || (target_point.y>=240))
                      {
                          yError("Not acceptable pixels!");
                      }

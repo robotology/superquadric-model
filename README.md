@@ -52,12 +52,6 @@ Then, all the points belonging to the object blob are processed and used for the
 ## Documentation
 Online documentation is available here:  [http://giuliavezzani.github.com/superquadric-detection](http://giuliavezzani.github.com/superquadric-detection) [work in progress]
 
-## Code snippets
-In order to use the superquadric-detection module, you need to launch the following modules:
-- [IOL](https://github.com/robotology/iol), for object selection through its name,
-
-since a _RPC_ communication with these modules is required.
-
 ## License
 Material included here is Copyright of _iCub Facility - Istituto Italiano di Tecnologia_
 and is released under the terms of the GPL v2.0 or later. See the file LICENSE for details.
