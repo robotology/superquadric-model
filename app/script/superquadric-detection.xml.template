@@ -14,19 +14,13 @@
 
     <module>
        <name>yarpview</name>
-       <parameters>--name /disp --out /disp/out --p 33</parameters>
+       <parameters>--name /disp --out /dispSuperq/out --x 1600 --y 0 --p 33</parameters>
        <node>icub22</node>
     </module>
 
     <module>
        <name>yarpview</name>
-       <parameters>--name /dispSuperq --out /dispSuperq/out --x 1600 --y 0 --p 33</parameters>
-       <node>icub22</node>
-    </module>
-
-    <module>
-       <name>yarpview</name>
-       <parameters>--name /dispBlobs --out /dispBlobs/out --x 1600 --y 370 --w 600 --h 600 --p 33</parameters>
+       <parameters>--name /dispSuperq --out /dispBlobs/out --x 1600 --y 370 --w 600 --h 600 --p 33</parameters>
        <node>icub22</node>
     </module>
 
