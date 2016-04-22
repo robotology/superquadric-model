@@ -71,7 +71,7 @@ service superquadricDetection_IDL
     * @param b is blue value in [0,255]  
     * @return true/false on success/failure
     */
-    bool set_rgb(1:i32 r, 2:i32 g, 3:i32 b)
+    bool set_rgb(1: i32 r, 2: i32 g, 3: i32 b)
 
     /**
     * Get the eye used for projection of the

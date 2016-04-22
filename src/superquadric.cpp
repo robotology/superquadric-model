@@ -76,7 +76,10 @@ public:
             int count=point_cloud.size()/max_num_points;
 
             for (int i=0; i<point_cloud.size(); i+=count)
+            {
                 points_downsampled.push_back(point_cloud[i]);
+            }
+
         }
 
         yInfo("points usable for modeling: %lu ",points_downsampled.size());
@@ -290,7 +293,7 @@ public:
     {
         bounds.resize(11,2);
 
-        bounds_automatic=(rf->check("bounds_automatic",Value("no")).asString()=="yes");
+        bounds_automatic=(rf->check("bounds_automatic",Value("yes")).asString()=="yes");
 
         if (bounds_automatic==false)
             readMatrix("bounds",bounds, 11, rf);

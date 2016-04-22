@@ -164,9 +164,9 @@ protected:
     }
 
     /**********************************************************************/
-    bool set_rgb(const int &red, const int &green, const int &blue)
+    bool set_rgb(const int red, const int green, const int blue)
     {
-        if ((r<=255) && (g<=255) && (b<=255) && (r>=0) && (g>=0) && (b>=0))
+        if ((red<=255) && (green<=255) && (blue<=255) && (red>=0) && (green>=0) && (blue>=0))
         {
             r=red;
             g=green;
@@ -369,6 +369,7 @@ public:
         attach(portRpc);
 
         homeContextPath=rf.getHomeContextPath().c_str();
+        yDebug()<<"home cnt "<<homeContextPath;
         downsampling=std::max(1,rf.check("downsampling",Value(3)).asInt());
         vis_points=16;
         count=0;
@@ -675,8 +676,11 @@ public:
     void savePoints()
     {
         ofstream fout;
+        stringstream ss2;
+        ss2 << count;
+        string str_i = ss2.str();
         count++;
-        fout.open((homeContextPath+"/test-3d-points"+count+".off").c_str());
+        fout.open((homeContextPath+"/test-3d-points"+str_i+".off").c_str());
         if (fout.is_open())
         {
             fout<<"OFF"<<endl;
