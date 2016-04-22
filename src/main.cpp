@@ -627,10 +627,10 @@ public:
                         info4.addString("position_2d_left");
                     }
                     else
-                        yInfo("no object id provided by OPC!");
+                        yError("no object id provided by OPC!");
                 }
                 else
-                    yInfo("uncorrect reply from OPC!");
+                    yError("uncorrect reply from OPC!");
 
                 Bottle reply;
                 portOPCrpc.write(cmd,reply);
@@ -653,22 +653,22 @@ public:
                                 contour.push_back(p);
                             }
                             else
-                                yInfo("position_2d_left field not found in the OPC reply!");
+                                yError("position_2d_left field not found in the OPC reply!");
                         }
                         else
-                            yInfo("uncorrect reply structure received!");
+                            yError("uncorrect reply structure received!");
                     }
                     else
-                        yInfo("Failure in reply for object 2D point!");
+                        yError("Failure in reply for object 2D point!");
                 }
                 else
-                    yInfo("reply size for 2D point less than 1!");
+                    yError("reply size for 2D point less than 1!");
             }
             else
-                yInfo("Failure in reply for object id!");
+                yError("Failure in reply for object id!");
         }
         else
-            yInfo("reply size for object id less than 1!");
+            yError("reply size for object id less than 1!");
     }
 
 
@@ -729,7 +729,7 @@ public:
         else if(status==Ipopt::Maximum_CpuTime_Exceeded)
         {
             x=superQ_nlp->get_result();
-            yError("Solution after maximum time exceeded: %s", x.toString(3,3).c_str());
+            yWarning("Solution after maximum time exceeded: %s", x.toString(3,3).c_str());
             return true;
         }
         else
