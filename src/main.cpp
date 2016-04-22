@@ -336,7 +336,7 @@ public:
             portSFMrpc.close();
 
         if (portOPCrpc.asPort().isOpen())
-            portSFMrpc.close();
+            portOPCrpc.close();
 
         if (portRpc.asPort().isOpen())
             portRpc.close();
