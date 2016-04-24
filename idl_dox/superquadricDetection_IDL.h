@@ -116,7 +116,11 @@ public:
    * Get the parameters of the reconstructed
    * superquadric
    * @param name of the object of which we want the superquadric
-   * @return the 11 parameters on the current superquadric
+   * @return the 11 parameters (x0, .. x10) of the current superquadric.
+   * In particular, x0, x1, x2 are the three semi-axes lenghts,
+   * x3 and x4 are the exponents, responsible for the superquadric shape.
+   * x5, x6, x7 are the coordinate of the superquadric center and
+   * x8, x9, 10 are the Euler angles, representing the superquadric orientation.
    */
   virtual std::vector<double>  get_superq(const std::string& name = "");
   virtual bool read(yarp::os::ConnectionReader& connection);
