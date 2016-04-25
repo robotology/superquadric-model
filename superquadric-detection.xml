@@ -13,7 +13,7 @@
 
     To correctly launch the module, do the following:
     - Put an <b>object</b> in the robot's sight and make sure that the <b>eye vergence</b> is equal to that value used during _SFM_ calibration.
-    - Launch <b>IOL</b> module and make sure that _SFM_ is giving a good disparity map (otherwise calibrate it thorugh the proper rpc port).
+    - Launch <b>IOL</b> application and make sure that _SFM_ is giving a good disparity map (otherwise calibrate it thorugh the proper rpc port).
     - Launch <b>superquadric-detection</b> module.
     - Make all the <b>connections</b>.
     - Use the <b>rpc port</b> to play with this module.
