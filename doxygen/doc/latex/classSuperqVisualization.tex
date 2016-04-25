@@ -1,0 +1,507 @@
+\section{Superq\+Visualization Class Reference}
+\label{classSuperqVisualization}\index{Superq\+Visualization@{Superq\+Visualization}}
+
+
+This class shows the point cloud used for modeling or the estimated superquadric overlapped on the camera image and in real time.  
+
+
+
+
+{\ttfamily \#include $<$superq\+Visualization.\+h$>$}
+
+
+
+Inherits Rate\+Thread.
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{classSuperqVisualization_ac387ba6f204a820657e399cedbe84d43}} 
+{\bfseries Superq\+Visualization} (int rate, const std\+::string \&\+\_\+eye, const std\+::string \&\+\_\+what\+\_\+to\+\_\+plot, yarp\+::sig\+::\+Vector \&\+\_\+x, yarp\+::sig\+::\+Vector \&\+\_\+x\+\_\+filtered, std\+::deque$<$ int $>$ \&\+\_\+\+Color, yarp\+::dev\+::\+I\+Gaze\+Control $\ast$\+\_\+igaze, const yarp\+::sig\+::\+Matrix \+\_\+K, std\+::deque$<$ yarp\+::sig\+::\+Vector $>$ \&\+\_\+points, const int \&\+\_\+vis\+\_\+points, const int \&\+\_\+vis\+\_\+step)
+\item 
+bool \mbox{\hyperlink{classSuperqVisualization_aea374f59e3b941e688c1ddafad8896b9}{show\+Points}} ()
+\begin{DoxyCompactList}\small\item\em Show point cloud on the image. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classSuperqVisualization_aa763f8f73c82d4de1d47b03ae9d2e276}{show\+Superq}} (yarp\+::sig\+::\+Vector \&x\+\_\+to\+\_\+show)
+\begin{DoxyCompactList}\small\item\em Show reconstructed superquadric on the image. \end{DoxyCompactList}\item 
+yarp\+::sig\+::\+Vector \mbox{\hyperlink{classSuperqVisualization_aff405a4d0ad916decad09f923e319be6}{from3\+Dto2D}} (const yarp\+::sig\+::\+Vector \&point3D)
+\begin{DoxyCompactList}\small\item\em Compute 2D pixels from 3D points. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_a93dc1583d46a71bbcc4e4ef7f65820b9}} 
+virtual bool \mbox{\hyperlink{classSuperqVisualization_a93dc1583d46a71bbcc4e4ef7f65820b9}{thread\+Init}} ()
+\begin{DoxyCompactList}\small\item\em Init function of Rate\+Thread. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_a46d689c65cec6c04d3fffdbfbbd1838b}} 
+virtual void \mbox{\hyperlink{classSuperqVisualization_a46d689c65cec6c04d3fffdbfbbd1838b}{run}} ()
+\begin{DoxyCompactList}\small\item\em Run function of Rate\+Thread. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_a0fceb3fcc3bd4eadbf9d68abb4b0badc}} 
+void \mbox{\hyperlink{classSuperqVisualization_a0fceb3fcc3bd4eadbf9d68abb4b0badc}{interrupt\+Ports}} ()
+\begin{DoxyCompactList}\small\item\em Interrupt ports functionalities. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_ae79d791d2accf581cbe0502d579f5416}} 
+virtual void \mbox{\hyperlink{classSuperqVisualization_ae79d791d2accf581cbe0502d579f5416}{thread\+Release}} ()
+\begin{DoxyCompactList}\small\item\em Release function of Rate\+Thread. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classSuperqVisualization_acbc374ffecb809ca16853c9475d7f347}{set\+Par}} (const std\+::string \&par\+\_\+name, const std\+::string \&value)
+\begin{DoxyCompactList}\small\item\em Set a given parameter equal to a string. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classSuperqVisualization_a2403b8fcb9448e61866fd39035a482f0}{set\+Par}} (const std\+::string \&par\+\_\+name, const int \&value)
+\begin{DoxyCompactList}\small\item\em Set a given parameter equal to a desired value. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classSuperqVisualization_a82eb6b92c07720b35c714a3c8e2f88a3}{set\+Color}} (const int \&\mbox{\hyperlink{classSuperqVisualization_aee081a694340a9a8658a960872cb6172}{r}}, const int \&\mbox{\hyperlink{classSuperqVisualization_a51cc6e3ac3ee243250a7042f00c813d1}{g}}, const int \&\mbox{\hyperlink{classSuperqVisualization_a96c39287f863466bbbc21342dd62b68a}{b}})
+\begin{DoxyCompactList}\small\item\em Set color for visualization. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classSuperqVisualization_a5250a90e5865bf45c0bd8ae919b8eab0}{set\+Par}} (const yarp\+::os\+::\+Property \&new\+Options, bool first\+\_\+time)
+\begin{DoxyCompactList}\small\item\em Set parameters for visualization. \end{DoxyCompactList}\item 
+yarp\+::os\+::\+Property \mbox{\hyperlink{classSuperqVisualization_ae4fac8f79629a3fa81a688ab4baf61f7}{get\+Par}} ()
+\begin{DoxyCompactList}\small\item\em Get parameters for visualization. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classSuperqVisualization_a9583b378f68f466a76022817d3051c6e}{get\+Time}} ()
+\begin{DoxyCompactList}\small\item\em Get time required for visualization. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Data Fields}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{classSuperqVisualization_a57358b13afc9b5aa3920b7c96b20b26d}} 
+yarp\+::sig\+::\+Vector \& \mbox{\hyperlink{classSuperqVisualization_a57358b13afc9b5aa3920b7c96b20b26d}{superq}}
+\begin{DoxyCompactList}\small\item\em Estimated superquadric. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_aed6197ba510529ed07d32a1a86a48e83}} 
+yarp\+::sig\+::\+Vector \& \mbox{\hyperlink{classSuperqVisualization_aed6197ba510529ed07d32a1a86a48e83}{superq\+\_\+filtered}}
+\begin{DoxyCompactList}\small\item\em Filtered superquadric. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_aa00fb7590a7bc410387e041fbdfb162a}} 
+std\+::deque$<$ yarp\+::sig\+::\+Vector $>$ \& \mbox{\hyperlink{classSuperqVisualization_aa00fb7590a7bc410387e041fbdfb162a}{points}}
+\begin{DoxyCompactList}\small\item\em Object point cloud. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_a599776b35fd931a41a9bf6416e639275}} 
+yarp\+::sig\+::\+Image\+Of$<$ yarp\+::sig\+::\+Pixel\+Rgb $>$ $\ast$ \mbox{\hyperlink{classSuperqVisualization_a599776b35fd931a41a9bf6416e639275}{img\+In}}
+\begin{DoxyCompactList}\small\item\em Input image. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{classSuperqVisualization_a567a3ef8af7cbd836fcd04c24c314243}} 
+yarp\+::os\+::\+Buffered\+Port$<$ yarp\+::sig\+::\+Image\+Of$<$ yarp\+::sig\+::\+Pixel\+Rgb $>$ $>$ \mbox{\hyperlink{classSuperqVisualization_a567a3ef8af7cbd836fcd04c24c314243}{port\+Img\+In}}
+\begin{DoxyCompactList}\small\item\em Input image port. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_a0ed5bf82e324579e781952b7a540d5c0}} 
+yarp\+::os\+::\+Buffered\+Port$<$ yarp\+::sig\+::\+Image\+Of$<$ yarp\+::sig\+::\+Pixel\+Rgb $>$ $>$ \mbox{\hyperlink{classSuperqVisualization_a0ed5bf82e324579e781952b7a540d5c0}{port\+Img\+Out}}
+\begin{DoxyCompactList}\small\item\em Output image port $\ast$. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_aee081a694340a9a8658a960872cb6172}} 
+int \mbox{\hyperlink{classSuperqVisualization_aee081a694340a9a8658a960872cb6172}{r}}
+\begin{DoxyCompactList}\small\item\em R value for visualization. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_a51cc6e3ac3ee243250a7042f00c813d1}} 
+int \mbox{\hyperlink{classSuperqVisualization_a51cc6e3ac3ee243250a7042f00c813d1}{g}}
+\begin{DoxyCompactList}\small\item\em Green value for visualization. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_a96c39287f863466bbbc21342dd62b68a}} 
+int \mbox{\hyperlink{classSuperqVisualization_a96c39287f863466bbbc21342dd62b68a}{b}}
+\begin{DoxyCompactList}\small\item\em Blue value for visualization. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_af984de33154bf4ebe0abf6f1f5047a1c}} 
+double \mbox{\hyperlink{classSuperqVisualization_af984de33154bf4ebe0abf6f1f5047a1c}{t\+\_\+vis}}
+\begin{DoxyCompactList}\small\item\em Time for visualization. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_a97eaa294a7c48033ef5695976556435a}} 
+int \mbox{\hyperlink{classSuperqVisualization_a97eaa294a7c48033ef5695976556435a}{vis\+\_\+points}}
+\begin{DoxyCompactList}\small\item\em Number of points used for visualization. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_a43a34e1d587532fbff246941cd28e3b6}} 
+int \mbox{\hyperlink{classSuperqVisualization_a43a34e1d587532fbff246941cd28e3b6}{vis\+\_\+step}}
+\begin{DoxyCompactList}\small\item\em Number of visualization step. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_a60f1dd2489b897777edffc4dfdebe64d}} 
+std\+::string \mbox{\hyperlink{classSuperqVisualization_a60f1dd2489b897777edffc4dfdebe64d}{what\+\_\+to\+\_\+plot}}
+\begin{DoxyCompactList}\small\item\em String used for deciding what to plot\+: \char`\"{}points\char`\"{} or \char`\"{}superq\char`\"{}. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_a77fbae5c4996f393cae867d56cf2ee16}} 
+yarp\+::sig\+::\+Vector {\bfseries point}
+\item 
+\mbox{\label{classSuperqVisualization_a43a15830ead614d6962ac4777c8fc014}} 
+yarp\+::sig\+::\+Vector {\bfseries point1}
+\item 
+\mbox{\label{classSuperqVisualization_a186ba8f98b1344934bab2fc2de516375}} 
+yarp\+::sig\+::\+Vector {\bfseries point2D}
+\item 
+\mbox{\label{classSuperqVisualization_ae976f619addaebdf724316f25e2c38a8}} 
+std\+::deque$<$ int $>$ {\bfseries Color}
+\item 
+\mbox{\label{classSuperqVisualization_a57cd2c0f68d9bf7365b8c9334b7c07bd}} 
+std\+::string \mbox{\hyperlink{classSuperqVisualization_a57cd2c0f68d9bf7365b8c9334b7c07bd}{eye}}
+\begin{DoxyCompactList}\small\item\em Eye camera selected. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_ad38ada4dfaaf6ced81c6da9aacba4bc0}} 
+yarp\+::sig\+::\+Matrix {\bfseries R}
+\item 
+\mbox{\label{classSuperqVisualization_a64d02e9b2b003bb30235522f1b293a59}} 
+yarp\+::sig\+::\+Matrix {\bfseries H}
+\item 
+\mbox{\label{classSuperqVisualization_a3b44b49611b760f95341303143b72804}} 
+yarp\+::sig\+::\+Matrix {\bfseries K}
+\item 
+\mbox{\label{classSuperqVisualization_a70393943f451663a458119c63b6e0ebf}} 
+yarp\+::dev\+::\+I\+Gaze\+Control $\ast$ \mbox{\hyperlink{classSuperqVisualization_a70393943f451663a458119c63b6e0ebf}{igaze}}
+\begin{DoxyCompactList}\small\item\em Gaze Control interface. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqVisualization_a5925440ac066d2d7dd40df5758e76bbf}} 
+yarp\+::os\+::\+Mutex {\bfseries mutex}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This class shows the point cloud used for modeling or the estimated superquadric overlapped on the camera image and in real time. 
+
+Definition at line 36 of file superq\+Visualization.\+h.
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\label{classSuperqVisualization_aff405a4d0ad916decad09f923e319be6}} 
+\index{Superq\+Visualization@{Superq\+Visualization}!from3\+Dto2D@{from3\+Dto2D}}
+\index{from3\+Dto2D@{from3\+Dto2D}!Superq\+Visualization@{Superq\+Visualization}}
+\subsubsection{\texorpdfstring{from3\+Dto2\+D()}{from3Dto2D()}}
+{\footnotesize\ttfamily Vector Superq\+Visualization\+::from3\+Dto2D (\begin{DoxyParamCaption}\item[{const yarp\+::sig\+::\+Vector \&}]{point3D }\end{DoxyParamCaption})}
+
+
+
+Compute 2D pixels from 3D points. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em point3D} & is the 3D point to be converted \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a 2D vector representing the corresponding pixel 
+\end{DoxyReturn}
+
+
+Definition at line 168 of file superq\+Visualization.\+cpp.
+
+
+
+Referenced by show\+Points(), and show\+Superq().
+
+
+\begin{DoxyCode}
+169 \{
+170     Vector point2D(3,0.0);
+171     Vector point\_aux(4,1.0);
+172     point\_aux.setSubvector(0,point3D);
+173     point2D=K*H*point\_aux;
+174     \textcolor{keywordflow}{return} point2D.subVector(0,1)/point2D[2];
+175 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqVisualization_ae4fac8f79629a3fa81a688ab4baf61f7}} 
+\index{Superq\+Visualization@{Superq\+Visualization}!get\+Par@{get\+Par}}
+\index{get\+Par@{get\+Par}!Superq\+Visualization@{Superq\+Visualization}}
+\subsubsection{\texorpdfstring{get\+Par()}{getPar()}}
+{\footnotesize\ttfamily Property Superq\+Visualization\+::get\+Par (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get parameters for visualization. 
+
+\begin{DoxyReturn}{Returns}
+a property with all the visualization options 
+\end{DoxyReturn}
+
+
+Definition at line 330 of file superq\+Visualization.\+cpp.
+
+
+
+References eye, vis\+\_\+points, vis\+\_\+step, and what\+\_\+to\+\_\+plot.
+
+
+\begin{DoxyCode}
+331 \{
+332     LockGuard lg(mutex);
+333 
+334     Property advOptions;
+335     advOptions.put(\textcolor{stringliteral}{"visualized\_points"},vis_points);
+336     \textcolor{keywordflow}{if} (Color[0]==255 && Color[1]==0 && Color[2]==0)
+337         advOptions.put(\textcolor{stringliteral}{"color"},\textcolor{stringliteral}{"red"});
+338     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if}  (Color[0]==0 && Color[1]==255 && Color[2]==0)
+339         advOptions.put(\textcolor{stringliteral}{"color"},\textcolor{stringliteral}{"green"});
+340     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if}  (Color[0]==0 && Color[1]==0 &&Color[2]==255)
+341         advOptions.put(\textcolor{stringliteral}{"color"},\textcolor{stringliteral}{"blue"});
+342     advOptions.put(\textcolor{stringliteral}{"camera"},eye);
+343     advOptions.put(\textcolor{stringliteral}{"visualized\_points\_step"},vis_step);
+344     advOptions.put(\textcolor{stringliteral}{"what\_to\_plot"},what_to_plot);
+345     \textcolor{keywordflow}{return} advOptions;
+346 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqVisualization_a9583b378f68f466a76022817d3051c6e}} 
+\index{Superq\+Visualization@{Superq\+Visualization}!get\+Time@{get\+Time}}
+\index{get\+Time@{get\+Time}!Superq\+Visualization@{Superq\+Visualization}}
+\subsubsection{\texorpdfstring{get\+Time()}{getTime()}}
+{\footnotesize\ttfamily double Superq\+Visualization\+::get\+Time (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get time required for visualization. 
+
+\begin{DoxyReturn}{Returns}
+the visualization time 
+\end{DoxyReturn}
+
+
+Definition at line 349 of file superq\+Visualization.\+cpp.
+
+
+
+References t\+\_\+vis.
+
+
+\begin{DoxyCode}
+350 \{   
+351     LockGuard lg(mutex);
+352     \textcolor{keywordflow}{return} t_vis;
+353 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqVisualization_a82eb6b92c07720b35c714a3c8e2f88a3}} 
+\index{Superq\+Visualization@{Superq\+Visualization}!set\+Color@{set\+Color}}
+\index{set\+Color@{set\+Color}!Superq\+Visualization@{Superq\+Visualization}}
+\subsubsection{\texorpdfstring{set\+Color()}{setColor()}}
+{\footnotesize\ttfamily void Superq\+Visualization\+::set\+Color (\begin{DoxyParamCaption}\item[{const int \&}]{r,  }\item[{const int \&}]{g,  }\item[{const int \&}]{b }\end{DoxyParamCaption})}
+
+
+
+Set color for visualization. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em r} & is the red component \\
+\hline
+{\em g} & is the green component \\
+\hline
+{\em b} & is the blue component \\
+\hline
+\end{DoxyParams}
+\mbox{\label{classSuperqVisualization_acbc374ffecb809ca16853c9475d7f347}} 
+\index{Superq\+Visualization@{Superq\+Visualization}!set\+Par@{set\+Par}}
+\index{set\+Par@{set\+Par}!Superq\+Visualization@{Superq\+Visualization}}
+\subsubsection{\texorpdfstring{set\+Par()}{setPar()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily void Superq\+Visualization\+::set\+Par (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{par\+\_\+name,  }\item[{const std\+::string \&}]{value }\end{DoxyParamCaption})}
+
+
+
+Set a given parameter equal to a string. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em par\+\_\+name} & is the name of the parameter to be changed \\
+\hline
+{\em value} & is the new value \\
+\hline
+\end{DoxyParams}
+\mbox{\label{classSuperqVisualization_a2403b8fcb9448e61866fd39035a482f0}} 
+\index{Superq\+Visualization@{Superq\+Visualization}!set\+Par@{set\+Par}}
+\index{set\+Par@{set\+Par}!Superq\+Visualization@{Superq\+Visualization}}
+\subsubsection{\texorpdfstring{set\+Par()}{setPar()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily void Superq\+Visualization\+::set\+Par (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{par\+\_\+name,  }\item[{const int \&}]{value }\end{DoxyParamCaption})}
+
+
+
+Set a given parameter equal to a desired value. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em par\+\_\+name} & is the name of the parameter to be changed \\
+\hline
+{\em value} & is the new value \\
+\hline
+\end{DoxyParams}
+\mbox{\label{classSuperqVisualization_a5250a90e5865bf45c0bd8ae919b8eab0}} 
+\index{Superq\+Visualization@{Superq\+Visualization}!set\+Par@{set\+Par}}
+\index{set\+Par@{set\+Par}!Superq\+Visualization@{Superq\+Visualization}}
+\subsubsection{\texorpdfstring{set\+Par()}{setPar()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily void Superq\+Visualization\+::set\+Par (\begin{DoxyParamCaption}\item[{const yarp\+::os\+::\+Property \&}]{new\+Options,  }\item[{bool}]{first\+\_\+time }\end{DoxyParamCaption})}
+
+
+
+Set parameters for visualization. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em new\+Options} & is a Property with the new options to set \\
+\hline
+{\em first\+\_\+time} & takes into account if the options have already been set or not \\
+\hline
+\end{DoxyParams}
+\mbox{\label{classSuperqVisualization_aea374f59e3b941e688c1ddafad8896b9}} 
+\index{Superq\+Visualization@{Superq\+Visualization}!show\+Points@{show\+Points}}
+\index{show\+Points@{show\+Points}!Superq\+Visualization@{Superq\+Visualization}}
+\subsubsection{\texorpdfstring{show\+Points()}{showPoints()}}
+{\footnotesize\ttfamily bool Superq\+Visualization\+::show\+Points (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Show point cloud on the image. 
+
+\begin{DoxyReturn}{Returns}
+true 
+\end{DoxyReturn}
+
+
+Definition at line 117 of file superq\+Visualization.\+cpp.
+
+
+
+References eye, from3\+Dto2\+D(), igaze, img\+In, points, port\+Img\+Out, and vis\+\_\+step.
+
+
+
+Referenced by run().
+
+
+\begin{DoxyCode}
+118 \{
+119     PixelRgb color(Color[0],Color[1],Color[2]);
+120     Stamp *stamp=NULL;
+121     Vector pos, orient;
+122 
+123     ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
+124     imgOut=*imgIn;
+125 
+126     \textcolor{keywordflow}{if} (eye==\textcolor{stringliteral}{"left"})
+127     \{
+128         \textcolor{keywordflow}{if} (igaze->getLeftEyePose(pos,orient,stamp))
+129         \{
+130             H=axis2dcm(orient);
+131             H.setSubcol(pos,0,3);
+132             H=SE3inv(H);
+133         \}
+134     \}
+135     \textcolor{keywordflow}{else}
+136     \{
+137         \textcolor{keywordflow}{if} (igaze->getRightEyePose(pos,orient,stamp))
+138         \{
+139             H=axis2dcm(orient);
+140             H.setSubcol(pos,0,3);
+141             H=SE3inv(H);
+142         \}
+143     \}
+144 
+145     Vector point(3,0.0);
+146 
+147      \textcolor{keywordflow}{for} (\textcolor{keywordtype}{size\_t} i=0; i<points.size(); i+=vis_step)
+148      \{
+149          point=points[i].subVector(0,2);
+150          point2D=from3Dto2D(point);
+151 
+152          cv::Point target\_point((\textcolor{keywordtype}{int})point2D[0],(\textcolor{keywordtype}{int})point2D[1]);
+153 
+154          \textcolor{keywordflow}{if} ((target\_point.x<0) || (target\_point.y<0) || (target\_point.x>=320) || (target\_point.y>=240))
+155          \{
+156              yWarning(\textcolor{stringliteral}{"[SuperqVisualization]:  Not acceptable pixels!"});
+157          \}
+158          \textcolor{keywordflow}{else}
+159             imgOut.pixel(target\_point.x, target\_point.y)=color;
+160      \}
+161 
+162     portImgOut.write();
+163 
+164     \textcolor{keywordflow}{return} \textcolor{keyword}{true};
+165 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqVisualization_aa763f8f73c82d4de1d47b03ae9d2e276}} 
+\index{Superq\+Visualization@{Superq\+Visualization}!show\+Superq@{show\+Superq}}
+\index{show\+Superq@{show\+Superq}!Superq\+Visualization@{Superq\+Visualization}}
+\subsubsection{\texorpdfstring{show\+Superq()}{showSuperq()}}
+{\footnotesize\ttfamily bool Superq\+Visualization\+::show\+Superq (\begin{DoxyParamCaption}\item[{yarp\+::sig\+::\+Vector \&}]{x\+\_\+to\+\_\+show }\end{DoxyParamCaption})}
+
+
+
+Show reconstructed superquadric on the image. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x\+\_\+to\+\_\+show} & is the superquadric to be shown \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true/false on success/failure 
+\end{DoxyReturn}
+
+
+Definition at line 39 of file superq\+Visualization.\+cpp.
+
+
+
+References eye, from3\+Dto2\+D(), igaze, img\+In, port\+Img\+Out, and vis\+\_\+points.
+
+
+
+Referenced by run().
+
+
+\begin{DoxyCode}
+40 \{
+41     LockGuard lg(mutex);
+42 
+43     PixelRgb color(Color[0],Color[1],Color[2]);
+44     Vector pos, orient;
+45     \textcolor{keywordtype}{double} co,so,ce,se;
+46     Stamp *stamp=NULL;
+47 
+48     ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
+49     imgOut=*imgIn;
+50 
+51     R=euler2dcm(x\_toshow.subVector(8,10));
+52     R=R.transposed();
+53 
+54     \textcolor{keywordflow}{if} ((norm(x\_toshow)>0.0))
+55     \{
+56         \textcolor{keywordflow}{if} (eye==\textcolor{stringliteral}{"left"})
+57         \{
+58             \textcolor{keywordflow}{if} (igaze->getLeftEyePose(pos,orient,stamp))
+59             \{
+60                 H=axis2dcm(orient);
+61                 H.setSubcol(pos,0,3);
+62                 H=SE3inv(H);
+63             \}
+64         \}
+65         \textcolor{keywordflow}{else}
+66         \{
+67             \textcolor{keywordflow}{if} (igaze->getRightEyePose(pos,orient,stamp))
+68             \{
+69                 H=axis2dcm(orient);
+70                 H.setSubcol(pos,0,3);
+71                 H=SE3inv(H);
+72             \}
+73         \}
+74 
+75         \textcolor{keywordtype}{double} step=2*M\_PI/vis_points;
+76 
+77         \textcolor{keywordflow}{for} (\textcolor{keywordtype}{double} eta=-M\_PI; eta<M\_PI; eta+=step)
+78         \{
+79              \textcolor{keywordflow}{for} (\textcolor{keywordtype}{double} omega=-M\_PI; omega<M\_PI;omega+=step)
+80              \{
+81                  co=cos(omega); so=sin(omega);
+82                  ce=cos(eta); se=sin(eta);
+83 
+84                  point[0]=x\_toshow[0] * sign(ce)*(pow(abs(ce),x\_toshow[3])) * sign(co)*(pow(abs(co),
+      x\_toshow[4])) * R(0,0) +
+85                             x\_toshow[1] * sign(ce)*(pow(abs(ce),x\_toshow[3]))* sign(so)*(pow(abs(so),
+      x\_toshow[4])) * R(0,1)+
+86                                 x\_toshow[2] * sign(se)*(pow(abs(se),x\_toshow[3])) * R(0,2) + x\_toshow[5];
+87 
+88                  point[1]=x\_toshow[0] * sign(ce)*(pow(abs(ce),x\_toshow[3])) * sign(co)*(pow(abs(co),
+      x\_toshow[4])) * R(1,0) +
+89                             x\_toshow[1] * sign(ce)*(pow(abs(ce),x\_toshow[3])) * sign(so)*(pow(abs(so),
+      x\_toshow[4])) * R(1,1)+
+90                                 x\_toshow[2] * sign(se)*(pow(abs(se),x\_toshow[3])) * R(1,2) + x\_toshow[6];
+91 
+92                  point[2]=x\_toshow[0] * sign(ce)*(pow(abs(ce),x\_toshow[3])) * sign(co)*(pow(abs(co),
+      x\_toshow[4])) * R(2,0) +
+93                             x\_toshow[1] * sign(ce)*(pow(abs(ce),x\_toshow[3])) * sign(so)*(pow(abs(so),
+      x\_toshow[4])) * R(2,1)+
+94                                 x\_toshow[2] * sign(se)*(pow(abs(se),x\_toshow[3])) * R(2,2) + x\_toshow[7];
+95 
+96                  point2D=from3Dto2D(point);
+97 
+98                  cv::Point target\_point((\textcolor{keywordtype}{int})point2D[0],(\textcolor{keywordtype}{int})point2D[1]);
+99 
+100                  \textcolor{keywordflow}{if} ((target\_point.x<0) || (target\_point.y<0) || (target\_point.x>=320) || (target\_point.y>=
+      240))
+101                  \{
+102                      yWarning(\textcolor{stringliteral}{"[SuperqVisualization]: Not acceptable pixels!"});
+103                  \}
+104                  \textcolor{keywordflow}{else}
+105                     imgOut.pixel(target\_point.x, target\_point.y)=color;
+106              \}
+107          \}
+108     \}
+109 
+110     portImgOut.write();
+111 
+112     \textcolor{keywordflow}{return} \textcolor{keyword}{true};
+113 
+114 \}
+\end{DoxyCode}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Users/upattacini/\+Desktop/superquadric-\/model/include/superq\+Visualization.\+h\item 
+C\+:/\+Users/upattacini/\+Desktop/superquadric-\/model/src/superq\+Visualization.\+cpp\end{DoxyCompactItemize}

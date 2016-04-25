@@ -1,0 +1,68 @@
+\section{superquadric-\/model}
+\label{group__superquadric-model}\index{superquadric-\/model@{superquadric-\/model}}
+
+
+~\newline
+ Framework for object detecting and modeling.  
+
+
+~\newline
+ Framework for object detecting and modeling. 
+
+Version\+:1.\+0 \begin{DoxyAuthor}{Author}
+Giulia Vezzani \href{mailto:giulia.vezzani@iit.it}{\tt giulia.\+vezzani@iit.\+it} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the G\+NU G\+PL v2.\+0 
+\end{DoxyCopyright}
+\hypertarget{group__superquadric-model_intro_sec}{}\subsection{Description}\label{group__superquadric-model_intro_sec}
+This module provides an object modeling tool based on superquadric functions. A tutorial on how to use the module is provided in the dedicated repository \href{https://github.com/robotology/superquadric-model/tree/master/tutorial}{\tt {\bfseries tutorial}}.
+
+This page illustrates the main parameters of the module (Section {\bfseries Parameters}), the available ports and services. The modules parameters are labeled as standard and advanced. Note\+: change the advanced parameters only if you are familiar with the implemented techniques.
+
+The module can also provides {\bfseries three output files} is the saving options is enabled\+:
+\begin{DoxyItemize}
+\item {\bfseries tag-\/file.\+txt} or {\bfseries output.\+txt} (if the point cloud is given through a file or a seed point), containing the reconstructed superquadric and some information about I\+P\+O\+PT algorithm;
+\item {\bfseries S\+F\+M-\/tag-\/file.\+off} containing the 3D points coming from S\+FM;
+\item {\bfseries filtered-\/tag-\/file.\+off} containing the filtered 3D points (if filtering is enabled).
+\end{DoxyItemize}\hypertarget{group__superquadric-model_parameters_sec}{}\subsection{Parameters}\label{group__superquadric-model_parameters_sec}
+~\newline
+
+\begin{DoxyItemize}
+\item --context\+: Select the current context (standard parameter).
+\item --from\+: Configuration file name (standard parameter).
+\item --tag\+\_\+file\+: Tag for saving files (standard parameter).
+\item --visualization\+\_\+on\+: Variable to enable or not the visualization (standard parameter -\/ thrift service available).
+\item --camera\+: Eye used for projection of the 3D points on the superquadric surface to the 2D pixels (standard parameter -\/ thrift service available).
+\item --vis\+\_\+points\+: Number of points used for visualization (standard parameter -\/ thrift service available).
+\item --what\+\_\+to\+\_\+plot\+: What to plot among the estimated superquadric and the acquired 3D points (standard parameter -\/ thrift service available).
+\item --tol\+: Desired convergence tolerance (relative). Determines the convergence tolerance for the I\+P\+O\+PT algorithm (standard parameter -\/ thrift service available).
+\item --acceptable\+\_\+iter\+: I\+P\+O\+PT acceptable iter. Number of acceptable iterates before triggering termination. If the algorithm encounters this many successive acceptable iterates, it terminates, assuming that the problem has been solved to best possible accuracy given round-\/off. If it is set to zero, this heuristic is disabled (advanced parameter-\/ thrift service available).
+\item --max\+\_\+iter\+: I\+P\+O\+PT maximum iteration (advanced parameter-\/ thrift service available).
+\item --max\+\_\+cpu\+\_\+time\+: Maximum cpu time for I\+P\+O\+PT algorithm execution (advanced parameter -\/ thrift service available).
+\item --mu\+\_\+strategy\+: I\+P\+O\+PT update strategy for barrier parameter. Determines which barrier parameter update strategy is to be used. P\+Ossible values\+: monotone or adaptive (advanced parameter-\/ thrift service available).
+\item --nlp\+\_\+scaling\+\_\+method\+: I\+P\+O\+PT nlp\+\_\+scaling\+\_\+method\+: Select the technique used for scaling the problem. Possible values\+: none, user-\/scaling, gradient-\/based, equilibration-\/based (advanced parameter-\/ thrift service available).
+\item --filter\+\_\+points\+: Variable to decide to filter points or not (standard parameter -\/ thrift service available).
+\item --radius\+: K\+NN radius value for filtering (advanced parameter -\/ thrift service available).
+\item --nn\+Threshold\+: K\+KN threshold value for filtering (advanced parameter -\/ thrift service available).
+\item --filter\+\_\+superq\+: Variable to decide to filter superq or not (standard parameter -\/ thrift service available).
+\item --fixed\+\_\+window\+: Variable to decide if to use a fixed window for the median filter on superquadrics (standard parameter -\/ thrift service available).
+\item --median\+\_\+order\+: Window width in case and adaptive window is not used (advanced parameter -\/ thrift service available).
+\item --min\+\_\+median\+\_\+order\+: Min window width in case an adaptive window is used (advanced parameter -\/ thrift service available).
+\item --max\+\_\+median\+\_\+order\+: Max window width in case an adaptive window is used (advanced parameter -\/ thrift service available). 
+\end{DoxyItemize}\hypertarget{group__superquadric-model_inputports_sec}{}\subsection{Input Ports}\label{group__superquadric-model_inputports_sec}
+
+\begin{DoxyItemize}
+\item /superquadric-\/model/img\+:i \mbox{[}yarp\+::sig\+::\+Image\+Of\+Pixel\+Rgb\mbox{]} \mbox{[}default carrier\+:tcp\mbox{]}\+: receive the image from the left camera.
+\item /superquadric-\/model/point\+:i \mbox{[}yarp\+::os\+::\+Bottle\mbox{]} \mbox{[}default carrier\+:tcp\mbox{]}\+: receive the 2D blob of the object.
+\end{DoxyItemize}\hypertarget{group__superquadric-model_outputports_sec}{}\subsection{Output Ports}\label{group__superquadric-model_outputports_sec}
+
+\begin{DoxyItemize}
+\item /superquadric-\/model/img\+:o \mbox{[}yarp\+::sig\+::\+Image\+Of\+Pixel\+Mono\mbox{]} \mbox{[}default carrier\+:tcp\mbox{]}\+: send the image from the left camera with the visualized superquadric or points.
+\item /superquadric-\/model/superq\+:o \mbox{[}yarp\+::os\+::\+Property\mbox{]} \mbox{[}default carrier\+:tcp\mbox{]}\+: send the estimated superquadric in streaming.
+\end{DoxyItemize}\hypertarget{group__superquadric-model_services_sec}{}\subsection{Services}\label{group__superquadric-model_services_sec}
+
+\begin{DoxyItemize}
+\item /superquadric-\/model/rpc \mbox{[}rpc-\/server\mbox{]}\+: service port . This service is described in \mbox{\hyperlink{classsuperquadricModel__IDL}{superquadric\+Model\+\_\+\+I\+DL}} (idl.\+thrift) 
+\end{DoxyItemize}

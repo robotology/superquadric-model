@@ -1,0 +1,1047 @@
+\section{Superq\+Computation Class Reference}
+\label{classSuperqComputation}\index{Superq\+Computation@{Superq\+Computation}}
+
+
+This class provides a thread for computing in real time the superquadric, filtering the point cloud and the superquadric.  
+
+
+
+
+{\ttfamily \#include $<$superq\+Computation.\+h$>$}
+
+
+
+Inherits Thread.
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{classSuperqComputation_a9ded9044e1c7fe17a70997f27eea7aa7}} 
+{\bfseries Superq\+Computation} (yarp\+::os\+::\+Mutex \&mutex\+\_\+shared, int \+\_\+rate, bool \+\_\+filter\+\_\+points, bool \+\_\+filter\+\_\+superq, bool \+\_\+fixed\+\_\+window, std\+::deque$<$ yarp\+::sig\+::\+Vector $>$ \&\+\_\+points, std\+::string \+\_\+tag\+\_\+file, double \+\_\+threshold\+\_\+median, const yarp\+::os\+::\+Property \&filters\+\_\+points\+\_\+par, yarp\+::sig\+::\+Vector \&\+\_\+x, yarp\+::sig\+::\+Vector \&\+\_\+x\+\_\+filtered, const yarp\+::os\+::\+Property \&filters\+\_\+superq\+\_\+par, const yarp\+::os\+::\+Property \&optimizer\+\_\+par, const std\+::string \&\+\_\+home\+Context\+Path, bool \+\_\+save\+\_\+points, yarp\+::os\+::\+Resource\+Finder $\ast$rf)
+\item 
+void \mbox{\hyperlink{classSuperqComputation_a4f841a006336a06d0a349f8a57707524}{set\+Points\+Filter\+Par}} (const yarp\+::os\+::\+Property \&new\+Options, bool first\+\_\+time)
+\begin{DoxyCompactList}\small\item\em Set options for filtering the point cloud. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classSuperqComputation_ac0eb6516ba435573f74b03ed4177d8d0}{set\+Superq\+Filter\+Par}} (const yarp\+::os\+::\+Property \&new\+Options, bool first\+\_\+time)
+\begin{DoxyCompactList}\small\item\em Set options for filtering the superquadric. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classSuperqComputation_afa65ce67fb294f38c4e843540f96de3c}{set\+Ipopt\+Par}} (const yarp\+::os\+::\+Property \&new\+Options, bool first\+\_\+time)
+\begin{DoxyCompactList}\small\item\em Set options for the optimization problem solved by Ipopt. \end{DoxyCompactList}\item 
+yarp\+::os\+::\+Property \mbox{\hyperlink{classSuperqComputation_a110d429be796961d8c4fe8ce9b944362}{get\+Points\+Filter\+Par}} ()
+\begin{DoxyCompactList}\small\item\em Get options used for filtering the point cloud. \end{DoxyCompactList}\item 
+yarp\+::os\+::\+Property \mbox{\hyperlink{classSuperqComputation_a1f93a7688ef418d2ca9402cff5621048}{get\+Superq\+Filter\+Par}} ()
+\begin{DoxyCompactList}\small\item\em Get options used for filtering the superquadric. \end{DoxyCompactList}\item 
+yarp\+::os\+::\+Property \mbox{\hyperlink{classSuperqComputation_a1d95dee395edafac26144758f3bd5830}{get\+Ipopt\+Par}} ()
+\begin{DoxyCompactList}\small\item\em Get options used for solving the optimization problem with Ipopt. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classSuperqComputation_a1780009371c09327b8491189dee66b20}{set\+Par}} (const std\+::string \&par\+\_\+name, const std\+::string \&value)
+\begin{DoxyCompactList}\small\item\em Set a parameter equal to a value. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_ada608220b124f8ffcf458d93bad4f227}} 
+virtual bool \mbox{\hyperlink{classSuperqComputation_ada608220b124f8ffcf458d93bad4f227}{thread\+Init}} ()
+\begin{DoxyCompactList}\small\item\em Init function of Thread class. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a4a4ac55200a7633a2384da0f0d945ba9}} 
+virtual void \mbox{\hyperlink{classSuperqComputation_a4a4ac55200a7633a2384da0f0d945ba9}{run}} ()
+\begin{DoxyCompactList}\small\item\em Run function of Thread class. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a9e9646fce399266221fb87bc1e1c2476}} 
+virtual void \mbox{\hyperlink{classSuperqComputation_a9e9646fce399266221fb87bc1e1c2476}{thread\+Release}} ()
+\begin{DoxyCompactList}\small\item\em Release function of Thread class. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classSuperqComputation_ab8912bb805cf979007985ffb553d43b0}{save\+Points}} (const std\+::string \&namefile, const yarp\+::sig\+::\+Vector \&colors)
+\begin{DoxyCompactList}\small\item\em Save point cloud used for reconstructing the superquadric. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a39716be08b79ce6ff2ebcb5818fac75e}} 
+bool \mbox{\hyperlink{classSuperqComputation_a39716be08b79ce6ff2ebcb5818fac75e}{read\+Point\+Cloud}} ()
+\begin{DoxyCompactList}\small\item\em Read the object point cloud from txt for offline tests. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a33f9e5ffc074bcf0235d2f49190a60c3}} 
+void \mbox{\hyperlink{classSuperqComputation_a33f9e5ffc074bcf0235d2f49190a60c3}{filter}} ()
+\begin{DoxyCompactList}\small\item\em Filter the received point cloud. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classSuperqComputation_a99887a4fd19d25a3b1ebf46d63558397}{compute\+Superq}} ()
+\begin{DoxyCompactList}\small\item\em Compute the superquadric modeling the object. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_aaf15f0e8aecc808c945ca4036be8c249}} 
+void \mbox{\hyperlink{classSuperqComputation_aaf15f0e8aecc808c945ca4036be8c249}{filter\+Superq}} ()
+\begin{DoxyCompactList}\small\item\em Filter the superquadri with the median filter. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a49c6ca5d5a0d4f0a9a065e0ad448a3e2}} 
+void \mbox{\hyperlink{classSuperqComputation_a49c6ca5d5a0d4f0a9a065e0ad448a3e2}{reset\+Median\+Filter}} ()
+\begin{DoxyCompactList}\small\item\em Reset median filter. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a8d35478d678ddd1711ca63a7e66a13ac}} 
+int \mbox{\hyperlink{classSuperqComputation_a8d35478d678ddd1711ca63a7e66a13ac}{adapt\+Wind\+Computation}} ()
+\begin{DoxyCompactList}\small\item\em Compute window size according to the object velocity. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a7e3d03f909761bcf7ab70a3eeabcee23}} 
+bool \mbox{\hyperlink{classSuperqComputation_a7e3d03f909761bcf7ab70a3eeabcee23}{config\+Filter\+Superq}} ()
+\begin{DoxyCompactList}\small\item\em Configure superquadric filter. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a5076581260278406719f1df46fa528c7}} 
+bool \mbox{\hyperlink{classSuperqComputation_a5076581260278406719f1df46fa528c7}{config3\+Dpoints}} ()
+\begin{DoxyCompactList}\small\item\em Configure point cloud filter. \end{DoxyCompactList}\item 
+yarp\+::sig\+::\+Vector \mbox{\hyperlink{classSuperqComputation_aa659eda30d49322192be2565f44c0fb9}{get\+Solution}} (bool filtered\+\_\+or\+\_\+not)
+\begin{DoxyCompactList}\small\item\em Return the computed superquadric. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classSuperqComputation_a52c81fde3c749d05572eecd3319ac905}{send\+Points}} (const std\+::deque$<$ yarp\+::sig\+::\+Vector $>$ \&p)
+\begin{DoxyCompactList}\small\item\em Get the point cloud for computing the superquadric. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a7d81b7930e2c8799dcea18745e574a2a}} 
+void \mbox{\hyperlink{classSuperqComputation_a7d81b7930e2c8799dcea18745e574a2a}{get\+Points3D}} ()
+\begin{DoxyCompactList}\small\item\em Get the point cloud for computing the superquadric. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classSuperqComputation_a6822767dea4b3b819f9190289d9f89a5}{get\+Time}} ()
+\begin{DoxyCompactList}\small\item\em Return the computation time for estimating the superquadric. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Data Fields}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{classSuperqComputation_ab30b0c645ad52b61fe7a947eb3c227ed}} 
+int \mbox{\hyperlink{classSuperqComputation_ab30b0c645ad52b61fe7a947eb3c227ed}{std\+\_\+median\+\_\+order}}
+\begin{DoxyCompactList}\small\item\em median order width \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_af8ec20c3b393c5f82c6662a0a2c1145d}} 
+int \mbox{\hyperlink{classSuperqComputation_af8ec20c3b393c5f82c6662a0a2c1145d}{max\+\_\+median\+\_\+order}}
+\begin{DoxyCompactList}\small\item\em max median order width \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a3973557e78ae06f3f32d6e279585f4ac}} 
+yarp\+::sig\+::\+Vector \& \mbox{\hyperlink{classSuperqComputation_a3973557e78ae06f3f32d6e279585f4ac}{x}}
+\begin{DoxyCompactList}\small\item\em Object superquadric. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a7e297c9aaff44b1c83e2134f17f9d949}} 
+yarp\+::sig\+::\+Vector \& \mbox{\hyperlink{classSuperqComputation_a7e297c9aaff44b1c83e2134f17f9d949}{x\+\_\+filtered}}
+\begin{DoxyCompactList}\small\item\em Filtered object superquadric. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a1d88efa996ff50a62e46bbf4fb8bca0b}} 
+std\+::deque$<$ yarp\+::sig\+::\+Vector $>$ \& \mbox{\hyperlink{classSuperqComputation_a1d88efa996ff50a62e46bbf4fb8bca0b}{points}}
+\begin{DoxyCompactList}\small\item\em Object point cloud. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a4862f75f1f976e449f434bd1d78f8445}} 
+std\+::deque$<$ cv\+::\+Point $>$ \mbox{\hyperlink{classSuperqComputation_a4862f75f1f976e449f434bd1d78f8445}{blob\+\_\+points}}
+\begin{DoxyCompactList}\small\item\em Object 2D blob. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\label{classSuperqComputation_a2503498f171c08ccba94f754a7554cc3}} 
+int \mbox{\hyperlink{classSuperqComputation_a2503498f171c08ccba94f754a7554cc3}{count}}
+\begin{DoxyCompactList}\small\item\em Count variable. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a61546ef4a16a8daf6a2a92e5fa16eaf5}} 
+bool \mbox{\hyperlink{classSuperqComputation_a61546ef4a16a8daf6a2a92e5fa16eaf5}{save\+\_\+points}}
+\begin{DoxyCompactList}\small\item\em Boolean variable for enabling point cloud saving. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_aae8ace8205eac99d97d54f3213bf708b}} 
+std\+::string \mbox{\hyperlink{classSuperqComputation_aae8ace8205eac99d97d54f3213bf708b}{tag\+\_\+file}}
+\begin{DoxyCompactList}\small\item\em Tag name of files for saving 3D points. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a8e71181154ad0c3dfa8d37b2201e290e}} 
+std\+::string \mbox{\hyperlink{classSuperqComputation_a8e71181154ad0c3dfa8d37b2201e290e}{home\+Context\+Path}}
+\begin{DoxyCompactList}\small\item\em Path where code context is located. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a83ea1977c3822c48c917a97068d77f44}} 
+yarp\+::os\+::\+Const\+String \mbox{\hyperlink{classSuperqComputation_a83ea1977c3822c48c917a97068d77f44}{point\+Cloud\+File\+Name}}
+\begin{DoxyCompactList}\small\item\em Pointcloud name file in case the module runs offline. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_ab35ce370798ac4744994185539b25a54}} 
+std\+::vector$<$ cv\+::\+Point $>$ \mbox{\hyperlink{classSuperqComputation_ab35ce370798ac4744994185539b25a54}{contour}}
+\begin{DoxyCompactList}\small\item\em Open\+CV variable for blob extraction. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_aa8eaa06377f2a937eaafa6a21af2a2d4}} 
+yarp\+::os\+::\+Buffered\+Port$<$ yarp\+::os\+::\+Bottle $>$ \mbox{\hyperlink{classSuperqComputation_aa8eaa06377f2a937eaafa6a21af2a2d4}{point\+Port}}
+\begin{DoxyCompactList}\small\item\em Port for receiving point cloud. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a7c01fd3e1036076ddd945195be99ab2f}} 
+double \mbox{\hyperlink{classSuperqComputation_a7c01fd3e1036076ddd945195be99ab2f}{radius}}
+\begin{DoxyCompactList}\small\item\em Radius for spatial density filter. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a184368bb5e30b99c9286a47530a67995}} 
+int \mbox{\hyperlink{classSuperqComputation_a184368bb5e30b99c9286a47530a67995}{nn\+Threshold}}
+\begin{DoxyCompactList}\small\item\em Density threshold for spatial density filter. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a6d42c789127b151b2b57cf700b18b25e}} 
+int {\bfseries num\+Vertices}
+\item 
+\mbox{\label{classSuperqComputation_a89c7e41d61c5d05cdecc2f9db26d7820}} 
+int \mbox{\hyperlink{classSuperqComputation_a89c7e41d61c5d05cdecc2f9db26d7820}{median\+\_\+order}}
+\begin{DoxyCompactList}\small\item\em Median filder order. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a5672798eb1d57d4b5001cde356e6d9f2}} 
+int \mbox{\hyperlink{classSuperqComputation_a5672798eb1d57d4b5001cde356e6d9f2}{min\+\_\+median\+\_\+order}}
+\begin{DoxyCompactList}\small\item\em Minimum median filder order allowed. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a716b1dadab06327d2e151235a1d8473d}} 
+int \mbox{\hyperlink{classSuperqComputation_a716b1dadab06327d2e151235a1d8473d}{new\+\_\+median\+\_\+order}}
+\begin{DoxyCompactList}\small\item\em New median filder order estimated. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a7ba8919ab91d4209eae8ab7484127d95}} 
+bool \mbox{\hyperlink{classSuperqComputation_a7ba8919ab91d4209eae8ab7484127d95}{filter\+\_\+points}}
+\begin{DoxyCompactList}\small\item\em Boolean variable for enabling point cloud filtering. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a05c6cb1a1018d9ef2327ef69a12a8c98}} 
+bool \mbox{\hyperlink{classSuperqComputation_a05c6cb1a1018d9ef2327ef69a12a8c98}{fixed\+\_\+window}}
+\begin{DoxyCompactList}\small\item\em Boolean variable for enabling the use of a fixed window during the median filter. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a5ff0b2908d2bb2399a4048f55fb295a1}} 
+bool \mbox{\hyperlink{classSuperqComputation_a5ff0b2908d2bb2399a4048f55fb295a1}{filter\+\_\+superq}}
+\begin{DoxyCompactList}\small\item\em Boolean variable for enabling superquadric filtering. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a99ff3b4952560a7b687512361c2d06f4}} 
+double \mbox{\hyperlink{classSuperqComputation_a99ff3b4952560a7b687512361c2d06f4}{threshold\+\_\+median}}
+\begin{DoxyCompactList}\small\item\em Threshold for velocity estimation for median order. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a56c1d0c3110650d5f609c36fbf26253b}} 
+double \mbox{\hyperlink{classSuperqComputation_a56c1d0c3110650d5f609c36fbf26253b}{min\+\_\+norm\+\_\+vel}}
+\begin{DoxyCompactList}\small\item\em Minimum norm of velocity for considering the object moving. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_ae4a1ef363106dd0847fbdfd8817153bb}} 
+bool \mbox{\hyperlink{classSuperqComputation_ae4a1ef363106dd0847fbdfd8817153bb}{go\+\_\+on}}
+\begin{DoxyCompactList}\small\item\em Boolean variable for going to the next step of the state machine. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_aefd14b0b7c049f47da8bdfcbfae9601c}} 
+bool {\bfseries one\+\_\+shot}
+\item 
+\mbox{\label{classSuperqComputation_af39fa3aba2711650375fda5772876824}} 
+double \mbox{\hyperlink{classSuperqComputation_af39fa3aba2711650375fda5772876824}{tol}}
+\begin{DoxyCompactList}\small\item\em Tolerance of the optimization problem. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_ae7b9d547c797db0ce58966617036e048}} 
+double {\bfseries sum}
+\item 
+\mbox{\label{classSuperqComputation_a7c6fad9fa4e90a3c4b43700ac425d784}} 
+double \mbox{\hyperlink{classSuperqComputation_a7c6fad9fa4e90a3c4b43700ac425d784}{max\+\_\+cpu\+\_\+time}}
+\begin{DoxyCompactList}\small\item\em Max cpu time allowed for solving the optimization problem. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_ae62bf913e73a28fefde3ea86f422e83c}} 
+int \mbox{\hyperlink{classSuperqComputation_ae62bf913e73a28fefde3ea86f422e83c}{acceptable\+\_\+iter}}
+\begin{DoxyCompactList}\small\item\em Acceptable iter of Ipopt algorithm. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a0b957ecf11a17e5a57555151db1d2ac8}} 
+int \mbox{\hyperlink{classSuperqComputation_a0b957ecf11a17e5a57555151db1d2ac8}{max\+\_\+iter}}
+\begin{DoxyCompactList}\small\item\em Maximum iteration allowed of Ipopt algorithm. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_ae7682e7de5241952a3d453d64bea6b4a}} 
+int \mbox{\hyperlink{classSuperqComputation_ae7682e7de5241952a3d453d64bea6b4a}{optimizer\+\_\+points}}
+\begin{DoxyCompactList}\small\item\em Number of 3D points used for optimization. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a88a2dd407f7f5d2f6188b9b117102c00}} 
+bool \mbox{\hyperlink{classSuperqComputation_a88a2dd407f7f5d2f6188b9b117102c00}{bounds\+\_\+automatic}}
+\begin{DoxyCompactList}\small\item\em Boolean varibal for enabling automatic computation of variables bounds. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_ac526d6a64e9015e9b7eb454a87882011}} 
+std\+::string \mbox{\hyperlink{classSuperqComputation_ac526d6a64e9015e9b7eb454a87882011}{mu\+\_\+strategy}}
+\begin{DoxyCompactList}\small\item\em Mu strategy of the Ipopt algorithm. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_add6516c9ef0aeb658ea9f8fab49f14bc}} 
+std\+::string \mbox{\hyperlink{classSuperqComputation_add6516c9ef0aeb658ea9f8fab49f14bc}{nlp\+\_\+scaling\+\_\+method}}
+\begin{DoxyCompactList}\small\item\em N\+LP scaling method of the Ipopt algorithm. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_ad940fa340f762266eb59ade68aa4b2ae}} 
+yarp\+::sig\+::\+Vector {\bfseries elem\+\_\+x}
+\item 
+\mbox{\label{classSuperqComputation_a8414fb4c30070a8510bd9bc46f70514f}} 
+double \mbox{\hyperlink{classSuperqComputation_a8414fb4c30070a8510bd9bc46f70514f}{t\+\_\+superq}}
+\begin{DoxyCompactList}\small\item\em Time required for computing superquadric. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a490818d0b38fb4d12778e7b36b93d2c1}} 
+int {\bfseries count\+\_\+file}
+\item 
+\mbox{\label{classSuperqComputation_a8e122bb9464e111f68fc5c8a4e9fc32e}} 
+std\+::string \mbox{\hyperlink{classSuperqComputation_a8e122bb9464e111f68fc5c8a4e9fc32e}{ob\+\_\+class}}
+\begin{DoxyCompactList}\small\item\em Objec class\+: cylinder, sphere of box. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a814b2ae62e40b9bafd51f18241ff68f8}} 
+yarp\+::os\+::\+Resource\+Finder $\ast$ {\bfseries rf}
+\item 
+\mbox{\label{classSuperqComputation_ab63b4c30d44582586da1951852293271}} 
+double {\bfseries t}
+\item 
+\mbox{\label{classSuperqComputation_ac144b5fb4a510155a31b8bdc84d31a4b}} 
+double {\bfseries t0}
+\item 
+\mbox{\label{classSuperqComputation_a29404ed2e8aefeea9d130fd593ffba04}} 
+yarp\+::os\+::\+Mutex {\bfseries mutex}
+\item 
+\mbox{\label{classSuperqComputation_ae6f9649303ef83c6f237cbeafe925504}} 
+yarp\+::os\+::\+Mutex \& {\bfseries mutex\+\_\+shared}
+\item 
+\mbox{\label{classSuperqComputation_a3f68fd1573d593f8c2e31a24b5fecd62}} 
+i\+Cub\+::ctrl\+::\+Median\+Filter $\ast$ \mbox{\hyperlink{classSuperqComputation_a3f68fd1573d593f8c2e31a24b5fecd62}{m\+Filter}}
+\begin{DoxyCompactList}\small\item\em Median filter for discarding wrong superquadrics. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a6376183a329639f4f2f65affa5984dab}} 
+i\+Cub\+::ctrl\+::\+A\+W\+Poly\+Estimator $\ast$ \mbox{\hyperlink{classSuperqComputation_a6376183a329639f4f2f65affa5984dab}{Poly\+Est}}
+\begin{DoxyCompactList}\small\item\em Time Polyestimator for estimating object velocity. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a2bedeac86517b9c75f5ab2bd82fec336}} 
+yarp\+::os\+::\+Property \mbox{\hyperlink{classSuperqComputation_a2bedeac86517b9c75f5ab2bd82fec336}{filter\+\_\+points\+\_\+par}}
+\begin{DoxyCompactList}\small\item\em Parameters of point cloud filter. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_abdb75d518be9b5af47732389076e59b1}} 
+yarp\+::os\+::\+Property \mbox{\hyperlink{classSuperqComputation_abdb75d518be9b5af47732389076e59b1}{filter\+\_\+superq\+\_\+par}}
+\begin{DoxyCompactList}\small\item\em Parameters of superquadric filter. \end{DoxyCompactList}\item 
+\mbox{\label{classSuperqComputation_a22a31f157e5d1978e82ee5001e57b72c}} 
+yarp\+::os\+::\+Property \mbox{\hyperlink{classSuperqComputation_a22a31f157e5d1978e82ee5001e57b72c}{ipopt\+\_\+par}}
+\begin{DoxyCompactList}\small\item\em Parameters of the Ipopt optimization problem. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This class provides a thread for computing in real time the superquadric, filtering the point cloud and the superquadric. 
+
+The optimization problem for estimating the superquadric is solved with Ipopt software package. 
+
+Definition at line 48 of file superq\+Computation.\+h.
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\label{classSuperqComputation_a99887a4fd19d25a3b1ebf46d63558397}} 
+\index{Superq\+Computation@{Superq\+Computation}!compute\+Superq@{compute\+Superq}}
+\index{compute\+Superq@{compute\+Superq}!Superq\+Computation@{Superq\+Computation}}
+\subsubsection{\texorpdfstring{compute\+Superq()}{computeSuperq()}}
+{\footnotesize\ttfamily bool Superq\+Computation\+::compute\+Superq (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Compute the superquadric modeling the object. 
+
+\begin{DoxyReturn}{Returns}
+true/false on success/failure 
+\end{DoxyReturn}
+
+
+Definition at line 742 of file superq\+Computation.\+cpp.
+
+
+
+References acceptable\+\_\+iter, bounds\+\_\+automatic, Super\+Quadric\+\_\+\+N\+L\+P\+::init(), max\+\_\+cpu\+\_\+time, max\+\_\+iter, mu\+\_\+strategy, nlp\+\_\+scaling\+\_\+method, ob\+\_\+class, optimizer\+\_\+points, points, save\+Points(), tag\+\_\+file, tol, and x.
+
+
+
+Referenced by run().
+
+
+\begin{DoxyCode}
+743 \{
+744     Vector colors(3,0.0);
+745     colors[1]=255;
+746 
+747     savePoints(\textcolor{stringliteral}{"/3Dpoints-"}+tag_file, colors);
+748 
+749     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=\textcolor{keyword}{new} Ipopt::IpoptApplication;
+750     app->Options()->SetNumericValue(\textcolor{stringliteral}{"tol"},tol);
+751     app->Options()->SetIntegerValue(\textcolor{stringliteral}{"acceptable\_iter"},acceptable_iter);
+752     app->Options()->SetStringValue(\textcolor{stringliteral}{"mu\_strategy"},mu_strategy);
+753     app->Options()->SetIntegerValue(\textcolor{stringliteral}{"max\_iter"},max_iter);
+754     app->Options()->SetNumericValue(\textcolor{stringliteral}{"max\_cpu\_time"},max_cpu_time);
+755     app->Options()->SetStringValue(\textcolor{stringliteral}{"nlp\_scaling\_method"},nlp_scaling_method);
+756     app->Options()->SetStringValue(\textcolor{stringliteral}{"hessian\_approximation"},\textcolor{stringliteral}{"limited-memory"});
+757     app->Options()->SetIntegerValue(\textcolor{stringliteral}{"print\_level"},0);
+758     app->Initialize();
+759 
+760     Ipopt::SmartPtr<SuperQuadric\_NLP> superQ\_nlp= \textcolor{keyword}{new} SuperQuadric_NLP;
+761 
+762     superQ\_nlp->init();
+763     superQ\_nlp->configure(this->rf,bounds_automatic, ob_class);
+764 
+765     superQ\_nlp->setPoints(points, optimizer_points);
+766 
+767     \textcolor{keywordtype}{double} t0\_superq=Time::now();
+768 
+769     yDebug()<<\textcolor{stringliteral}{"[SuperqComputation]: Start IPOPT "};
+770 
+771     Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ\_nlp));
+772 
+773     yDebug()<<\textcolor{stringliteral}{"[SuperqComputation]: Finish IPOPT "};
+774 
+775     \textcolor{keywordtype}{double} t\_s=Time::now()-t0\_superq;
+776 
+777     \textcolor{keywordflow}{if} (status==Ipopt::Solve\_Succeeded)
+778     \{
+779         x=superQ\_nlp->get\_result();
+780         yInfo(\textcolor{stringliteral}{"[SuperqComputation]: Solution of the optimization problem: %s"}, x.toString(3,3).c\_str());
+781         yInfo(\textcolor{stringliteral}{"[SuperqComputation]: Execution time : %f"}, t\_s);
+782         \textcolor{keywordflow}{return} \textcolor{keyword}{true};
+783     \}
+784     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if}(status==Ipopt::Maximum\_CpuTime\_Exceeded)
+785     \{
+786         x=superQ\_nlp->get\_result();
+787         yWarning(\textcolor{stringliteral}{"[SuperqComputation]: Solution after maximum time exceeded: %s"}, 
+      x.toString(3,3).c\_str());
+788         \textcolor{keywordflow}{return} \textcolor{keyword}{true};
+789     \}
+790     \textcolor{keywordflow}{else}
+791     \{
+792         x.resize(11,0.0);
+793         \textcolor{keywordflow}{return} \textcolor{keyword}{false};
+794     \}
+795 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqComputation_a1d95dee395edafac26144758f3bd5830}} 
+\index{Superq\+Computation@{Superq\+Computation}!get\+Ipopt\+Par@{get\+Ipopt\+Par}}
+\index{get\+Ipopt\+Par@{get\+Ipopt\+Par}!Superq\+Computation@{Superq\+Computation}}
+\subsubsection{\texorpdfstring{get\+Ipopt\+Par()}{getIpoptPar()}}
+{\footnotesize\ttfamily Property Superq\+Computation\+::get\+Ipopt\+Par (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get options used for solving the optimization problem with Ipopt. 
+
+\begin{DoxyReturn}{Returns}
+a property with the options on ipopt / /$\ast$ 
+\end{DoxyReturn}
+
+
+Definition at line 418 of file superq\+Computation.\+cpp.
+
+
+
+References acceptable\+\_\+iter, max\+\_\+cpu\+\_\+time, max\+\_\+iter, mu\+\_\+strategy, nlp\+\_\+scaling\+\_\+method, optimizer\+\_\+points, and tol.
+
+
+\begin{DoxyCode}
+419 \{
+420     LockGuard lg(mutex);
+421 
+422     Property advOptions;
+423     advOptions.put(\textcolor{stringliteral}{"optimizer\_points"},optimizer_points);
+424     advOptions.put(\textcolor{stringliteral}{"max\_cpu\_time"},max_cpu_time);
+425     advOptions.put(\textcolor{stringliteral}{"tol"},tol);
+426     advOptions.put(\textcolor{stringliteral}{"max\_iter"},max_iter);
+427     advOptions.put(\textcolor{stringliteral}{"acceptable\_iter"},acceptable_iter);
+428     advOptions.put(\textcolor{stringliteral}{"IPOPT\_mu\_strategy"},mu_strategy);
+429     advOptions.put(\textcolor{stringliteral}{"IPOPT\_nlp\_scaling\_method"},nlp_scaling_method);
+430     \textcolor{keywordflow}{return} advOptions;
+431 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqComputation_a110d429be796961d8c4fe8ce9b944362}} 
+\index{Superq\+Computation@{Superq\+Computation}!get\+Points\+Filter\+Par@{get\+Points\+Filter\+Par}}
+\index{get\+Points\+Filter\+Par@{get\+Points\+Filter\+Par}!Superq\+Computation@{Superq\+Computation}}
+\subsubsection{\texorpdfstring{get\+Points\+Filter\+Par()}{getPointsFilterPar()}}
+{\footnotesize\ttfamily Property Superq\+Computation\+::get\+Points\+Filter\+Par (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get options used for filtering the point cloud. 
+
+\begin{DoxyReturn}{Returns}
+a property with the options on the points filtering 
+\end{DoxyReturn}
+
+
+Definition at line 120 of file superq\+Computation.\+cpp.
+
+
+
+References nn\+Threshold, and radius.
+
+
+\begin{DoxyCode}
+121 \{
+122     LockGuard lg(mutex);
+123 
+124     Property advOptions;
+125     advOptions.put(\textcolor{stringliteral}{"filter\_radius"},radius);
+126     advOptions.put(\textcolor{stringliteral}{"filter\_nnThreshold"},nnThreshold);
+127     \textcolor{keywordflow}{return} advOptions;
+128 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqComputation_aa659eda30d49322192be2565f44c0fb9}} 
+\index{Superq\+Computation@{Superq\+Computation}!get\+Solution@{get\+Solution}}
+\index{get\+Solution@{get\+Solution}!Superq\+Computation@{Superq\+Computation}}
+\subsubsection{\texorpdfstring{get\+Solution()}{getSolution()}}
+{\footnotesize\ttfamily Vector Superq\+Computation\+::get\+Solution (\begin{DoxyParamCaption}\item[{bool}]{filtered\+\_\+or\+\_\+not }\end{DoxyParamCaption})}
+
+
+
+Return the computed superquadric. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filtered\+\_\+or\+\_\+not} & can be \char`\"{}on\char`\"{} or \char`\"{}off\char`\"{} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the estimated superquadric filtered or not 
+\end{DoxyReturn}
+
+
+Definition at line 867 of file superq\+Computation.\+cpp.
+
+
+
+References x, and x\+\_\+filtered.
+
+
+\begin{DoxyCode}
+868 \{
+869     LockGuard lg(mutex);
+870 
+871     \textcolor{keywordflow}{if} (filtered\_superq==\textcolor{keyword}{false})
+872         \textcolor{keywordflow}{return} x;
+873     \textcolor{keywordflow}{else}
+874         \textcolor{keywordflow}{return} x_filtered;
+875 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqComputation_a1f93a7688ef418d2ca9402cff5621048}} 
+\index{Superq\+Computation@{Superq\+Computation}!get\+Superq\+Filter\+Par@{get\+Superq\+Filter\+Par}}
+\index{get\+Superq\+Filter\+Par@{get\+Superq\+Filter\+Par}!Superq\+Computation@{Superq\+Computation}}
+\subsubsection{\texorpdfstring{get\+Superq\+Filter\+Par()}{getSuperqFilterPar()}}
+{\footnotesize\ttfamily Property Superq\+Computation\+::get\+Superq\+Filter\+Par (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get options used for filtering the superquadric. 
+
+\begin{DoxyReturn}{Returns}
+a property with the options on superquadric filtering / /$\ast$ 
+\end{DoxyReturn}
+
+
+Definition at line 259 of file superq\+Computation.\+cpp.
+
+
+
+References fixed\+\_\+window, max\+\_\+median\+\_\+order, min\+\_\+median\+\_\+order, min\+\_\+norm\+\_\+vel, std\+\_\+median\+\_\+order, and threshold\+\_\+median.
+
+
+\begin{DoxyCode}
+260 \{
+261     LockGuard lg(mutex);
+262 
+263     Property advOptions;
+264     \textcolor{keywordflow}{if} (fixed_window)
+265         advOptions.put(\textcolor{stringliteral}{"fixed\_window"},\textcolor{stringliteral}{"on"});
+266     \textcolor{keywordflow}{else}
+267         advOptions.put(\textcolor{stringliteral}{"fixed\_window"},\textcolor{stringliteral}{"off"});
+268     advOptions.put(\textcolor{stringliteral}{"median\_order"},std_median_order);
+269     advOptions.put(\textcolor{stringliteral}{"min\_median\_order"},min_median_order);
+270     advOptions.put(\textcolor{stringliteral}{"max\_median\_order"},max_median_order);
+271     advOptions.put(\textcolor{stringliteral}{"threshold\_median"},threshold_median);
+272     advOptions.put(\textcolor{stringliteral}{"min\_norm\_vel"},min_norm_vel);
+273     \textcolor{keywordflow}{return} advOptions;
+274 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqComputation_a6822767dea4b3b819f9190289d9f89a5}} 
+\index{Superq\+Computation@{Superq\+Computation}!get\+Time@{get\+Time}}
+\index{get\+Time@{get\+Time}!Superq\+Computation@{Superq\+Computation}}
+\subsubsection{\texorpdfstring{get\+Time()}{getTime()}}
+{\footnotesize\ttfamily double Superq\+Computation\+::get\+Time (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Return the computation time for estimating the superquadric. 
+
+\begin{DoxyReturn}{Returns}
+the period value 
+\end{DoxyReturn}
+
+
+Definition at line 451 of file superq\+Computation.\+cpp.
+
+
+
+References t\+\_\+superq.
+
+
+\begin{DoxyCode}
+452 \{   
+453     LockGuard lg(mutex);
+454     \textcolor{keywordflow}{return} t_superq;
+455 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqComputation_ab8912bb805cf979007985ffb553d43b0}} 
+\index{Superq\+Computation@{Superq\+Computation}!save\+Points@{save\+Points}}
+\index{save\+Points@{save\+Points}!Superq\+Computation@{Superq\+Computation}}
+\subsubsection{\texorpdfstring{save\+Points()}{savePoints()}}
+{\footnotesize\ttfamily void Superq\+Computation\+::save\+Points (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{namefile,  }\item[{const yarp\+::sig\+::\+Vector \&}]{colors }\end{DoxyParamCaption})}
+
+
+
+Save point cloud used for reconstructing the superquadric. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em namefile} & is the name of the file where to save the superquadric \\
+\hline
+{\em colors} & is a Vector with the color to be used for saving the point cloud \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 622 of file superq\+Computation.\+cpp.
+
+
+
+References home\+Context\+Path, points, and save\+\_\+points.
+
+
+
+Referenced by compute\+Superq(), and filter().
+
+
+\begin{DoxyCode}
+623 \{
+624     \textcolor{keywordflow}{if} (save_points)
+625     \{
+626         ofstream fout;
+627         stringstream ss;
+628         ss<<count\_file;
+629         \textcolor{keywordtype}{string} count\_file\_str=ss.str();
+630         fout.open((homeContextPath+namefile+count\_file\_str+\textcolor{stringliteral}{".off"}).c\_str());
+631 
+632         \textcolor{keywordflow}{if} (fout.is\_open())
+633         \{
+634             fout<<\textcolor{stringliteral}{"COFF"}<<endl;
+635             fout<<points.size()<<\textcolor{stringliteral}{" 0 0"}<<endl;
+636             fout<<endl;
+637             \textcolor{keywordflow}{for} (\textcolor{keywordtype}{size\_t} i=0; i<points.size(); i++)
+638             \{
+639                 \textcolor{keywordtype}{int} r=points[i][3];
+640                 \textcolor{keywordtype}{int} g=points[i][4];
+641                 \textcolor{keywordtype}{int} b=points[i][5];
+642                 fout<<points[i].subVector(0,2).toString(3,3)<<\textcolor{stringliteral}{" "}<<r<<\textcolor{stringliteral}{" "}<<g<<\textcolor{stringliteral}{" "}<<b<<endl;
+643             \}
+644 
+645             fout<<endl;
+646         \}
+647         \textcolor{keywordflow}{else}
+648             yError()<<\textcolor{stringliteral}{"[SuperqComputation]: Some problems in opening output file!"};
+649 
+650         fout.close();
+651 
+652         count\_file++;
+653     \}
+654 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqComputation_a52c81fde3c749d05572eecd3319ac905}} 
+\index{Superq\+Computation@{Superq\+Computation}!send\+Points@{send\+Points}}
+\index{send\+Points@{send\+Points}!Superq\+Computation@{Superq\+Computation}}
+\subsubsection{\texorpdfstring{send\+Points()}{sendPoints()}}
+{\footnotesize\ttfamily void Superq\+Computation\+::send\+Points (\begin{DoxyParamCaption}\item[{const std\+::deque$<$ yarp\+::sig\+::\+Vector $>$ \&}]{p }\end{DoxyParamCaption})}
+
+
+
+Get the point cloud for computing the superquadric. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em p} & is the object point cloud \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 878 of file superq\+Computation.\+cpp.
+
+
+
+References points.
+
+
+\begin{DoxyCode}
+879 \{
+880     LockGuard lg(mutex);
+881 
+882     points.clear();
+883 
+884     \textcolor{keywordflow}{for} (\textcolor{keywordtype}{int} i=0; i<p.size(); i++)
+885     \{
+886         points.push\_back(p[i]);
+887     \}
+888 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqComputation_afa65ce67fb294f38c4e843540f96de3c}} 
+\index{Superq\+Computation@{Superq\+Computation}!set\+Ipopt\+Par@{set\+Ipopt\+Par}}
+\index{set\+Ipopt\+Par@{set\+Ipopt\+Par}!Superq\+Computation@{Superq\+Computation}}
+\subsubsection{\texorpdfstring{set\+Ipopt\+Par()}{setIpoptPar()}}
+{\footnotesize\ttfamily void Superq\+Computation\+::set\+Ipopt\+Par (\begin{DoxyParamCaption}\item[{const yarp\+::os\+::\+Property \&}]{new\+Options,  }\item[{bool}]{first\+\_\+time }\end{DoxyParamCaption})}
+
+
+
+Set options for the optimization problem solved by Ipopt. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em new\+Options} & is a Property with the new options to set \\
+\hline
+{\em first\+\_\+time} & takes into account if the options have already been set or not \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 277 of file superq\+Computation.\+cpp.
+
+
+
+References acceptable\+\_\+iter, max\+\_\+cpu\+\_\+time, max\+\_\+iter, mu\+\_\+strategy, nlp\+\_\+scaling\+\_\+method, optimizer\+\_\+points, points, and tol.
+
+
+
+Referenced by thread\+Init().
+
+
+\begin{DoxyCode}
+278 \{
+279     LockGuard lg(mutex);
+280 
+281     \textcolor{keywordtype}{int} points=newOptions.find(\textcolor{stringliteral}{"optimizer\_points"}).asInt();
+282     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"optimizer\_points"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+283     \{
+284         optimizer_points=50;
+285     \}
+286     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"optimizer\_points"}).isNull())
+287     \{
+288         \textcolor{keywordflow}{if} ((points>=10) && (points<=300))
+289         \{
+290             optimizer_points=points;
+291         \}
+292         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (points<10)
+293         \{
+294             optimizer_points=10;
+295         \}
+296         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (points>300)
+297         \{
+298             optimizer_points=300;
+299         \}
+300     \}
+301 
+302     \textcolor{keywordtype}{double} maxCpuTime=newOptions.find(\textcolor{stringliteral}{"max\_cpu\_time"}).asDouble();
+303     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"max\_cpu\_time"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+304     \{
+305         max_cpu_time=5.0;
+306     \}
+307     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"max\_cpu\_time"}).isNull())
+308     \{
+309         \textcolor{keywordflow}{if} ((maxCpuTime>=0.01) && (maxCpuTime<=10.0))
+310         \{
+311             max_cpu_time=maxCpuTime;
+312         \}
+313         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (maxCpuTime<0.01)
+314         \{
+315             max_cpu_time=0.01;
+316         \}
+317         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (maxCpuTime>10.0)
+318         \{
+319             max_cpu_time=10.0;
+320         \}
+321     \}
+322 
+323     \textcolor{keywordtype}{double} tolValue=newOptions.find(\textcolor{stringliteral}{"tol"}).asDouble();
+324     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"tol"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+325     \{
+326         tol=1e-5;
+327     \}
+328     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"tol"}).isNull())
+329     \{
+330         \textcolor{keywordflow}{if} ((tolValue>1e-8) && (tolValue<=0.01))
+331         \{
+332             tol=tolValue;
+333         \}
+334         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (tolValue<1e-8)
+335         \{
+336             tol=1e-8;
+337         \}
+338         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (tolValue>0.01)
+339         \{
+340             tol=0.01;
+341         \}
+342     \}
+343 
+344     \textcolor{keywordtype}{int} accIter=newOptions.find(\textcolor{stringliteral}{"acceptable\_iter"}).asInt();
+345     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"acceptable\_iter"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+346     \{
+347         acceptable_iter=0;
+348     \}
+349     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"acceptable\_iter"}).isNull())
+350     \{
+351         \textcolor{keywordflow}{if} ((accIter>=0 )&& (accIter<=10))
+352         \{
+353              acceptable_iter=accIter;
+354         \}
+355         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (accIter<0)
+356         \{
+357             acceptable_iter=0;
+358         \}
+359         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (accIter>10)
+360         \{
+361             acceptable_iter=10;
+362         \}
+363     \}
+364 
+365     \textcolor{keywordtype}{int} maxIter=newOptions.find(\textcolor{stringliteral}{"max\_iter"}).asInt();
+366     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"max\_iter"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+367     \{
+368         max_iter=100;
+369     \}
+370     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"max\_iter"}).isNull())
+371     \{
+372         \textcolor{keywordflow}{if} ((maxIter>1))
+373         \{
+374             max_iter=maxIter;
+375         \}
+376         \textcolor{keywordflow}{else}
+377         \{
+378             max_iter=100;
+379         \}
+380     \}
+381 
+382     \textcolor{keywordtype}{string} mu\_str=newOptions.find(\textcolor{stringliteral}{"mu\_strategy"}).asString();
+383     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"mu\_strategy"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+384     \{
+385         mu_strategy=\textcolor{stringliteral}{"monotone"};
+386     \}
+387     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"mu\_strategy"}).isNull())
+388     \{
+389         \textcolor{keywordflow}{if} ((mu\_str==\textcolor{stringliteral}{"adaptive"}) || (mu\_str==\textcolor{stringliteral}{"monotone"}))
+390         \{
+391             mu_strategy=mu\_str;
+392         \}
+393         \textcolor{keywordflow}{else}
+394         \{
+395             mu_strategy=\textcolor{stringliteral}{"monotone"};
+396         \}
+397     \}
+398 
+399     \textcolor{keywordtype}{string} nlp=newOptions.find(\textcolor{stringliteral}{"nlp\_scaling\_method"}).asString();
+400     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"nlp\_scaling\_method"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+401     \{
+402         nlp_scaling_method=\textcolor{stringliteral}{"gradient-based"};
+403     \}
+404     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"nlp\_scaling\_method"}).isNull())
+405     \{
+406         \textcolor{keywordflow}{if} ((nlp==\textcolor{stringliteral}{"none"}) || (nlp==\textcolor{stringliteral}{"gradient-based"}))
+407         \{
+408             nlp_scaling_method=nlp;
+409         \}
+410         \textcolor{keywordflow}{else}
+411         \{
+412             nlp_scaling_method=\textcolor{stringliteral}{"gradient-based"};
+413         \}
+414     \}
+415 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqComputation_a1780009371c09327b8491189dee66b20}} 
+\index{Superq\+Computation@{Superq\+Computation}!set\+Par@{set\+Par}}
+\index{set\+Par@{set\+Par}!Superq\+Computation@{Superq\+Computation}}
+\subsubsection{\texorpdfstring{set\+Par()}{setPar()}}
+{\footnotesize\ttfamily void Superq\+Computation\+::set\+Par (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{par\+\_\+name,  }\item[{const std\+::string \&}]{value }\end{DoxyParamCaption})}
+
+
+
+Set a parameter equal to a value. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em par\+\_\+name} & is the name of the variable we want to change \\
+\hline
+{\em value} & is the new balue \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 434 of file superq\+Computation.\+cpp.
+
+
+
+References filter\+\_\+points, filter\+\_\+superq, ob\+\_\+class, save\+\_\+points, and tag\+\_\+file.
+
+
+\begin{DoxyCode}
+435 \{
+436     \textcolor{keywordflow}{if} (par\_name==\textcolor{stringliteral}{"tag\_file"})
+437         tag_file=value;
+438     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (par\_name==\textcolor{stringliteral}{"filter\_points"})
+439         filter_points=(value==\textcolor{stringliteral}{"on"});
+440     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (par\_name==\textcolor{stringliteral}{"filter\_superq"})
+441         filter_superq=(value==\textcolor{stringliteral}{"on"});
+442     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (par\_name==\textcolor{stringliteral}{"save\_points"})
+443         save_points=(value==\textcolor{stringliteral}{"on"});
+444     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (par\_name==\textcolor{stringliteral}{"one\_shot"})
+445         one\_shot=(value==\textcolor{stringliteral}{"on"});
+446     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (par\_name==\textcolor{stringliteral}{"object\_class"})
+447         ob_class=value;
+448 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqComputation_a4f841a006336a06d0a349f8a57707524}} 
+\index{Superq\+Computation@{Superq\+Computation}!set\+Points\+Filter\+Par@{set\+Points\+Filter\+Par}}
+\index{set\+Points\+Filter\+Par@{set\+Points\+Filter\+Par}!Superq\+Computation@{Superq\+Computation}}
+\subsubsection{\texorpdfstring{set\+Points\+Filter\+Par()}{setPointsFilterPar()}}
+{\footnotesize\ttfamily void Superq\+Computation\+::set\+Points\+Filter\+Par (\begin{DoxyParamCaption}\item[{const yarp\+::os\+::\+Property \&}]{new\+Options,  }\item[{bool}]{first\+\_\+time }\end{DoxyParamCaption})}
+
+
+
+Set options for filtering the point cloud. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em new\+Options} & is a Property with the new options to set \\
+\hline
+{\em first\+\_\+time} & takes into account if the options have already been set or not \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 76 of file superq\+Computation.\+cpp.
+
+
+
+References nn\+Threshold, and radius.
+
+
+
+Referenced by thread\+Init().
+
+
+\begin{DoxyCode}
+77 \{
+78     LockGuard lg(mutex);
+79 
+80     \textcolor{keywordtype}{double} radiusValue=newOptions.find(\textcolor{stringliteral}{"filter\_radius"}).asDouble();
+81     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"filter\_radius"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+82     \{
+83         radius=0.01;
+84     \}
+85     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"filter\_radius"}).isNull())
+86     \{
+87         \textcolor{keywordflow}{if} ((radiusValue>0.0000001) && (radiusValue<0.01))
+88         \{
+89             radius=radiusValue;
+90         \}
+91         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ((radiusValue>=0.01))
+92         \{
+93             radius=0.01;
+94         \}
+95         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ((radiusValue<=0.0000001))
+96         \{
+97             radius=0.0000001;
+98         \}
+99     \}
+100 
+101    \textcolor{keywordtype}{int} nnThreValue=newOptions.find(\textcolor{stringliteral}{"filter\_nnThreshold"}).asInt();
+102     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"filter\_nnThreshold"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+103     \{
+104         nnThreshold=100;
+105     \}
+106     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"filter\_nnThreshold"}).isNull())
+107     \{
+108         \textcolor{keywordflow}{if} ((nnThreValue>0) && (nnThreValue<100))
+109         \{
+110                 nnThreshold=nnThreValue;
+111         \}
+112         \textcolor{keywordflow}{else}
+113         \{
+114             nnThreshold=100;
+115         \}
+116     \}
+117 \}
+\end{DoxyCode}
+\mbox{\label{classSuperqComputation_ac0eb6516ba435573f74b03ed4177d8d0}} 
+\index{Superq\+Computation@{Superq\+Computation}!set\+Superq\+Filter\+Par@{set\+Superq\+Filter\+Par}}
+\index{set\+Superq\+Filter\+Par@{set\+Superq\+Filter\+Par}!Superq\+Computation@{Superq\+Computation}}
+\subsubsection{\texorpdfstring{set\+Superq\+Filter\+Par()}{setSuperqFilterPar()}}
+{\footnotesize\ttfamily void Superq\+Computation\+::set\+Superq\+Filter\+Par (\begin{DoxyParamCaption}\item[{const yarp\+::os\+::\+Property \&}]{new\+Options,  }\item[{bool}]{first\+\_\+time }\end{DoxyParamCaption})}
+
+
+
+Set options for filtering the superquadric. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em new\+Options} & is a Property with the new options to set \\
+\hline
+{\em first\+\_\+time} & takes into account if the options have already been set or not \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 131 of file superq\+Computation.\+cpp.
+
+
+
+References fixed\+\_\+window, max\+\_\+median\+\_\+order, min\+\_\+median\+\_\+order, min\+\_\+norm\+\_\+vel, std\+\_\+median\+\_\+order, and threshold\+\_\+median.
+
+
+
+Referenced by thread\+Init().
+
+
+\begin{DoxyCode}
+132 \{
+133     LockGuard lg(mutex);
+134 
+135     \textcolor{keywordtype}{int} mOrderValue=newOptions.find(\textcolor{stringliteral}{"median\_order"}).asInt();
+136     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"median\_order"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+137     \{
+138         std_median_order=3;
+139     \}
+140     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"median\_order"}).isNull())
+141     \{
+142         \textcolor{keywordflow}{if}((mOrderValue>=1) && (mOrderValue<=50))
+143         \{
+144             std_median_order=mOrderValue;
+145         \}
+146         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (mOrderValue<1)
+147         \{
+148             std_median_order=1;
+149         \}
+150         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (mOrderValue>50)
+151         \{
+152             std_median_order=50;
+153         \}
+154     \}
+155 
+156     mOrderValue=newOptions.find(\textcolor{stringliteral}{"min\_median\_order"}).asInt();
+157     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"min\_median\_order"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+158     \{
+159         min_median_order=1;
+160     \}
+161     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"min\_median\_order"}).isNull())
+162     \{
+163         \textcolor{keywordflow}{if} ((mOrderValue>=1) && (mOrderValue<=50))
+164         \{
+165             min_median_order=mOrderValue;
+166         \}
+167         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (mOrderValue<1)
+168         \{
+169             min_median_order=1;
+170         \}
+171         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (mOrderValue>50)
+172         \{
+173             min_median_order=50;
+174         \}
+175     \}
+176 
+177     mOrderValue=newOptions.find(\textcolor{stringliteral}{"max\_median\_order"}).asInt();
+178     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"max\_median\_order"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+179     \{
+180         max_median_order=30;
+181     \}
+182     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"max\_median\_order"}).isNull())
+183     \{
+184         \textcolor{keywordflow}{if} ((mOrderValue>=1) && (mOrderValue<=50) && (mOrderValue>=
+      min_median_order))
+185         \{
+186             max_median_order=mOrderValue;
+187         \}
+188         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ((mOrderValue<1) || (mOrderValue<min_median_order))
+189         \{
+190             max_median_order=min_median_order;
+191         \}
+192         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (mOrderValue>50)
+193         \{
+194             max_median_order=50;
+195         \}
+196     \}
+197 
+198     \textcolor{keywordtype}{double} threValue=newOptions.find(\textcolor{stringliteral}{"threshold\_median"}).asDouble();
+199     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"threhsold\_median"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+200     \{
+201         threshold_median=0.1;
+202     \}
+203     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"threhsold\_median"}).isNull())
+204     \{
+205         \textcolor{keywordflow}{if} ((threValue>0.005) && (threValue<=2.0))
+206         \{
+207             threshold_median=threValue;
+208         \}
+209         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (threValue<0.005)
+210         \{
+211             threshold_median=0.005;
+212         \}
+213         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (threValue>2.0)
+214         \{
+215             threshold_median=2.0;
+216         \}
+217     \}
+218 
+219     \textcolor{keywordtype}{double} minNormVel=newOptions.find(\textcolor{stringliteral}{"min\_norm\_vel"}).asDouble();
+220     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"min\_norm\_vel"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+221     \{
+222         min_norm_vel=0.01;
+223     \}
+224     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"min\_norm\_vel"}).isNull())
+225     \{
+226         \textcolor{keywordflow}{if} ((minNormVel>0.005) && (minNormVel<=0.1))
+227         \{
+228             min_norm_vel=minNormVel;
+229         \}
+230         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (minNormVel<0.005)
+231         \{
+232             min_norm_vel=0.005;
+233         \}
+234         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (minNormVel>0.1)
+235         \{
+236             min_norm_vel=0.1;
+237         \}
+238     \}
+239 
+240     \textcolor{keywordtype}{string} par=newOptions.find(\textcolor{stringliteral}{"fixed\_window"}).asString();
+241     \textcolor{keywordflow}{if} (newOptions.find(\textcolor{stringliteral}{"fixed\_window"}).isNull() && (first\_time==\textcolor{keyword}{true}))
+242     \{
+243         fixed_window=\textcolor{keyword}{false};
+244     \}
+245     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (!newOptions.find(\textcolor{stringliteral}{"fixed\_window"}).isNull())
+246     \{
+247         \textcolor{keywordflow}{if} ((par==\textcolor{stringliteral}{"on"}) || (par==\textcolor{stringliteral}{"off"}))
+248         \{
+249             fixed_window=(par==\textcolor{stringliteral}{"on"});
+250         \}
+251         \textcolor{keywordflow}{else}
+252         \{
+253             fixed_window=\textcolor{keyword}{false};
+254         \}
+255     \}
+256 \}
+\end{DoxyCode}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Users/upattacini/\+Desktop/superquadric-\/model/include/superq\+Computation.\+h\item 
+C\+:/\+Users/upattacini/\+Desktop/superquadric-\/model/src/superq\+Computation.\+cpp\end{DoxyCompactItemize}

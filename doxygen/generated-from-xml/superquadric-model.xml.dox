@@ -1,0 +1,86 @@
+
+  /**
+  *
+  * @ingroup  
+  * \defgroup superquadric-model superquadric-model
+  * Framework for object detecting and modeling.
+  * Version:1.0
+  * \author  Giulia Vezzani giulia.vezzani@iit.it
+  * \n
+  * \copyright Released under the terms of the GNU GPL v2.0
+  * \section intro_sec Description
+  *
+  
+This module provides an object modeling tool based on superquadric functions.
+A tutorial on how to use the module is provided in the dedicated repository <a href="https://github.com/robotology/superquadric-model/tree/master/tutorial"><b>tutorial</b></a>.
+
+This page illustrates the main parameters of the module (Section <b>Parameters</b>), the available ports and services.
+The modules parameters are labeled as standard and advanced. Note: change the advanced parameters only if you are familiar with the implemented techniques.
+
+The module can also provides <b>three output files</b> is the saving options is enabled:
+  - <b>tag-file.txt</b> or <b>output.txt</b> (if the point cloud is given through a file or a seed point), containing the reconstructed superquadric and some information about IPOPT algorithm;
+  - <b>SFM-tag-file.off</b> containing the 3D points coming from SFM;
+  - <b>filtered-tag-file.off</b> containing the filtered 3D points (if filtering is enabled).
+
+
+  * \section parameters_sec Parameters     
+  
+  *- --context: Select the current context (standard parameter).
+  *- --from: Configuration file name (standard parameter).
+  *- --tag_file: Tag for saving files (standard parameter).
+  *- --visualization_on: Variable to enable or not the visualization (standard parameter - thrift service available).
+  *- --camera: Eye used for projection of the 3D points on the superquadric surface to the 2D pixels (standard parameter - thrift service available).
+  *- --vis_points: Number of points used for visualization (standard parameter - thrift service available).
+  *- --what_to_plot: What to plot among the estimated superquadric and the acquired 3D points (standard parameter - thrift service available).
+  *- --tol: Desired convergence tolerance (relative). Determines the convergence tolerance for the IPOPT algorithm (standard parameter - thrift service available).
+  *- --acceptable_iter: IPOPT acceptable iter. Number of acceptable iterates before triggering termination. If the algorithm encounters this many successive acceptable iterates, it terminates, assuming that the problem has been solved to best possible accuracy given round-off. If it is set to zero, this heuristic is disabled (advanced parameter- thrift service available).
+  *- --max_iter: IPOPT maximum iteration (advanced parameter- thrift service available).
+  *- --max_cpu_time: Maximum cpu time for IPOPT algorithm execution (advanced parameter - thrift service available).
+  *- --mu_strategy: IPOPT update strategy for barrier parameter. Determines which barrier parameter update strategy is to be used. POssible values: monotone or adaptive (advanced parameter- thrift service available).
+  *- --nlp_scaling_method: IPOPT nlp_scaling_method: Select the technique used for scaling the problem. Possible values: none, user-scaling, gradient-based, equilibration-based (advanced parameter- thrift service available).
+  *- --filter_points: Variable to decide to filter points or not (standard parameter - thrift service available).
+  *- --radius: KNN radius value for filtering (advanced parameter  -  thrift service available).
+  *- --nnThreshold: KKN threshold value for filtering (advanced parameter  -  thrift service available).
+  *- --filter_superq: Variable to decide to filter superq or not (standard parameter - thrift service available).
+  *- --fixed_window: Variable to decide if to use a fixed window for the median filter on superquadrics (standard parameter - thrift service available).
+  *- --median_order: Window width in case and adaptive window is not used (advanced parameter - thrift service available).
+  *- --min_median_order: Min window width in case an adaptive window is used (advanced parameter - thrift service available).
+  *- --max_median_order: Max window width in case an adaptive window is used (advanced parameter - thrift service available).
+  * \section inputports_sec Input Ports
+  * 
+  *- /superquadric-model/img:i [yarp::sig::ImageOfPixelRgb]  [default carrier:tcp]: 
+        receive the image from the left camera.
+      
+  *
+  
+  *- /superquadric-model/point:i [yarp::os::Bottle]  [default carrier:tcp]: 
+        receive the 2D blob of the object.
+      
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /superquadric-model/img:o [yarp::sig::ImageOfPixelMono]  [default carrier:tcp]: 
+        send the image from the left camera with the visualized superquadric or points.
+      
+  *
+  
+  *- /superquadric-model/superq:o [yarp::os::Property]  [default carrier:tcp]: 
+        send the estimated superquadric in streaming.
+      
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *- /superquadric-model/rpc
+  *  [rpc-server]: 
+  * service port
+  * . This service is described in superquadricModel_IDL (idl.thrift)
+  * 
+  *
+  * 
+  *
+  *
+  **/
+
