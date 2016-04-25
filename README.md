@@ -19,7 +19,12 @@ The inside-outside function can be used for superquadric recovery. Suppose we ha
 
 <img src="https://github.com/giuliavezzani/superquadric-detection/blob/master/img/fgen-eq.jpg" width=469 height=75>
 
-We want to find such values for the 11 parameters _&Lambda;_ ( _&lambda;j_, _j = 1, .. 11 )_ that most of the _n_ 3D points will lay on, or close to the superquadric surface.
+We want to find such values for the 11 parameters _&Lambda;_ ( _&lambda;j_, _j = 1, .. 11 )_ that most of the _n_ 3D points will lay on, or close to the superquadric surface. The superquadric parameters have the following meanings:
+- _&lambda;1_, _&lambda;2_, and _&lambda;3_ are the semi-axes lengths;
+- _&lambda;4_ and _&lambda;5_ are the exponents, responsible for the superquadric shape;
+- _&lambda;6_, _&lambda;7_, and _&lambda;8_ are the coordinates of the superquadric center;
+- _&lambda;9_, _&lambda;10_, and _&lambda;11_ are the Euler angles, representing the superquadric pose.
+
 The problem can be solved by minimizing the following quantity:
 
 <img src="https://github.com/giuliavezzani/superquadric-detection/blob/master/img/min-eq.jpg" width=646 height=91>
