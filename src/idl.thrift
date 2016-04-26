@@ -17,7 +17,7 @@ service superquadricDetection_IDL
     * @param entry is the name of the object
     * @return true/false is the object is known/unknown
     */
-    bool set_object_name(1:string entry="");
+    bool set_object_name(1:string entry);
 
     /**
     * Get the seed point of the object
@@ -88,7 +88,7 @@ service superquadricDetection_IDL
     * @param eye is a string "left" or "right" for selecting the left or right eye
     * @return true/false on success/failure
     */
-    bool set_eye(1:string eye="")
+    bool set_eye(1:string eye)
 
     /**
     * Get the maximum number of points used
@@ -130,7 +130,7 @@ service superquadricDetection_IDL
     * x5, x6, x7 are the coordinate of the superquadric center and
     * x8, x9, 10 are the Euler angles, representing the superquadric orientation.
     */
-    list<double> get_superq(1:string name="")
+    list<double> get_superq(1:string name)
 
 
 }
