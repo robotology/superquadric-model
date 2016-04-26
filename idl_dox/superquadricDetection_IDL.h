@@ -23,7 +23,7 @@ public:
    * @param entry is the name of the object
    * @return true/false is the object is known/unknown
    */
-  virtual bool set_object_name(const std::string& entry = "");
+  virtual bool set_object_name(const std::string& entry);
   /**
    * Get the seed point of the object
    * without using the name object
@@ -31,7 +31,7 @@ public:
    * @param y_pixel is the x pixel value of the object seed point
    * return true/false on success/failure.
    */
-  virtual bool seed_point(const int32_t x_pixel, const int32_t y_pixel);
+  virtual bool set_seed_point(const int32_t x_pixel, const int32_t y_pixel);
   /**
    * Return the name of the object that is
    * being detected and modeled
@@ -49,19 +49,19 @@ public:
    * Get downsampling value
    * @return int value for the downsampling
    */
-  virtual int32_t get_downsampling();
+  virtual int32_t get_downsampling_acquisition();
   /**
    * Set downsampling value
    * @param d is the downsampling value
    * @return true/false for success/failure
    */
-  virtual bool set_downsampling(const int32_t d);
+  virtual bool set_downsampling_acquisition(const int32_t d);
   /**
    * Get RGB values
    * @return a list with the RGB values of the
    * superquadric and blob visualization
    */
-  virtual std::vector<int32_t>  get_rgb();
+  virtual std::vector<int32_t>  get_color();
   /**
    * Set the RGB values of the superquadric
    * and blob visualization
@@ -70,7 +70,7 @@ public:
    * @param b is blue value in [0,255]
    * @return true/false on success/failure
    */
-  virtual bool set_rgb(const int32_t r, const int32_t g, const int32_t b);
+  virtual bool set_color(const int32_t r, const int32_t g, const int32_t b);
   /**
    * Get the eye used for projection of the
    * 3D points on the superquadric surface
@@ -85,20 +85,20 @@ public:
    * @param eye is a string "left" or "right" for selecting the left or right eye
    * @return true/false on success/failure
    */
-  virtual bool set_eye(const std::string& eye = "");
+  virtual bool set_eye(const std::string& eye);
   /**
    * Get the maximum number of points used
    * for the superquadric reconstruction
    * @return the maximum number of the points
    */
-  virtual int32_t get_max_num_points();
+  virtual int32_t get_optimizer_points();
   /**
    * Set the maximum number of points used
    * for the superquadric reconstruction
    * @param max is the number of points for superquadric reconstruction
    * @return true/false on success/failure
    */
-  virtual bool set_max_num_points(const int32_t max);
+  virtual bool set_optimizer_points(const int32_t max);
   /**
    * Get max number of visualized points
    * on superquadric surface
@@ -122,7 +122,7 @@ public:
    * x5, x6, x7 are the coordinate of the superquadric center and
    * x8, x9, 10 are the Euler angles, representing the superquadric orientation.
    */
-  virtual std::vector<double>  get_superq(const std::string& name = "");
+  virtual std::vector<double>  get_superq(const std::string& name);
   virtual bool read(yarp::os::ConnectionReader& connection);
   virtual std::vector<std::string> help(const std::string& functionName="--all");
 };
