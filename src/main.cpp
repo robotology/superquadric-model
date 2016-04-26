@@ -46,6 +46,34 @@ using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
 
+/*******************************************************************************/
+class SpatialDensityFilter
+{
+public:
+
+    /*******************************************************************************/
+    static vector<int> filter(const cv::Mat &data,const double radius, const int maxResults)
+    {
+        cv::flann::KDTreeIndexParams indexParams;
+        cv::flann::Index kdtree(data,indexParams);
+
+        cv::Mat query(1,data.cols,CV_32F);
+        cv::Mat indices,dists;
+
+        vector<int> res(data.rows);
+        for (size_t i=0; i<res.size(); i++)
+        {
+            for (int c=0; c<query.cols; c++)
+                query.at<float>(0,c)=data.at<float>(i,c);
+
+            res[i]=kdtree.radiusSearch(query,indices,dists,radius,maxResults,cv::flann::SearchParams(128));
+        }
+
+        return res;
+    }
+};
+
+/*******************************************************************************/
 class SuperqModule : public RFModule,
                      public superquadricDetection_IDL
 {
@@ -57,6 +85,8 @@ protected:
     string objname;
     string method;
     string homeContextPath;
+    string pointCloudFileName;
+    string outputFileName;
     vector<cv::Point> contour;
     deque<Vector> points;
     deque<cv::Point> blob_points;
@@ -70,12 +100,18 @@ protected:
     RpcClient portOPCrpc;
     RpcServer portRpc;
 
+    double radius;
+    int nnThreshold;
+    int numVertices;
+
+    bool mode_on;
     bool go_on;
     double tol, sum;
     double max_cpu_time;
     int acceptable_iter,max_iter;    
-    string mu_strategy,nlp_scaling_method;
+    string mu_strategy,nlp_scaling_method;    
     Vector x;
+    double t_superq;
 
     BufferedPort<ImageOf<PixelRgb> > portImgIn;
     BufferedPort<ImageOf<PixelRgb> > portImgOut;
@@ -241,36 +277,64 @@ public:
         double t,t0;
         t0=Time::now();
 
-        go_on=acquirePointsFromBlob();
-
-        if ((go_on==false) && (!isStopping()))
+        if (mode_on)
         {
-            yError("No image available! ");
+            go_on=acquirePointsFromBlob();
+
+            if ((go_on==false) && (!isStopping()))
+            {
+                yError("No image available! ");
+                return false;
+            }
+
+            if (points.size()>0)
+            {
+                yInfo()<<"number of points acquired:"<< points.size();
+                go_on=computeSuperq();
+            }
+
+            if ((go_on==false) && (!isStopping()))
+            {
+                yError("Not found a suitable superquadric! ");
+            }
+            else if (go_on==true)
+                go_on=showSuperq();
+
+            if ((go_on==false) && (!isStopping()))
+            {
+                yError("No image available! ");
+                return false;
+            }
+
+            t=Time::now()-t0;
+            times.push_back(t);
+            yInfo("Update module runs in %f",t);
+        }
+        else
+        {
+            go_on=filter();
+
+            if ((go_on==false) && (!isStopping()))
+            {
+                yError("Something wrong in point filtering! ");
+                return false;
+            }
+
+            if (points.size()>0)
+            {
+                yInfo()<<"number of points read and filtered:"<< points.size();
+                go_on=computeSuperq();
+            }
+
+            if ((go_on==false) && (!isStopping()))
+            {
+                yError("Not found a suitable superquadric! ");
+            }
+            else
+                saveSuperq();
+
             return false;
         }
-
-        if (points.size()>0)
-        {
-            yInfo()<<"number of points acquired:"<< points.size();
-            go_on=computeSuperq();
-        }
-
-        if ((go_on==false) && (!isStopping()))
-        {
-            yError("Not found a suitable superquadric! ");
-        }
-        else if (go_on==true)
-            go_on=showSuperq();
-
-        if ((go_on==false) && (!isStopping()))
-        {
-            yError("No image available! ");
-            return false;
-        }
-
-        t=Time::now()-t0;
-        times.push_back(t);
-        yInfo("Update module runs in %f",t);
 
         return true;
     }
@@ -280,12 +344,18 @@ public:
     {
         bool config_ok;
 
-        config_ok=config3Dpoints(rf);
+        config_ok=configOnOff(rf);
+
+        if (mode_on==false)
+            config_ok=configFilter(rf);
+
+        if ((config_ok==true) && (mode_on==true))
+            config_ok=config3Dpoints(rf);
 
         if (config_ok)
             config_ok=configSuperq(rf);
 
-        if (config_ok)
+        if ((config_ok==true) && (mode_on==true))
             config_ok=configViewer(rf);
 
         return config_ok;
@@ -312,10 +382,13 @@ public:
     /***********************************************************************/
     bool close()
     {
-        for(size_t i=0; i<times.size(); i++)
-            sum+=times[i];
+        if(mode_on)
+        {
+            for(size_t i=0; i<times.size(); i++)
+                sum+=times[i];
 
-        yInfo("Average updateModule execution time: %f",sum/times.size());
+            yInfo("Average updateModule execution time: %f",sum/times.size());
+        }
 
         if (!portDispIn.isClosed())
             portDispIn.close();
@@ -353,6 +426,41 @@ public:
     }
 
     /***********************************************************************/
+    bool configOnOff(ResourceFinder &rf)
+    {
+        count=0;
+
+        homeContextPath=rf.getHomeContextPath().c_str();
+        pointCloudFileName=homeContextPath+rf.find("pointCloudFile").asString();
+
+        yDebug()<<"file points "<<pointCloudFileName;
+
+        if (rf.find("pointCloudFile").isNull())
+            mode_on=true;
+        else
+        {
+            outputFileName=homeContextPath+rf.find("outputFile").asString().c_str();
+
+            if (rf.find("outputFile").isNull())
+                outputFileName=homeContextPath+"/data/output.off";
+
+            yDebug()<<"file output "<<outputFileName;
+
+            mode_on=false;
+        }
+
+        return true;
+    }
+
+    /***********************************************************************/
+    bool configFilter(ResourceFinder &rf)
+    {
+        radius=rf.check("radius", Value(0.0002)).asDouble();
+        nnThreshold=rf.check("nn-threshold", Value(80)).asInt();
+        return true;
+    }
+
+    /***********************************************************************/
     bool config3Dpoints(ResourceFinder &rf)
     {
         portDispIn.open("/superquadric-detection/disp:i");
@@ -368,11 +476,7 @@ public:
 
         attach(portRpc);
 
-        homeContextPath=rf.getHomeContextPath().c_str();
-        yDebug()<<"home cnt "<<homeContextPath;
         downsampling=std::max(1,rf.check("downsampling",Value(3)).asInt());
-        vis_points=16;
-        count=0;
 
         return true;
     }
@@ -381,26 +485,32 @@ public:
     bool configSuperq(ResourceFinder &rf)
     {
         this->rf=&rf;
+        x.resize(11,0.0);
 
-        tol=rf.check("tol",Value(1e-2)).asDouble();
+        if (mode_on)
+            tol=rf.check("tol",Value(1e-2)).asDouble();
+        else
+            tol=rf.check("tol",Value(1e-5)).asDouble();
         acceptable_iter=rf.check("acceptable_iter",Value(0)).asInt();
         max_iter=rf.check("max_iter",Value(numeric_limits<int>::max())).asInt();
-        max_cpu_time=rf.check("max_cpu_time", Value(0.3)).asDouble();
+        if (mode_on)
+            max_cpu_time=rf.check("max_cpu_time", Value(0.3)).asDouble();
+        else
+            max_cpu_time=numeric_limits<double>::max();
 
         mu_strategy=rf.find("mu_strategy").asString().c_str();
         if (rf.find("mu_strategy").isNull())
-            mu_strategy="adaptive";
+            mu_strategy="monotone";
         nlp_scaling_method=rf.find("nlp_scaling_method").asString().c_str();
         if (rf.find("nlp_scaling_method").isNull())
-            nlp_scaling_method="none";
+            nlp_scaling_method="gradient-based";
 
         return true;
     }
 
     /***********************************************************************/
     bool configViewer(ResourceFinder &rf)
-    {
-        x.resize(11,0.0);
+    {        
         portImgIn.open("/superquadric-detection/img:i");
         portImgOut.open("/superquadric-detection/img:o");
 
@@ -458,6 +568,8 @@ public:
         point2D.resize(2,0.0);
         point.resize(3,0.0);
         point1.resize(3,0.0);
+
+        vis_points=16;
 
         return true;
     }
@@ -680,7 +792,8 @@ public:
         ss2 << count;
         string str_i = ss2.str();
         count++;
-        fout.open((homeContextPath+"/test-3d-points"+str_i+".off").c_str());
+        fout.open((homeContextPath+"/data/filtered-points"+str_i+".off").c_str());
+
         if (fout.is_open())
         {
             fout<<"OFF"<<endl;
@@ -690,10 +803,80 @@ public:
             {
                 fout<<points[i].subVector(0,2).toString(3,4).c_str()<<endl;
             }
+
             fout<<endl;
         }
-        fout.close();
+        else
+            yError()<<"Some problems in opening output file!";
 
+        fout.close();
+    }
+
+    /***********************************************************************/
+    void saveSuperq()
+    {
+        ofstream fout;
+        fout.open(outputFileName.c_str());
+        if (fout.is_open())
+        {
+            fout<<"Computed superquadric "<<endl;
+            fout<<x.toString();
+            fout<<endl;
+            fout<<"Execution time "<<endl;
+            fout<<t_superq <<endl;
+        }
+        fout.close();
+    }
+
+    /***********************************************************************/
+    bool filter()
+    {
+        ifstream pointsFile(pointCloudFileName.c_str());
+
+        if (!pointsFile.is_open())
+        {
+            yError()<<"problem opening point cloud file!";
+            return false;
+        }
+
+        std::string offTag;
+        int dontcare;
+        pointsFile>>offTag>>numVertices;
+        pointsFile>>dontcare>>dontcare;
+
+        cv:: Mat data(numVertices,3,CV_32F);
+        for (int i=0; i<numVertices; i++)
+        {
+            pointsFile>>data.at<float>(i,0)
+                      >>data.at<float>(i,1)
+                      >>data.at<float>(i,2);
+        }
+
+        pointsFile.close();
+
+        yInfo()<<"Processing points...";
+        double t0=yarp::os::Time::now();
+        std::vector<int> res=SpatialDensityFilter::filter(data,radius,nnThreshold+1);
+        double t1=yarp::os::Time::now();
+        yInfo()<<"Processed in "<<1e3*(t1-t0)<<" [ms]";
+
+        points.clear();
+
+        for (size_t i=0; i<numVertices; i++)
+        {
+            Vector point(3,0.0);
+            if (res[i]>=nnThreshold)
+            {
+                point[0]=data.at<float>(i,0);
+                point[1]=data.at<float>(i,1);
+                point[2]=data.at<float>(i,2);
+                points.push_back(point);
+            }
+        }
+
+        savePoints();
+
+        return true;
     }
 
     /***********************************************************************/
@@ -714,9 +897,13 @@ public:
 
         superQ_nlp->init();
         superQ_nlp->configure(this->rf);
-        superQ_nlp->usePoints(points);
+        superQ_nlp->usePoints(points, mode_on);
+
+        double t0_superq=Time::now();
 
         Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
+
+        t_superq=Time::now()-t0_superq;
 
         points.clear();
 
@@ -724,6 +911,7 @@ public:
         {
             x=superQ_nlp->get_result();
             yInfo("Solution of the optimization problem: %s", x.toString(3,3).c_str());
+            yInfo("Execution time : %f", t_superq);
             return true;
         }
         else if(status==Ipopt::Maximum_CpuTime_Exceeded)

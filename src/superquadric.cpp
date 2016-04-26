@@ -62,8 +62,11 @@ public:
     }
 
     /****************************************************************/
-    void usePoints(const deque<Vector> &point_cloud)
+    void usePoints(const deque<Vector> &point_cloud, bool &mode_on)
     {
+        if (mode_on==false)
+            max_num_points=point_cloud.size()/10;
+
         if (point_cloud.size()<max_num_points)
         {
             for (size_t i=0;i<point_cloud.size();i++)
