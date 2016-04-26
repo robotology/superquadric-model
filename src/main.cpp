@@ -145,7 +145,7 @@ protected:
     }
 
     /************************************************************************/
-    bool seed_point(const int &x, const int &y)
+    bool set_seed_point(const int &x, const int &y)
     {
         if ((x>0) && (y>0))
         {
@@ -171,13 +171,13 @@ protected:
     }
 
     /************************************************************************/
-    int get_downsampling()
+    int get_downsampling_acquisition()
     {
         return downsampling;
     }
 
     /************************************************************************/
-    bool set_downsampling(const int d)
+    bool set_downsampling_acquisition(const int d)
     {
         if ((d>0) && (d<100))
         {
@@ -189,7 +189,7 @@ protected:
     }
 
     /************************************************************************/
-    vector<int> get_rgb()
+    vector<int> get_color()
     {
         vector<int> rgb;
         rgb.clear();
@@ -200,7 +200,7 @@ protected:
     }
 
     /**********************************************************************/
-    bool set_rgb(const int red, const int green, const int blue)
+    bool set_color(const int red, const int green, const int blue)
     {
         if ((red<=255) && (green<=255) && (blue<=255) && (red>=0) && (green>=0) && (blue>=0))
         {

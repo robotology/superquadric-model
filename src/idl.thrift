@@ -26,7 +26,7 @@ service superquadricDetection_IDL
     * @param y_pixel is the x pixel value of the object seed point
     * return true/false on success/failure.
     */
-    bool seed_point(1:i32 x_pixel, 2:i32 y_pixel);
+    bool set_seed_point(1:i32 x_pixel, 2:i32 y_pixel);
 
     /**
     * Return the name of the object that is
@@ -47,21 +47,21 @@ service superquadricDetection_IDL
     * Get downsampling value
     * @return int value for the downsampling
     */
-    i32 get_downsampling();
+    i32 get_downsampling_acquisition();
 
     /**
     * Set downsampling value
     * @param d is the downsampling value
     * @return true/false for success/failure
     */
-    bool set_downsampling(1: i32 d);
+    bool set_downsampling_acquisition(1: i32 d);
 
     /**
     * Get RGB values
     * @return a list with the RGB values of the
     * superquadric and blob visualization
     */
-    list<i32> get_rgb()
+    list<i32> get_color()
 
     /**
     * Set the RGB values of the superquadric
@@ -71,7 +71,7 @@ service superquadricDetection_IDL
     * @param b is blue value in [0,255]  
     * @return true/false on success/failure
     */
-    bool set_rgb(1: i32 r, 2: i32 g, 3: i32 b)
+    bool set_color(1: i32 r, 2: i32 g, 3: i32 b)
 
     /**
     * Get the eye used for projection of the
@@ -95,7 +95,7 @@ service superquadricDetection_IDL
     * for the superquadric reconstruction
     * @return the maximum number of the points
     */
-    i32 get_max_num_points()
+    i32 get_optimizer_points()
 
     /**
     * Set the maximum number of points used
@@ -103,7 +103,7 @@ service superquadricDetection_IDL
     * @param max is the number of points for superquadric reconstruction
     * @return true/false on success/failure
     */
-    bool set_max_num_points(1:i32 max)
+    bool set_optimizer_points(1:i32 max)
 
     /**
     * Get max number of visualized points
