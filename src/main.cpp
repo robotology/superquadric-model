@@ -52,7 +52,7 @@ class SpatialDensityFilter
 public:
 
     /*******************************************************************************/
-    static vector<int> filter(const cv::Mat &data,const double radius, const int maxResults)
+    static vector<int>  filter(const cv::Mat &data,const double radius, const int maxResults, deque<Vector> &points)
     {
         cv::flann::KDTreeIndexParams indexParams;
         cv::flann::Index kdtree(data,indexParams);
@@ -67,6 +67,15 @@ public:
                 query.at<float>(0,c)=data.at<float>(i,c);
 
             res[i]=kdtree.radiusSearch(query,indices,dists,radius,maxResults,cv::flann::SearchParams(128));
+
+            Vector point(3,0.0);
+            if (res[i]>=maxResults)
+            {
+                point[0]=data.at<float>(i,0);
+                point[1]=data.at<float>(i,1);
+                point[2]=data.at<float>(i,2);
+                points.push_back(point);
+            }
         }
 
         return res;
@@ -85,7 +94,7 @@ protected:
     string objname;
     string method;
     string homeContextPath;
-    string pointCloudFileName;
+    ConstString pointCloudFileName;
     string outputFileName;
     vector<cv::Point> contour;
     deque<Vector> points;
@@ -103,12 +112,15 @@ protected:
     double radius;
     int nnThreshold;
     int numVertices;
+    bool filter_on;
+    bool file_on;
 
-    bool mode_on;
+    bool mode_online;
     bool go_on;
     double tol, sum;
     double max_cpu_time;
-    int acceptable_iter,max_iter;    
+    int acceptable_iter,max_iter;
+    int optimizer_points;
     string mu_strategy,nlp_scaling_method;    
     Vector x;
     double t_superq;
@@ -232,6 +244,24 @@ protected:
     }
 
     /**********************************************************************/
+    int get_optimizer_points()
+    {
+        return optimizer_points;
+    }
+
+    /**********************************************************************/
+    bool set_optimizer_points(const int &num)
+    {
+        if ((num>0) && (num<500))
+        {
+            optimizer_points=num;
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**********************************************************************/
     int get_visualized_points()
     {
         return vis_points;
@@ -277,7 +307,7 @@ public:
         double t,t0;
         t0=Time::now();
 
-        if (mode_on)
+        if (mode_online)
         {
             go_on=acquirePointsFromBlob();
 
@@ -312,7 +342,27 @@ public:
         }
         else
         {
-            go_on=filter();
+            if (!file_on)
+            {                
+                go_on=acquirePointsFromBlob();
+
+                if ((go_on==false) && (!isStopping())) go_on=acquirePointsFromBlob();
+
+                if ((go_on==false) && (!isStopping()))
+                {
+                    yError("No image available! ");
+                    return false;
+                }
+                {
+                    yError("No image available! ");
+                    return false;
+                }
+            }
+            else
+                go_on=readPointCloud();
+
+            if (filter_on)
+                go_on=filter();
 
             if ((go_on==false) && (!isStopping()))
             {
@@ -322,7 +372,7 @@ public:
 
             if (points.size()>0)
             {
-                yInfo()<<"number of points read and filtered:"<< points.size();
+                yInfo()<<"number of points received for superquadric computation:"<< points.size();
                 go_on=computeSuperq();
             }
 
@@ -346,16 +396,17 @@ public:
 
         config_ok=configOnOff(rf);
 
-        if (mode_on==false)
+        if (mode_online==false)
             config_ok=configFilter(rf);
 
-        if ((config_ok==true) && (mode_on==true))
+        if ((config_ok==true) && (mode_online==true))
             config_ok=config3Dpoints(rf);
+
 
         if (config_ok)
             config_ok=configSuperq(rf);
 
-        if ((config_ok==true) && (mode_on==true))
+        if ((config_ok==true) && (mode_online==true))
             config_ok=configViewer(rf);
 
         return config_ok;
@@ -382,7 +433,7 @@ public:
     /***********************************************************************/
     bool close()
     {
-        if(mode_on)
+        if(mode_online)
         {
             for(size_t i=0; i<times.size(); i++)
                 sum+=times[i];
@@ -431,22 +482,24 @@ public:
         count=0;
 
         homeContextPath=rf.getHomeContextPath().c_str();
-        pointCloudFileName=homeContextPath+rf.find("pointCloudFile").asString();
-
+        pointCloudFileName=rf.findFile("pointCloudFile");
         yDebug()<<"file points "<<pointCloudFileName;
 
         if (rf.find("pointCloudFile").isNull())
-            mode_on=true;
+        {
+            mode_online=true;
+            file_on=false;
+        }
         else
         {
-            outputFileName=homeContextPath+rf.find("outputFile").asString().c_str();
+            file_on=true;
+            outputFileName=rf.findFile("outputFile");
 
             if (rf.find("outputFile").isNull())
-                outputFileName=homeContextPath+"/data/output.off";
+                outputFileName=homeContextPath+"/output.off";
 
             yDebug()<<"file output "<<outputFileName;
-
-            mode_on=false;
+            mode_online=false;
         }
 
         return true;
@@ -457,6 +510,7 @@ public:
     {
         radius=rf.check("radius", Value(0.0002)).asDouble();
         nnThreshold=rf.check("nn-threshold", Value(80)).asInt();
+        filter_on=(rf.check("filter_on", Value("no"))=="yes");
         return true;
     }
 
@@ -487,13 +541,20 @@ public:
         this->rf=&rf;
         x.resize(11,0.0);
 
-        if (mode_on)
+        if (mode_online)
+        {
+            optimizer_points=rf.check("optimizer_points", Value(80)).asInt();
             tol=rf.check("tol",Value(1e-2)).asDouble();
+        }
         else
+        {
             tol=rf.check("tol",Value(1e-5)).asDouble();
+            optimizer_points=rf.check("optimizer_points", Value(500)).asInt();
+        }
+
         acceptable_iter=rf.check("acceptable_iter",Value(0)).asInt();
         max_iter=rf.check("max_iter",Value(numeric_limits<int>::max())).asInt();
-        if (mode_on)
+        if (mode_online)
             max_cpu_time=rf.check("max_cpu_time", Value(0.3)).asDouble();
         else
             max_cpu_time=numeric_limits<double>::max();
@@ -529,11 +590,11 @@ public:
         else
         {
             r=255; g=255; b=0;
-        }        
+        }
 
         Property optionG;
         optionG.put("device","gazecontrollerclient");
-        optionG.put("remote","/iKinGazeCtrl");
+        optionG.put("remote","/iKinGazeCtrl/");
         optionG.put("local","/superquadric-detection/gaze");
 
         GazeCtrl.open(optionG);
@@ -544,10 +605,13 @@ public:
         else
             return false;
 
+        yDebug()<<"deb 14 ";
+
         Bottle info;
         igaze->getInfo(info);
         K.resize(3,4);
         K.zero();
+
 
         Bottle *intr_par;
 
@@ -555,6 +619,7 @@ public:
             intr_par=info.find("camera_intrinsics_left").asList();
         else
             intr_par=info.find("camera_intrinsics_right").asList();
+               yDebug()<<"deb 15 ";
 
         K(0,0)=intr_par->get(0).asDouble();
         K(0,1)=intr_par->get(1).asDouble();
@@ -660,6 +725,7 @@ public:
     {
         Bottle cmd,reply;
         cmd.addString("Points");
+        count=0;
 
         for (size_t i=0; i<blob_points.size(); i++)
         {
@@ -677,9 +743,13 @@ public:
                 point[0]=reply.get(idx+0).asDouble();
                 point[1]=reply.get(idx+1).asDouble();
                 point[2]=reply.get(idx+2).asDouble();
+                count++;
 
-                if (norm(point)>0)
+                if ((norm(point)>0) && (count==downsampling-1))
+                {
                     points.push_back(point);
+                    count=0;
+                }
             }
 
             if (points.size()<=0)
@@ -688,7 +758,7 @@ public:
             }
             else
             {
-                savePoints();
+                savePoints("SFM-points");
             }
         }
         else
@@ -785,14 +855,14 @@ public:
 
 
     /***********************************************************************/
-    void savePoints()
+    void savePoints(const string &namefile)
     {
         ofstream fout;
         stringstream ss2;
         ss2 << count;
         string str_i = ss2.str();
         count++;
-        fout.open((homeContextPath+"/data/filtered-points"+str_i+".off").c_str());
+        fout.open((homeContextPath+"/data/"+namefile+str_i+".off").c_str());
 
         if (fout.is_open())
         {
@@ -829,9 +899,13 @@ public:
     }
 
     /***********************************************************************/
-    bool filter()
+    bool readPointCloud()
     {
         ifstream pointsFile(pointCloudFileName.c_str());
+        points.clear();
+        int nPoints;
+        int state=0;
+        char line[255];
 
         if (!pointsFile.is_open())
         {
@@ -839,42 +913,70 @@ public:
             return false;
         }
 
-        std::string offTag;
-        int dontcare;
-        pointsFile>>offTag>>numVertices;
-        pointsFile>>dontcare>>dontcare;
+        while (!pointsFile.eof())
+        {
+            pointsFile.getline(line,sizeof(line),'\n');
+            Bottle b(line);
+            Value firstItem=b.get(0);
+            bool isNumber=firstItem.isInt() || firstItem.isDouble();
+
+            if (state==0)
+            {
+                string tmp=firstItem.asString().c_str();
+                std::transform(tmp.begin(),tmp.end(),tmp.begin(),::toupper);
+            if (tmp=="OFF")
+                state++;
+            }
+            else if (state==1)
+            {
+                if (isNumber)
+                {
+                    nPoints=firstItem.asInt();
+                    state++;
+                }
+            }
+            else if (state==2)
+            {
+                if (isNumber && (b.size()>=3))
+                {
+                    Vector point(3,0.0);
+                    point[0]=b.get(0).asDouble();
+                    point[1]=b.get(1).asDouble();
+                    point[2]=b.get(2).asDouble();
+                    points.push_back(point);
+
+                    if (--nPoints<=0)
+                        return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /***********************************************************************/
+    bool filter()
+    {
+        numVertices=points.size();
 
         cv:: Mat data(numVertices,3,CV_32F);
         for (int i=0; i<numVertices; i++)
         {
-            pointsFile>>data.at<float>(i,0)
-                      >>data.at<float>(i,1)
-                      >>data.at<float>(i,2);
+            Vector point=points[i];
+            data.at<float>(i,0)=point[0];
+            data.at<float>(i,1)=point[1];
+            data.at<float>(i,2)=point[2];
         }
-
-        pointsFile.close();
-
-        yInfo()<<"Processing points...";
-        double t0=yarp::os::Time::now();
-        std::vector<int> res=SpatialDensityFilter::filter(data,radius,nnThreshold+1);
-        double t1=yarp::os::Time::now();
-        yInfo()<<"Processed in "<<1e3*(t1-t0)<<" [ms]";
 
         points.clear();
 
-        for (size_t i=0; i<numVertices; i++)
-        {
-            Vector point(3,0.0);
-            if (res[i]>=nnThreshold)
-            {
-                point[0]=data.at<float>(i,0);
-                point[1]=data.at<float>(i,1);
-                point[2]=data.at<float>(i,2);
-                points.push_back(point);
-            }
-        }
+        yInfo()<<"Processing points...";
+        double t0=yarp::os::Time::now();
+        SpatialDensityFilter::filter(data,radius,nnThreshold+1, points);
+        double t1=yarp::os::Time::now();
+        yInfo()<<"Processed in "<<1e3*(t1-t0)<<" [ms]";
 
-        savePoints();
+        savePoints("filtered-points");
 
         return true;
     }
@@ -897,7 +999,7 @@ public:
 
         superQ_nlp->init();
         superQ_nlp->configure(this->rf);
-        superQ_nlp->usePoints(points, mode_on);
+        superQ_nlp->setPoints(points, mode_online,optimizer_points);
 
         double t0_superq=Time::now();
 

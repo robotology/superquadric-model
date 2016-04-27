@@ -42,7 +42,6 @@ using namespace yarp::math;
 
 class  SuperQuadric_NLP : public Ipopt::TNLP
 {
-    int max_num_points;
     bool bounds_automatic;
     Vector x_v;
     Vector x0;
@@ -62,12 +61,9 @@ public:
     }
 
     /****************************************************************/
-    void usePoints(const deque<Vector> &point_cloud, bool &mode_on)
+    void setPoints(const deque<Vector> &point_cloud, bool &mode_on, const int &optimizer_points)
     {
-        if (mode_on==false)
-            max_num_points=point_cloud.size()/10;
-
-        if (point_cloud.size()<max_num_points)
+        if (point_cloud.size()<optimizer_points)
         {
             for (size_t i=0;i<point_cloud.size();i++)
             {
@@ -76,16 +72,15 @@ public:
         }
         else
         {
-            int count=point_cloud.size()/max_num_points;
+            int count=point_cloud.size()/optimizer_points;
 
             for (int i=0; i<point_cloud.size(); i+=count)
             {
                 points_downsampled.push_back(point_cloud[i]);
             }
-
         }
 
-        yInfo("points usable for modeling: %lu ",points_downsampled.size());
+        yInfo("points actually used for modeling: %lu ",points_downsampled.size());
 
         x0.resize(11,0.0);
         computeX0(x0, points_downsampled);
@@ -251,24 +246,21 @@ public:
          double grad_p, grad_n;
          double eps=1e-8;
 
-        // if (new_x)
-         //{
-             for (Ipopt::Index j=0;j<n;j++)
-                 x_tmp[j]=x[j];
+         for (Ipopt::Index j=0;j<n;j++)
+             x_tmp[j]=x[j];
 
-             for (Ipopt::Index j=0;j<n;j++)
-             {
-                 x_tmp[j]=x_tmp[j]+eps;
+         for (Ipopt::Index j=0;j<n;j++)
+         {
+             x_tmp[j]=x_tmp[j]+eps;
 
-                 grad_p=F_v(x_tmp,points_downsampled);
+             grad_p=F_v(x_tmp,points_downsampled);
 
-                 x_tmp[j]=x_tmp[j]-eps;
+             x_tmp[j]=x_tmp[j]-eps;
 
-                 grad_n=F_v(x_tmp,points_downsampled);
+             grad_n=F_v(x_tmp,points_downsampled);
 
-                 aux_gradf[j]=(grad_p-grad_n)/eps;
-              }
-        // }
+             aux_gradf[j]=(grad_p-grad_n)/eps;
+          }
 
          for (Ipopt::Index j=0;j<n;j++)
             grad_f[j]=aux_gradf[j];
@@ -300,8 +292,6 @@ public:
 
         if (bounds_automatic==false)
             readMatrix("bounds",bounds, 11, rf);
-
-        max_num_points=rf->check("max_num_points", Value(80)).asInt();
     }
 
     /****************************************************************/
