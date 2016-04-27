@@ -9,7 +9,10 @@
   <version>1.0</version>
   
   <description-long>
-    This module allows object detection and modelling in real-time.
+    This module allows object detection and modelling. You can run it in different modes:
+    - _real-time_, when the object is detected and modeled constantly;
+    - _one-shot_ mode. In this case it can compute the superquadric model from a .off _file_, containing the point cloud of interest or _on-line_, receiving the point cloud from the cameras.
+
 
     To correctly launch the module, do the following:
     - Put an <b>object</b> in the robot's sight and make sure that the <b>eye vergence</b> is equal to that value used during _SFM_ calibration.
@@ -28,8 +31,14 @@
     <param default="0.01" desc="IPOPT objective function tollerance">tol</param>
     <param default="0" desc="IPOPT acceptable iter">acceptable_iter</param>
     <param default="max numeric limit" desc="IPOPT maximum iteration">max_iter</param>
+    <param default="0.3" desc="Maximum cpu time for algorithm execution">max_cpu_time</param> 
     <param default="adaptive" desc="IPOPT mu strategy">mu_strategy</param> 
-    <param default="none" desc="IPOPT nlp_scaling_method">nlp_scaling_method</param>
+    <param default="none" desc="IPOPT nlp_scaling_method">nlp_scaling_method</param>    
+    <param default="0.0002" desc="radius value for filtering">radius</param> 
+    <param default="80" desc="Threshold value for filtering">nnThreshold</param> 
+    <param default="false" desc="Variable to decide to filter points or not">filter_on</param> 
+    <param default="3" desc="Downsampling value for point acquisition">downsampling</param> 
+    <param default="80" desc="Points used by the optimization algorithm">optimizer_points</param> 
   </arguments>
  
   <authors>
