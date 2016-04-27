@@ -317,6 +317,11 @@ public:
                 return false;
             }
 
+            if ((filter_on==true) && (points.size()>0) && (go_on==true))
+            {
+                go_on=filter();
+            }
+
             if (points.size()>0)
             {
                 yInfo()<<"number of points acquired:"<< points.size();
@@ -346,13 +351,7 @@ public:
             {                
                 go_on=acquirePointsFromBlob();
 
-                if ((go_on==false) && (!isStopping())) go_on=acquirePointsFromBlob();
-
                 if ((go_on==false) && (!isStopping()))
-                {
-                    yError("No image available! ");
-                    return false;
-                }
                 {
                     yError("No image available! ");
                     return false;
@@ -361,7 +360,7 @@ public:
             else
                 go_on=readPointCloud();
 
-            if (filter_on)
+            if ((filter_on==true) && (points.size()>0))
                 go_on=filter();
 
             if ((go_on==false) && (!isStopping()))
@@ -380,10 +379,16 @@ public:
             {
                 yError("Not found a suitable superquadric! ");
             }
-            else
+            else if (go_on==true)
+            {
                 saveSuperq();
+                go_on=showSuperq();
+            }
 
-            return false;
+            if( norm(x)!=0.0)
+                return false;
+            else
+                return true;
         }
 
         return true;
@@ -396,17 +401,16 @@ public:
 
         config_ok=configOnOff(rf);
 
-        if (mode_online==false)
+        if (filter_on==true)
             config_ok=configFilter(rf);
 
-        if ((config_ok==true) && (mode_online==true))
+        if (config_ok)
             config_ok=config3Dpoints(rf);
-
 
         if (config_ok)
             config_ok=configSuperq(rf);
 
-        if ((config_ok==true) && (mode_online==true))
+        if (config_ok==true)
             config_ok=configViewer(rf);
 
         return config_ok;
@@ -433,14 +437,6 @@ public:
     /***********************************************************************/
     bool close()
     {
-        if(mode_online)
-        {
-            for(size_t i=0; i<times.size(); i++)
-                sum+=times[i];
-
-            yInfo("Average updateModule execution time: %f",sum/times.size());
-        }
-
         if (!portDispIn.isClosed())
             portDispIn.close();
 
@@ -483,15 +479,21 @@ public:
 
         homeContextPath=rf.getHomeContextPath().c_str();
         pointCloudFileName=rf.findFile("pointCloudFile");
+        mode_online=(rf.check("online", Value("yes"))=="yes");
+
         yDebug()<<"file points "<<pointCloudFileName;
 
         if (rf.find("pointCloudFile").isNull())
         {
-            mode_online=true;
             file_on=false;
+            if (rf.find("outputFile").isNull())
+                outputFileName=homeContextPath+"/output.off";
+
+            yDebug()<<"file output "<<outputFileName;
         }
         else
         {
+            mode_online=false;
             file_on=true;
             outputFileName=rf.findFile("outputFile");
 
@@ -499,8 +501,9 @@ public:
                 outputFileName=homeContextPath+"/output.off";
 
             yDebug()<<"file output "<<outputFileName;
-            mode_online=false;
         }
+
+        filter_on=(rf.check("filter_on", Value("no"))=="yes");
 
         return true;
     }
@@ -509,8 +512,7 @@ public:
     bool configFilter(ResourceFinder &rf)
     {
         radius=rf.check("radius", Value(0.0002)).asDouble();
-        nnThreshold=rf.check("nn-threshold", Value(80)).asInt();
-        filter_on=(rf.check("filter_on", Value("no"))=="yes");
+        nnThreshold=rf.check("nn-threshold", Value(80)).asInt();        
         return true;
     }
 
@@ -594,18 +596,17 @@ public:
 
         Property optionG;
         optionG.put("device","gazecontrollerclient");
-        optionG.put("remote","/iKinGazeCtrl/");
+        optionG.put("remote","/iKinGazeCtrl");
         optionG.put("local","/superquadric-detection/gaze");
 
         GazeCtrl.open(optionG);
         igaze=NULL;
 
+
         if (GazeCtrl.isValid())
             GazeCtrl.view(igaze);
         else
             return false;
-
-        yDebug()<<"deb 14 ";
 
         Bottle info;
         igaze->getInfo(info);
@@ -619,7 +620,6 @@ public:
             intr_par=info.find("camera_intrinsics_left").asList();
         else
             intr_par=info.find("camera_intrinsics_right").asList();
-               yDebug()<<"deb 15 ";
 
         K(0,0)=intr_par->get(0).asDouble();
         K(0,1)=intr_par->get(1).asDouble();
@@ -758,7 +758,7 @@ public:
             }
             else
             {
-                savePoints("SFM-points");
+                savePoints("/SFM-points");
             }
         }
         else
@@ -862,7 +862,7 @@ public:
         ss2 << count;
         string str_i = ss2.str();
         count++;
-        fout.open((homeContextPath+"/data/"+namefile+str_i+".off").c_str());
+        fout.open((homeContextPath+namefile+str_i+".off").c_str());
 
         if (fout.is_open())
         {
@@ -976,7 +976,7 @@ public:
         double t1=yarp::os::Time::now();
         yInfo()<<"Processed in "<<1e3*(t1-t0)<<" [ms]";
 
-        savePoints("filtered-points");
+        savePoints("/filtered-points");
 
         return true;
     }
