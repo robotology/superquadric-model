@@ -512,7 +512,7 @@ public:
     bool configFilter(ResourceFinder &rf)
     {
         radius=rf.check("radius", Value(0.0002)).asDouble();
-        nnThreshold=rf.check("nn-threshold", Value(80)).asInt();        
+        nnThreshold=rf.check("nn-threshold", Value(40)).asInt();
         return true;
     }
 

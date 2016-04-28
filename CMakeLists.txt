@@ -37,7 +37,7 @@ add_executable(${PROJECT_NAME} ${sources} src/idl.thrift ${PROJECT_NAME}.xml ${I
 #add_executable(${PROJECT_NAME} ${sources} src/idl.thrift ${IDL_GEN_FILES})
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES} ${IPOPT_LIBRARIES})
 
-install(TARGETS ${PROJECTNAME} DESTINATION bin)
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 icubcontrib_add_uninstall_target()
 
 # app and conf
