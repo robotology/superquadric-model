@@ -61,7 +61,7 @@ public:
     }
 
     /****************************************************************/
-    void setPoints(const deque<Vector> &point_cloud, bool &mode_on, const int &optimizer_points)
+    void setPoints(const deque<Vector> &point_cloud, bool &mode_on, const unsigned int &optimizer_points)
     {
         if (point_cloud.size()<optimizer_points)
         {
@@ -74,7 +74,7 @@ public:
         {
             int count=point_cloud.size()/optimizer_points;
 
-            for (int i=0; i<point_cloud.size(); i+=count)
+            for (size_t i=0; i<point_cloud.size(); i+=count)
             {
                 points_downsampled.push_back(point_cloud[i]);
             }

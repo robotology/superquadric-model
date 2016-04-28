@@ -37,14 +37,12 @@ add_executable(${PROJECT_NAME} ${sources} src/idl.thrift ${PROJECT_NAME}.xml ${I
 #add_executable(${PROJECT_NAME} ${sources} src/idl.thrift ${IDL_GEN_FILES})
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES} ${IPOPT_LIBRARIES})
 
-add_subdirectory(app)
-
 install(TARGETS ${PROJECTNAME} DESTINATION bin)
 icubcontrib_add_uninstall_target()
 
 # app and conf
 file(GLOB conf ${CMAKE_CURRENT_SOURCE_DIR}/conf/*.ini)
-yarp_install(FILES ${conf} DESTINATION ${ICUBCONTRIB_CONTEXTS_INSTALL_DIR}/${PROJECTNAME})
+yarp_install(FILES ${conf} DESTINATION ${ICUBCONTRIB_CONTEXTS_INSTALL_DIR}/${PROJECT_NAME})
 file(GLOB scripts ${CMAKE_CURRENT_SOURCE_DIR}/app/scripts/*.template)
 yarp_install(FILES ${scripts} DESTINATION ${ICUBCONTRIB_APPLICATIONS_TEMPLATES_INSTALL_DIR})
 yarp_install(FILES ${PROJECT_NAME}.xml DESTINATION ${ICUBCONTRIB_MODULES_INSTALL_DIR})

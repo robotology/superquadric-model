@@ -120,7 +120,7 @@ protected:
     double tol, sum;
     double max_cpu_time;
     int acceptable_iter,max_iter;
-    int optimizer_points;
+    unsigned int optimizer_points;
     string mu_strategy,nlp_scaling_method;    
     Vector x;
     double t_superq;
@@ -410,7 +410,7 @@ public:
         if (config_ok)
             config_ok=configSuperq(rf);
 
-        if (config_ok==true)
+        if ((config_ok==true) && (file_on==false))
             config_ok=configViewer(rf);
 
         return config_ok;
