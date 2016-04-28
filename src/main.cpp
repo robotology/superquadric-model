@@ -62,7 +62,7 @@ public:
 
         vector<int> res(data.rows);
         for (size_t i=0; i<res.size(); i++)
-        {
+        {            
             for (int c=0; c<query.cols; c++)
                 query.at<float>(0,c)=data.at<float>(i,c);
 
@@ -250,11 +250,11 @@ protected:
     }
 
     /**********************************************************************/
-    bool set_optimizer_points(const int &num)
+    bool set_optimizer_points(const int max)
     {
-        if ((num>0) && (num<500))
+        if ((max>0) && (max<500))
         {
-            optimizer_points=num;
+            optimizer_points=max;
             return true;
         }
         else
@@ -340,10 +340,6 @@ public:
                 yError("No image available! ");
                 return false;
             }
-
-            t=Time::now()-t0;
-            times.push_back(t);
-            yInfo("Update module runs in %f",t);
         }
         else
         {
@@ -385,11 +381,19 @@ public:
                 go_on=showSuperq();
             }
 
+            t=Time::now()-t0;
+            times.push_back(t);
+            yInfo("Update module runs in %f",t);
+
             if( norm(x)!=0.0)
                 return false;
             else
                 return true;
         }
+
+        t=Time::now()-t0;
+        times.push_back(t);
+        yInfo("Update module runs in %f",t);
 
         return true;
     }
@@ -551,7 +555,7 @@ public:
         else
         {
             tol=rf.check("tol",Value(1e-5)).asDouble();
-            optimizer_points=rf.check("optimizer_points", Value(500)).asInt();
+            optimizer_points=rf.check("optimizer_points", Value(100)).asInt();
         }
 
         acceptable_iter=rf.check("acceptable_iter",Value(0)).asInt();
@@ -559,7 +563,7 @@ public:
         if (mode_online)
             max_cpu_time=rf.check("max_cpu_time", Value(0.3)).asDouble();
         else
-            max_cpu_time=numeric_limits<double>::max();
+            max_cpu_time=rf.check("max_cpu_time", Value(5.0)).asDouble();
 
         mu_strategy=rf.find("mu_strategy").asString().c_str();
         if (rf.find("mu_strategy").isNull())
