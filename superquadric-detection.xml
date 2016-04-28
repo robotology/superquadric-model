@@ -39,6 +39,8 @@
     <param default="false" desc="Variable to decide to filter points or not">filter_on</param> 
     <param default="3" desc="Downsampling value for point acquisition">downsampling</param> 
     <param default="80" desc="Points used by the optimization algorithm">optimizer_points</param> 
+    <param default="1" desc="Boolean variable to switch between online and offline mode">online</param> 
+    <param default="" desc="File containing the point cloud to be modeled">pointCloudFile</param> 
   </arguments>
  
   <authors>
