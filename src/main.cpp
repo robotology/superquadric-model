@@ -138,7 +138,6 @@ protected:
     Vector point,point1;
     Vector point2D;
     deque<int> Color;
-    deque<double> times;
 
     ResourceFinder *rf;
     double t,t0;
@@ -384,8 +383,6 @@ public:
             }
 
             t=Time::now()-t0;
-            times.push_back(t);
-            yInfo("Update module runs in %f",t);
 
             if( norm(x)!=0.0)
                 return false;
@@ -393,10 +390,11 @@ public:
                 return true;
         }
 
-        t=Time::now()-t0;
-        times.push_back(t);
-        yInfo("Update module runs in %f",t);
+        count++;
 
+        t=Time::now()-t0;
+
+        count++;
         return true;
     }
 
@@ -518,7 +516,7 @@ public:
     bool configFilter(ResourceFinder &rf)
     {
         radius=rf.check("radius", Value(0.0002)).asDouble();
-        nnThreshold=rf.check("nn-threshold", Value(40)).asInt();
+        nnThreshold=rf.check("nn-threshold", Value(60)).asInt();
         return true;
     }
 
@@ -553,19 +551,17 @@ public:
         {
             optimizer_points=rf.check("optimizer_points", Value(80)).asInt();
             tol=rf.check("tol",Value(1e-2)).asDouble();
+            max_cpu_time=rf.check("max_cpu_time", Value(0.3)).asDouble();
         }
         else
         {
             tol=rf.check("tol",Value(1e-5)).asDouble();
             optimizer_points=rf.check("optimizer_points", Value(100)).asInt();
+            max_cpu_time=rf.check("max_cpu_time", Value(5.0)).asDouble();
         }
 
         acceptable_iter=rf.check("acceptable_iter",Value(0)).asInt();
         max_iter=rf.check("max_iter",Value(numeric_limits<int>::max())).asInt();
-        if (mode_online)
-            max_cpu_time=rf.check("max_cpu_time", Value(0.3)).asDouble();
-        else
-            max_cpu_time=rf.check("max_cpu_time", Value(5.0)).asDouble();
 
         mu_strategy=rf.find("mu_strategy").asString().c_str();
         if (rf.find("mu_strategy").isNull())
@@ -868,8 +864,7 @@ public:
         ofstream fout;
         stringstream ss2;
         ss2 << count;
-        string str_i = ss2.str();
-        count++;
+        string str_i = ss2.str();        
         fout.open((homeContextPath+namefile+str_i+".off").c_str());
 
         if (fout.is_open())
