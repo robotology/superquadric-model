@@ -141,6 +141,7 @@ protected:
     deque<double> times;
 
     ResourceFinder *rf;
+    double t,t0;
 
     /************************************************************************/
     bool attach(RpcServer &source)
@@ -153,6 +154,8 @@ protected:
     {
         objname=object_name;
         method="name";
+        outputFileName=homeContextPath+"/"+objname+".off";
+        yDebug()<<"file output "<<outputFileName;
         return true;
     }
 
@@ -163,7 +166,7 @@ protected:
         {
             cv::Point p;
             p.x=x;
-            p.y=y;
+            p.y=y;yDebug()<<"file output "<<outputFileName;
             contour.push_back(p);
         }
         method="point";
@@ -303,8 +306,7 @@ public:
 
     /***********************************************************************/
     bool updateModule()
-    {
-        double t,t0;
+    {        
         t0=Time::now();
 
         if (mode_online)
@@ -762,7 +764,7 @@ public:
             }
             else
             {
-                savePoints("/SFM-points");
+                savePoints("/SFM-"+objname);
             }
         }
         else
@@ -889,15 +891,23 @@ public:
     /***********************************************************************/
     void saveSuperq()
     {
-        ofstream fout;
+        ofstream fout;        
         fout.open(outputFileName.c_str());
         if (fout.is_open())
         {
-            fout<<"Computed superquadric "<<endl;
-            fout<<x.toString();
+            fout<<"*****Result*****"<<endl;
+            fout<<"Computed superquadric: "<<endl;
+            fout<<" "<<x.toString(3,3);
             fout<<endl;
-            fout<<"Execution time "<<endl;
-            fout<<t_superq <<endl;
+            fout<<"Execution time: "<<endl;
+            fout<<" "<<t_superq <<endl;
+            fout<<"Update module time"<<endl;
+            fout<<" "<<t_superq+Time::now()-t0<<endl<<endl;
+            fout<<"*****Optimizer parameters*****"<<endl;
+            fout<<"Optimizer points: "<<optimizer_points<<endl;
+            fout<<"Tolerance :"<<tol<<endl;
+            fout<<"Nlp scaling method: "<<nlp_scaling_method<<endl;
+            fout<<"Mu strategy: "<<mu_strategy<<endl;
         }
         fout.close();
     }
@@ -980,7 +990,7 @@ public:
         double t1=yarp::os::Time::now();
         yInfo()<<"Processed in "<<1e3*(t1-t0)<<" [ms]";
 
-        savePoints("/filtered-points");
+        savePoints("/filtered-"+objname);
 
         return true;
     }
