@@ -764,7 +764,9 @@ public:
             }
             else
             {
-                savePoints("/SFM-"+objname);
+                Vector colors(3,0.0);
+                colors[0]=255;
+                savePoints("/SFM-"+objname, colors);
             }
         }
         else
@@ -861,7 +863,7 @@ public:
 
 
     /***********************************************************************/
-    void savePoints(const string &namefile)
+    void savePoints(const string &namefile, const Vector &colors)
     {
         ofstream fout;
         stringstream ss2;
@@ -872,12 +874,13 @@ public:
 
         if (fout.is_open())
         {
-            fout<<"OFF"<<endl;
+            fout<<"COFF"<<endl;
             fout<<points.size()<<" 0 0"<<endl;
             fout<<endl;
             for (size_t i=0; i<points.size(); i++)
             {
-                fout<<points[i].subVector(0,2).toString(3,4).c_str()<<endl;
+                fout<<points[i].subVector(0,2).toString(3,4).c_str()<<
+                      " "<<colors[0]<<" "<<colors[1]<<" "<<colors[2]<<endl;
             }
 
             fout<<endl;
@@ -990,7 +993,9 @@ public:
         double t1=yarp::os::Time::now();
         yInfo()<<"Processed in "<<1e3*(t1-t0)<<" [ms]";
 
-        savePoints("/filtered-"+objname);
+        Vector colors(3,0.0);
+        colors[1]=255;
+        savePoints("/filtered-"+objname, colors);
 
         return true;
     }
