@@ -132,6 +132,41 @@ service superquadricDetection_IDL
     */
     list<double> get_superq(1:string name)
 
+    /**
+    * On/off point cloud filtering
+    * @param entry is "yes/no" if you want/do not want to filter points
+    * @return true/false on success/failure
+    */
+    bool set_filtering(1:string entry);
 
+    /**
+    * Say if filtering is on or not.
+    * @return yes/no string if filtering is on/off.
+    */
+    string get_filtering();
+
+    /**
+    * @param desired_tol is the stop tolerance of the optimization algorithm
+    * @return true/false on success/failure
+    */
+    bool set_tol(1:double desired_tol)
+    
+    /**
+    * Get the desired tolerance value of the optimization algorithm
+    * @return tolerance value
+    */
+    double get_tol()
+
+    /**
+    * @param max_time is the maximum time acceptblae for running the optimization algorithm
+    * @return true/false on success/failure
+    */
+    bool set_max_time(1:double max_time)
+    
+    /**
+    * Get the maximum time for running the optimization algorithm
+    * @return maximum time
+    */
+    double get_max_time()
 }
 

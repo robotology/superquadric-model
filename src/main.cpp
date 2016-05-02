@@ -296,6 +296,45 @@ protected:
         return parameters;
     }
 
+    /**********************************************************************/
+    bool set_filtering(const string &entry)
+    {
+        if ((entry=="yes") || (entry=="no"))
+        {
+            filter_on= (entry=="yes");
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**********************************************************************/
+    string get_filtering()
+    {
+        if (filter_on==1)
+            return "yes";
+        else
+            return "no";
+    }
+
+    /**********************************************************************/
+    bool set_max_time(const double &max_t)
+    {
+        if ((max_t>0.0) && (max_t<10.0))
+        {
+            max_cpu_time=max_t;
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**********************************************************************/
+    double get_max_time()
+    {
+        return max_cpu_time;
+    }
+
 public:
     /***********************************************************************/
     double getPeriod()
@@ -720,15 +759,6 @@ public:
                         yError()<<"Some problems in blob pixels!";
                     }
                 }
-
-                //if (blob_points.size()>0)
-                //{
-                   // get3Dpoints(imgDispOut,color);
-                //}
-                //else
-                //{
-                    //yError()<<"no blob received!";
-                //}
             }
             else
             {
@@ -737,7 +767,6 @@ public:
         }
         else
         {
-            //contour.clear();
             points.clear();
             yError("lbpExtract reply is fail!");
         }
