@@ -1049,9 +1049,9 @@ public:
         for (int i=0; i<numVertices; i++)
         {
             Vector point=points[i];
-            data.at<float>(i,0)=point[0];
-            data.at<float>(i,1)=point[1];
-            data.at<float>(i,2)=point[2];
+            data.at<float>(i,0)=(float)point[0];
+            data.at<float>(i,1)=(float)point[1];
+            data.at<float>(i,2)=(float)point[2];
         }
 
         points.clear();
@@ -1179,7 +1179,7 @@ public:
 
                      point2D=from3Dto2D(point);
 
-                     cv::Point target_point(point2D[0],point2D[1]);
+                     cv::Point target_point((int)point2D[0],(int)point2D[1]);
 
                      if ((target_point.x<0) || (target_point.y<0) || (target_point.x>=320) || (target_point.y>=240))
                      {
