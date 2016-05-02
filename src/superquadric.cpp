@@ -33,7 +33,6 @@
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 #include <yarp/math/SVD.h>
-#include <gsl/gsl_linalg.h>
 
 
 using namespace std;
