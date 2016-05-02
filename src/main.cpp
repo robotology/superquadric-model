@@ -334,12 +334,14 @@ public:
                 yError("Not found a suitable superquadric! ");
             }
             else if (go_on==true)
+            {
                 go_on=showSuperq();
 
-            if ((go_on==false) && (!isStopping()))
-            {
-                yError("No image available! ");
-                return false;
+                if ((go_on==false) && (!isStopping()))
+                {
+                    yError("No image available! ");
+                    return false;
+                }
             }
         }
         else
@@ -550,16 +552,15 @@ public:
         if (mode_online)
         {
             optimizer_points=rf.check("optimizer_points", Value(80)).asInt();
-            tol=rf.check("tol",Value(1e-2)).asDouble();
             max_cpu_time=rf.check("max_cpu_time", Value(0.3)).asDouble();
         }
         else
-        {
-            tol=rf.check("tol",Value(1e-5)).asDouble();
+        {            
             optimizer_points=rf.check("optimizer_points", Value(100)).asInt();
             max_cpu_time=rf.check("max_cpu_time", Value(5.0)).asDouble();
         }
 
+        tol=rf.check("tol",Value(1e-5)).asDouble();
         acceptable_iter=rf.check("acceptable_iter",Value(0)).asInt();
         max_iter=rf.check("max_iter",Value(numeric_limits<int>::max())).asInt();
 
@@ -701,18 +702,38 @@ public:
         cmd.addString("get_component_around");
         cmd.addInt(contour[0].x); cmd.addInt(contour[0].y);
 
+
         if (portBlobRpc.write(cmd,reply))
         {
-            Bottle *blob_list=reply.get(0).asList();
-            for (int i=0; i<blob_list->size();i++)
+            if (Bottle *blob_list=reply.get(0).asList())
             {
-                Bottle *blob_pair=blob_list->get(i).asList();
-                cv:: Point pix=cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt());
-                blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt()));
-                imgDispOut.pixel(pix.x, pix.y)=color;
-            }
+                for (int i=0; i<blob_list->size();i++)
+                {
+                    if (Bottle *blob_pair=blob_list->get(i).asList())
+                    {
+                        cv:: Point pix=cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt());
+                        blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt()));
+                        imgDispOut.pixel(pix.x, pix.y)=color;
+                    }
+                    else
+                    {
+                        yError()<<"Some problems in blob pixels!";
+                    }
+                }
 
-            get3Dpoints(imgDispOut,color);
+                //if (blob_points.size()>0)
+                //{
+                   // get3Dpoints(imgDispOut,color);
+                //}
+                //else
+                //{
+                    //yError()<<"no blob received!";
+                //}
+            }
+            else
+            {
+                yError()<<"Some problem  in object blob!";
+            }
         }
         else
         {
@@ -813,10 +834,16 @@ public:
                         info4.addString("position_2d_left");
                     }
                     else
+                    {
                         yError("no object id provided by OPC!");
+                        contour.clear();
+                    }
                 }
                 else
+                {
                     yError("uncorrect reply from OPC!");
+                    contour.clear();
+                }
 
                 Bottle reply;
                 portOPCrpc.write(cmd,reply);
@@ -839,22 +866,40 @@ public:
                                 contour.push_back(p);
                             }
                             else
+                            {
                                 yError("position_2d_left field not found in the OPC reply!");
+                                contour.clear();
+                            }
                         }
                         else
+                        {
                             yError("uncorrect reply structure received!");
+                            contour.clear();
+                        }
                     }
                     else
+                    {
                         yError("Failure in reply for object 2D point!");
+                        contour.clear();
+                    }
                 }
                 else
+                {
                     yError("reply size for 2D point less than 1!");
+                    contour.clear();
+                }
             }
             else
+            {
                 yError("Failure in reply for object id!");
+                contour.clear();
+            }
         }
         else
+        {
             yError("reply size for object id less than 1!");
+            contour.clear();
+        }
     }
 
 
@@ -1017,7 +1062,11 @@ public:
 
         double t0_superq=Time::now();
 
+        yDebug()<<"start IPOPT ";
+
         Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
+
+        yDebug()<<"finish IPOPT ";
 
         t_superq=Time::now()-t0_superq;
 
