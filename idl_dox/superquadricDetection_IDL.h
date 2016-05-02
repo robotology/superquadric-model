@@ -123,6 +123,37 @@ public:
    * x8, x9, 10 are the Euler angles, representing the superquadric orientation.
    */
   virtual std::vector<double>  get_superq(const std::string& name);
+  /**
+   * On/off point cloud filtering
+   * @param entry is "yes/no" if you want/do not want to filter points
+   * @return true/false on success/failure
+   */
+  virtual bool set_filtering(const std::string& entry);
+  /**
+   * Say if filtering is on or not.
+   * @return yes/no string if filtering is on/off.
+   */
+  virtual std::string get_filtering();
+  /**
+   * @param desired_tol is the stop tolerance of the optimization algorithm
+   * @return true/false on success/failure
+   */
+  virtual bool set_tol(const double desired_tol);
+  /**
+   * Get the desired tolerance value of the optimization algorithm
+   * @return tolerance value
+   */
+  virtual double get_tol();
+  /**
+   * @param max_time is the maximum time acceptblae for running the optimization algorithm
+   * @return true/false on success/failure
+   */
+  virtual bool set_max_time(const double max_time);
+  /**
+   * Get the maximum time for running the optimization algorithm
+   * @return maximum time
+   */
+  virtual double get_max_time();
   virtual bool read(yarp::os::ConnectionReader& connection);
   virtual std::vector<std::string> help(const std::string& functionName="--all");
 };
