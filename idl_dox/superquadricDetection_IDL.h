@@ -19,97 +19,97 @@ public:
   superquadricDetection_IDL();
   /**
    * Set the name of the object
-   * to be detected and modeled
-   * @param entry is the name of the object
-   * @return true/false is the object is known/unknown
+   * to be detected and modeled.
+   * @param entry is the name of the object.
+   * @return true/false is the object is known/unknown.
    */
   virtual bool set_object_name(const std::string& entry);
   /**
    * Get the seed point of the object
-   * without using the name object
-   * @param x_pixel is the x pixel value of the object seed point
-   * @param y_pixel is the x pixel value of the object seed point
+   * without using the name object.
+   * @param x_pixel is the x pixel value of the object seed point.
+   * @param y_pixel is the x pixel value of the object seed point.
    * return true/false on success/failure.
    */
   virtual bool set_seed_point(const int32_t x_pixel, const int32_t y_pixel);
   /**
    * Return the name of the object that is
-   * being detected and modeled
-   * @return the name of the object
+   * being detected and modeled.
+   * @return the name of the object.
    */
   virtual std::string get_object_name();
   /**
    * Say which method is set for getting
-   * blob
+   * blob.
    * @return "name" if you have to type the name
-   * "point" if you have to click on the camera
+   * "point" if you have to click on the camera.
    */
   virtual std::string get_method();
   /**
-   * Get downsampling value
-   * @return int value for the downsampling
+   * Get downsampling value.
+   * @return int value for the downsampling.
    */
   virtual int32_t get_downsampling_acquisition();
   /**
-   * Set downsampling value
-   * @param d is the downsampling value
-   * @return true/false for success/failure
+   * Set downsampling value.
+   * @param d is the downsampling value.
+   * @return true/false for success/failure.
    */
   virtual bool set_downsampling_acquisition(const int32_t d);
   /**
    * Get RGB values
    * @return a list with the RGB values of the
-   * superquadric and blob visualization
+   * superquadric and blob visualization.
    */
   virtual std::vector<int32_t>  get_color();
   /**
    * Set the RGB values of the superquadric
-   * and blob visualization
-   * @param r is red value in [0,255]
-   * @param g is green value in [0,255]
-   * @param b is blue value in [0,255]
-   * @return true/false on success/failure
+   * and blob visualization.
+   * @param r is red value in [0,255].
+   * @param g is green value in [0,255].
+   * @param b is blue value in [0,255].
+   * @return true/false on success/failure.
    */
   virtual bool set_color(const int32_t r, const int32_t g, const int32_t b);
   /**
    * Get the eye used for projection of the
    * 3D points on the superquadric surface
-   * to the 2D pixels
-   * @return the name of the eye used
+   * to the 2D pixels.
+   * @return the name of the eye used.
    */
   virtual std::string get_eye();
   /**
    * Set the eye used for projection of the
    * 3D points on the superquadric surface
-   * to the 2D pixels
-   * @param eye is a string "left" or "right" for selecting the left or right eye
-   * @return true/false on success/failure
+   * to the 2D pixels.
+   * @param eye is a string "left" or "right" for selecting the left or right eye.
+   * @return true/false on success/failure.
    */
   virtual bool set_eye(const std::string& eye);
   /**
    * Get the maximum number of points used
-   * for the superquadric reconstruction
-   * @return the maximum number of the points
+   * for the superquadric reconstruction.
+   * @return the maximum number of the points.
    */
   virtual int32_t get_optimizer_points();
   /**
    * Set the maximum number of points used
-   * for the superquadric reconstruction
+   * for the superquadric reconstruction.
    * @param max is the number of points for superquadric reconstruction
-   * @return true/false on success/failure
+   * @return true/false on success/failur.
    */
   virtual bool set_optimizer_points(const int32_t max);
   /**
    * Get max number of visualized points
-   * on superquadric surface
-   * @return the number of the visualized points
+   * on superquadric surface.
+   * @return the number of the visualized points.
    */
   virtual int32_t get_visualized_points();
   /**
    * Set max number of visualized points
-   * on superquadric surface
-   * @param vis is the number of points to be visualized
-   * @return true/false on success/failure
+   * on superquadric surface.
+   * @param vis is the number of points to be visualized.
+   * @return true/false on success/failure.
    */
   virtual bool set_visualized_points(const int32_t vis);
   /**
@@ -125,8 +125,8 @@ public:
   virtual std::vector<double>  get_superq(const std::string& name);
   /**
    * On/off point cloud filtering
-   * @param entry is "yes/no" if you want/do not want to filter points
-   * @return true/false on success/failure
+   * @param entry is "yes/no" if you want/do not want to filter points.
+   * @return true/false on success/failure.
    */
   virtual bool set_filtering(const std::string& entry);
   /**
@@ -135,23 +135,25 @@ public:
    */
   virtual std::string get_filtering();
   /**
-   * @param desired_tol is the stop tolerance of the optimization algorithm
-   * @return true/false on success/failure
+   * Set the desired tolerance value of the optimization algorithm
+   * @param desired_tol is the stop tolerance of the optimization algorithm.
+   * @return true/false on success/failure.
    */
   virtual bool set_tol(const double desired_tol);
   /**
    * Get the desired tolerance value of the optimization algorithm
-   * @return tolerance value
+   * @return tolerance value.
    */
   virtual double get_tol();
   /**
-   * @param max_time is the maximum time acceptblae for running the optimization algorithm
-   * @return true/false on success/failure
+   * Set the maximum time acceptable for running the optimization algorithm.
+   * @param max_time is the maximum time acceptable for running the optimization algorithm.
+   * @return true/false on success/failure.
    */
   virtual bool set_max_time(const double max_time);
   /**
-   * Get the maximum time for running the optimization algorithm
-   * @return maximum time
+   * Get the maximum time for running the optimization algorithm.
+   * @return maximum time.
    */
   virtual double get_max_time();
   virtual bool read(yarp::os::ConnectionReader& connection);
