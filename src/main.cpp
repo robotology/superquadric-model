@@ -1010,8 +1010,8 @@ public:
             {
                 string tmp=firstItem.asString().c_str();
                 std::transform(tmp.begin(),tmp.end(),tmp.begin(),::toupper);
-            if (tmp=="OFF")
-                state++;
+                if (tmp=="OFF")
+                    state++;
             }
             else if (state==1)
             {
