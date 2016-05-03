@@ -44,19 +44,6 @@ service superquadricDetection_IDL
     string get_method();
 
     /**
-    * Get downsampling value.
-    * @return int value for the downsampling.
-    */
-    i32 get_downsampling_acquisition();
-
-    /**
-    * Set downsampling value.
-    * @param d is the downsampling value.
-    * @return true/false for success/failure.
-    */
-    bool set_downsampling_acquisition(1: i32 d);
-
-    /**
     * Get RGB values
     * @return a list with the RGB values of the
     * superquadric and blob visualization.
@@ -170,5 +157,32 @@ service superquadricDetection_IDL
     * @return maximum time.
     */
     double get_max_time()
+
+    /**
+    * Get the nnthreshold of filtering algorithm.
+    * return the nnthreshold of filtering algorithm.
+    */
+    i32 get_nnthreshold()
+
+    /**
+    * Set the nnthreshold of filtering algorithm.
+    * @param nnthreshold value.
+    * @return true/false on success/failure.
+    */
+    bool set_nnthreshold(1:i32 nnt)
+    
+     /**
+    * Get the radius of filtering algorithm.
+    * return the radius of filtering algorithm.
+    */
+    double get_radius()
+
+    /**
+    * Set the radius of filtering algorithm.
+    * @param radiu value.
+    * @return true/false on success/failure.
+    */
+    bool set_radius(1:double radius)
 }
+
 

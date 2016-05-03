@@ -32,6 +32,7 @@
 #include <opencv2/opencv.hpp>
 
 #include <yarp/os/all.h>
+#include <yarp/os/Mutex.h>
 #include <yarp/dev/all.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
@@ -90,7 +91,6 @@ protected:
 
     int r,g,b;
     int count;
-    int downsampling;
     string objname;
     string method;
     string homeContextPath;
@@ -141,6 +141,7 @@ protected:
 
     ResourceFinder *rf;
     double t,t0;
+    Mutex mutex;
 
     /************************************************************************/
     bool attach(RpcServer &source)
@@ -182,24 +183,6 @@ protected:
     string get_method()
     {
         return method;
-    }
-
-    /************************************************************************/
-    int get_downsampling_acquisition()
-    {
-        return downsampling;
-    }
-
-    /************************************************************************/
-    bool set_downsampling_acquisition(const int d)
-    {
-        if ((d>0) && (d<100))
-        {
-            downsampling=d;
-            return true;
-        }
-        else
-            return false;
     }
 
     /************************************************************************/
@@ -302,6 +285,11 @@ protected:
         if ((entry=="yes") || (entry=="no"))
         {
             filter_on= (entry=="yes");
+            if (filter_on==1)
+            {
+                radius=0.0002;
+                nnThreshold=60;
+            }
             return true;
         }
         else
@@ -318,7 +306,25 @@ protected:
     }
 
     /**********************************************************************/
-    bool set_max_time(const double &max_t)
+    bool set_tol(const double t)
+    {
+        if ((t<0.1) && (t>0.000001))
+        {
+            tol=t;
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**********************************************************************/
+    double get_tol()
+    {
+        return tol;
+    }
+
+    /**********************************************************************/
+    bool set_max_time(const double max_t)
     {
         if ((max_t>0.0) && (max_t<10.0))
         {
@@ -334,6 +340,43 @@ protected:
     {
         return max_cpu_time;
     }
+
+    /**********************************************************************/
+    int get_nnthreshold()
+    {
+        return nnThreshold;
+    }
+
+    /**********************************************************************/
+    bool set_nnthreshold(const int nnt)
+    {
+        if ((nnt>0) && (nnt< 100))
+        {
+            nnThreshold=nnt;
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**********************************************************************/
+    double get_radius()
+    {
+        return radius;
+    }
+
+    /**********************************************************************/
+    bool set_radius(const double r)
+    {
+        if ((r<0.1) && (r>0.00000001))
+        {
+            radius=r;
+            return true;
+        }
+        else
+            return false;
+    }
+
 
 public:
     /***********************************************************************/
@@ -375,6 +418,8 @@ public:
             else if (go_on==true)
             {
                 go_on=showSuperq();
+                saveSuperq();
+                x.resize(11,0.0);
 
                 if ((go_on==false) && (!isStopping()))
                 {
@@ -431,11 +476,7 @@ public:
                 return true;
         }
 
-        count++;
-
         t=Time::now()-t0;
-
-        count++;
         return true;
     }
 
@@ -464,6 +505,8 @@ public:
     /***********************************************************************/
     bool interruptModule()
     {
+        mutex.lock();
+        mutex.unlock();
         portDispIn.interrupt();
         portDispOut.interrupt();
         portRgbIn.interrupt();
@@ -474,7 +517,7 @@ public:
         portRpc.interrupt();
 
         portImgIn.interrupt();
-        portImgOut.interrupt();
+        portImgOut.interrupt();        
 
         return true;
     }
@@ -520,8 +563,6 @@ public:
     /***********************************************************************/
     bool configOnOff(ResourceFinder &rf)
     {
-        count=0;
-
         homeContextPath=rf.getHomeContextPath().c_str();
         pointCloudFileName=rf.findFile("pointCloudFile");
         mode_online=(rf.check("online", Value("yes"))=="yes");
@@ -531,10 +572,6 @@ public:
         if (rf.find("pointCloudFile").isNull())
         {
             file_on=false;
-            if (rf.find("outputFile").isNull())
-                outputFileName=homeContextPath+"/output.off";
-
-            yDebug()<<"file output "<<outputFileName;
         }
         else
         {
@@ -557,7 +594,7 @@ public:
     bool configFilter(ResourceFinder &rf)
     {
         radius=rf.check("radius", Value(0.0002)).asDouble();
-        nnThreshold=rf.check("nn-threshold", Value(60)).asInt();
+        nnThreshold=rf.check("nn-threshold", Value(80)).asInt();
         return true;
     }
 
@@ -577,8 +614,6 @@ public:
 
         attach(portRpc);
 
-        downsampling=std::max(1,rf.check("downsampling",Value(3)).asInt());
-
         return true;
     }
 
@@ -590,12 +625,12 @@ public:
 
         if (mode_online)
         {
-            optimizer_points=rf.check("optimizer_points", Value(80)).asInt();
+            optimizer_points=rf.check("optimizer_points", Value(150)).asInt();
             max_cpu_time=rf.check("max_cpu_time", Value(0.3)).asDouble();
         }
         else
         {            
-            optimizer_points=rf.check("optimizer_points", Value(100)).asInt();
+            optimizer_points=rf.check("optimizer_points", Value(300)).asInt();
             max_cpu_time=rf.check("max_cpu_time", Value(5.0)).asDouble();
         }
 
@@ -676,7 +711,7 @@ public:
         point.resize(3,0.0);
         point1.resize(3,0.0);
 
-        vis_points=16;
+        vis_points=50;
 
         return true;
     }
@@ -797,7 +832,7 @@ public:
                 point[2]=reply.get(idx+2).asDouble();
                 count++;
 
-                if ((norm(point)>0) && (count==downsampling-1))
+                if ((norm(point)>0))
                 {
                     points.push_back(point);
                     count=0;
@@ -935,11 +970,8 @@ public:
     /***********************************************************************/
     void savePoints(const string &namefile, const Vector &colors)
     {
-        ofstream fout;
-        stringstream ss2;
-        ss2 << count;
-        string str_i = ss2.str();        
-        fout.open((homeContextPath+namefile+str_i+".off").c_str());
+        ofstream fout;       
+        fout.open((homeContextPath+namefile+".off").c_str());
 
         if (fout.is_open())
         {
@@ -963,7 +995,7 @@ public:
     /***********************************************************************/
     void saveSuperq()
     {
-        ofstream fout;        
+        ofstream fout;
         fout.open(outputFileName.c_str());
         if (fout.is_open())
         {
@@ -1043,6 +1075,8 @@ public:
     /***********************************************************************/
     bool filter()
     {
+        mutex.lock();
+
         numVertices=points.size();
 
         cv:: Mat data(numVertices,3,CV_32F);
@@ -1066,12 +1100,16 @@ public:
         colors[1]=255;
         savePoints("/filtered-"+objname, colors);
 
+        mutex.unlock();
+
         return true;
     }
 
     /***********************************************************************/
     bool computeSuperq()
     {
+        mutex.lock();
+
         Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
         app->Options()->SetNumericValue("tol",tol);
         app->Options()->SetIntegerValue("acceptable_iter",acceptable_iter);
@@ -1081,7 +1119,7 @@ public:
         app->Options()->SetStringValue("nlp_scaling_method",nlp_scaling_method);
         app->Options()->SetStringValue("hessian_approximation","limited-memory");
         app->Options()->SetIntegerValue("print_level",0);
-        app->Initialize();
+        app->Initialize();        
 
         Ipopt::SmartPtr<SuperQuadric_NLP> superQ_nlp= new SuperQuadric_NLP;
 
@@ -1100,12 +1138,13 @@ public:
         t_superq=Time::now()-t0_superq;
 
         points.clear();
+        mutex.unlock();
 
         if (status==Ipopt::Solve_Succeeded)
         {
             x=superQ_nlp->get_result();
             yInfo("Solution of the optimization problem: %s", x.toString(3,3).c_str());
-            yInfo("Execution time : %f", t_superq);
+            yInfo("Execution time : %f", t_superq);           
             return true;
         }
         else if(status==Ipopt::Maximum_CpuTime_Exceeded)
@@ -1116,6 +1155,7 @@ public:
         }
         else
             return false;
+
     }
 
     /***********************************************************************/
