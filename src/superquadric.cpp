@@ -104,9 +104,9 @@ public:
     {
         if (bounds_automatic==true)
         {
-            bounds(0,1)=x0[0]*2;
-            bounds(1,1)=x0[1]*2;
-            bounds(2,1)=x0[2]*2;
+            bounds(0,1)=x0[0]*2.0;
+            bounds(1,1)=x0[1]*2.0;
+            bounds(2,1)=x0[2]*2.0;
             bounds(0,0)=0.02;
             bounds(1,0)=0.02;
             bounds(2,0)=0.02;
@@ -154,7 +154,6 @@ public:
          {
              x[i]=x0[i];
          }
-
          return true;
      }
 
@@ -177,7 +176,6 @@ public:
 
              for(size_t i=0;i<points.size();i++)
                 value+=(pow(f(x,points[i]),x[3])-1)*(pow(f(x,points[i]),x[3])-1);
-
              value*=x[0]*x[1]*x[2]/points.size();
              aux_objvalue=value;
          }

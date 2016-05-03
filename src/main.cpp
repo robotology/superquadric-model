@@ -32,7 +32,6 @@
 #include <opencv2/opencv.hpp>
 
 #include <yarp/os/all.h>
-#include <yarp/os/Mutex.h>
 #include <yarp/dev/all.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
@@ -113,7 +112,6 @@ protected:
     int nnThreshold;
     int numVertices;
     bool filter_on;
-    bool file_on;
 
     bool mode_online;
     bool go_on;
@@ -141,7 +139,6 @@ protected:
 
     ResourceFinder *rf;
     double t,t0;
-    Mutex mutex;
 
     /************************************************************************/
     bool attach(RpcServer &source)
@@ -166,7 +163,8 @@ protected:
         {
             cv::Point p;
             p.x=x;
-            p.y=y;yDebug()<<"file output "<<outputFileName;
+            p.y=y;
+            yDebug()<<"file output "<<outputFileName;
             contour.push_back(p);
         }
         method="point";
@@ -350,7 +348,7 @@ protected:
     /**********************************************************************/
     bool set_nnthreshold(const int nnt)
     {
-        if ((nnt>0) && (nnt< 100))
+        if ((nnt>0) && (nnt<100))
         {
             nnThreshold=nnt;
             return true;
@@ -377,7 +375,6 @@ protected:
             return false;
     }
 
-
 public:
     /***********************************************************************/
     double getPeriod()
@@ -387,7 +384,7 @@ public:
 
     /***********************************************************************/
     bool updateModule()
-    {        
+    {
         t0=Time::now();
 
         if (mode_online)
@@ -430,18 +427,7 @@ public:
         }
         else
         {
-            if (!file_on)
-            {                
-                go_on=acquirePointsFromBlob();
-
-                if ((go_on==false) && (!isStopping()))
-                {
-                    yError("No image available! ");
-                    return false;
-                }
-            }
-            else
-                go_on=readPointCloud();
+            go_on=readPointCloud();
 
             if ((filter_on==true) && (points.size()>0))
                 go_on=filter();
@@ -467,8 +453,6 @@ public:
                 saveSuperq();
                 go_on=showSuperq();
             }
-
-            t=Time::now()-t0;
 
             if( norm(x)!=0.0)
                 return false;
@@ -496,7 +480,7 @@ public:
         if (config_ok)
             config_ok=configSuperq(rf);
 
-        if ((config_ok==true) && (file_on==false))
+        if ((config_ok==true) && (mode_online==true))
             config_ok=configViewer(rf);
 
         return config_ok;
@@ -505,8 +489,6 @@ public:
     /***********************************************************************/
     bool interruptModule()
     {
-        mutex.lock();
-        mutex.unlock();
         portDispIn.interrupt();
         portDispOut.interrupt();
         portRgbIn.interrupt();
@@ -517,7 +499,7 @@ public:
         portRpc.interrupt();
 
         portImgIn.interrupt();
-        portImgOut.interrupt();        
+        portImgOut.interrupt();
 
         return true;
     }
@@ -571,12 +553,11 @@ public:
 
         if (rf.find("pointCloudFile").isNull())
         {
-            file_on=false;
+            mode_online=true;
         }
         else
         {
             mode_online=false;
-            file_on=true;
             outputFileName=rf.findFile("outputFile");
 
             if (rf.find("outputFile").isNull())
@@ -594,7 +575,7 @@ public:
     bool configFilter(ResourceFinder &rf)
     {
         radius=rf.check("radius", Value(0.0002)).asDouble();
-        nnThreshold=rf.check("nn-threshold", Value(80)).asInt();
+        nnThreshold=rf.check("nn-threshold", Value(60)).asInt();
         return true;
     }
 
@@ -630,8 +611,8 @@ public:
         }
         else
         {            
-            optimizer_points=rf.check("optimizer_points", Value(300)).asInt();
-            max_cpu_time=rf.check("max_cpu_time", Value(5.0)).asDouble();
+            optimizer_points=rf.check("optimizer_points", Value(1000)).asInt();
+            max_cpu_time=rf.check("max_cpu_time", Value(10.0)).asDouble();
         }
 
         tol=rf.check("tol",Value(1e-5)).asDouble();
@@ -1075,7 +1056,6 @@ public:
     /***********************************************************************/
     bool filter()
     {
-        mutex.lock();
 
         numVertices=points.size();
 
@@ -1098,9 +1078,7 @@ public:
 
         Vector colors(3,0.0);
         colors[1]=255;
-        savePoints("/filtered-"+objname, colors);
-
-        mutex.unlock();
+        savePoints("/filtered-"+objname, colors);        
 
         return true;
     }
@@ -1108,8 +1086,6 @@ public:
     /***********************************************************************/
     bool computeSuperq()
     {
-        mutex.lock();
-
         Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
         app->Options()->SetNumericValue("tol",tol);
         app->Options()->SetIntegerValue("acceptable_iter",acceptable_iter);
@@ -1119,7 +1095,7 @@ public:
         app->Options()->SetStringValue("nlp_scaling_method",nlp_scaling_method);
         app->Options()->SetStringValue("hessian_approximation","limited-memory");
         app->Options()->SetIntegerValue("print_level",0);
-        app->Initialize();        
+        app->Initialize();
 
         Ipopt::SmartPtr<SuperQuadric_NLP> superQ_nlp= new SuperQuadric_NLP;
 
@@ -1133,18 +1109,16 @@ public:
 
         Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
 
-        yDebug()<<"finish IPOPT ";
-
+        yDebug()<<"finish IPOPT ";        
         t_superq=Time::now()-t0_superq;
 
         points.clear();
-        mutex.unlock();
 
         if (status==Ipopt::Solve_Succeeded)
         {
             x=superQ_nlp->get_result();
             yInfo("Solution of the optimization problem: %s", x.toString(3,3).c_str());
-            yInfo("Execution time : %f", t_superq);           
+            yInfo("Execution time : %f", t_superq);
             return true;
         }
         else if(status==Ipopt::Maximum_CpuTime_Exceeded)
@@ -1155,7 +1129,6 @@ public:
         }
         else
             return false;
-
     }
 
     /***********************************************************************/
