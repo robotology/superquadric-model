@@ -46,17 +46,6 @@ public:
    */
   virtual std::string get_method();
   /**
-   * Get downsampling value.
-   * @return int value for the downsampling.
-   */
-  virtual int32_t get_downsampling_acquisition();
-  /**
-   * Set downsampling value.
-   * @param d is the downsampling value.
-   * @return true/false for success/failure.
-   */
-  virtual bool set_downsampling_acquisition(const int32_t d);
-  /**
    * Get RGB values
    * @return a list with the RGB values of the
    * superquadric and blob visualization.
@@ -156,6 +145,28 @@ public:
    * @return maximum time.
    */
   virtual double get_max_time();
+  /**
+   * Get the nnthreshold of filtering algorithm.
+   * return the nnthreshold of filtering algorithm.
+   */
+  virtual int32_t get_nnthreshold();
+  /**
+   * Set the nnthreshold of filtering algorithm.
+   * @param nnthreshold value.
+   * @return true/false on success/failure.
+   */
+  virtual bool set_nnthreshold(const int32_t nnt);
+  /**
+   * Get the radius of filtering algorithm.
+   * return the radius of filtering algorithm.
+   */
+  virtual double get_radius();
+  /**
+   * Set the radius of filtering algorithm.
+   * @param radiu value.
+   * @return true/false on success/failure.
+   */
+  virtual bool set_radius(const double radius);
   virtual bool read(yarp::os::ConnectionReader& connection);
   virtual std::vector<std::string> help(const std::string& functionName="--all");
 };
