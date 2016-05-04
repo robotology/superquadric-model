@@ -28,9 +28,7 @@
   </description-long>
 
   <arguments>
-<description>
 Each parameter is labeled as <b>default</b> or <b>advanced parameter</b>. You can change advanced parameter values <b>only</b> if you are skilled with the relative usage. For each parameter, it is also specified if a thrift service is available to play with them while the module is running.
-</description>
     <param default="superquadric-detection" desc="Select the current context (default parameter).">context</param>
     <param default="config.ini" desc="Configuration file name (default parameter).">from</param>
     <param default="" desc="File containing the point cloud to be modeled (default parameter).">pointCloudFile</param>
