@@ -50,12 +50,12 @@ There are <b>two different modes</b> for running the module:
 
 
 In <b>online</b> mode you can <b>select the object</b> to be detected and modeled by sending through the rpc service:
-- the  <b>object seed-point</b>, i.e. a 2D point (_(x, y)_ pixel) representing the center of the object blob.
-- or the <b>object name</b> that is associated to the object and is stored in the robot memory.
+- the  <b>object seed-point</b>, i.e. a 2D point ( _(x, y)_ pixel) representing the center of the object blob.
+- or the <b>object name</b> that is associated to the object and stored in the robot memory.
 
 Both in <b>online</b> and <b>one-shot</b> mode, the 3D points can be <b>filtered</b> in order to remove possible outliers. The filter can be enabled by the users with a specific parameters.
 
-The module pipeline running in <b>online</b> mode is the following:
+The module pipeline in <b>online</b> mode is the following:
 
 
 <img src="https://github.com/giuliavezzani/superquadric-detection/blob/master/img/pipeline.png" width=1011 height=297>
