@@ -152,7 +152,7 @@ protected:
     {
         objname=object_name;
         method="name";
-        outputFileName=homeContextPath+"/"+objname+".off";
+        outputFileName=homeContextPath+"/"+objname+".txt";
         yDebug()<<"file output "<<outputFileName;
         return true;
     }
@@ -572,7 +572,7 @@ public:
             outputFileName=rf.findFile("outputFile");
 
             if (rf.find("outputFile").isNull())
-                outputFileName=homeContextPath+"/output.off";
+                outputFileName=homeContextPath+"/output.txt";
 
             yDebug()<<"file output "<<outputFileName;
         }

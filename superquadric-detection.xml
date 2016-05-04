@@ -16,35 +16,41 @@
 
     To correctly launch the module, do the following:
     - Put an <b>object</b> in the robot's sight (for example, on a table in front of it) and make sure that the <b>eye vergence</b> (<a href="http://wiki.icub.org/wiki/ICub_joints">iCub joints</a>) is equal to the value used during _SFM_ calibration.
-    - Launch <a href="https://github.com/robotology/iol"><b>IOL</b></a> application from the _yarpmanager_ (all modules, except for 2 speech modules and lua module), make the connections and make sure that _SFM_ is giving a good disparity map (otherwise calibrate it thorugh the proper rpc port).
+    - Launch <a href="https://github.com/robotology/iol"><b>IOL</b></a> application from the _yarpmanager_ (all modules, except for _2 speech modules_ and _lua module_), make the connections and make sure that _SFM_ is giving a good disparity map (otherwise calibrate it thorugh the proper rpc port).
     - Launch <b>superquadric-detection</b> application (_superquadric-detection_ module and two _yarpviews_), through the _yarpmanager_ and make all the connections.
-    - Open the rpc port <b>/superquadric-detection/rpc</b> to play with the application. A possible rpc command sequence if the following:
+    - Open the rpc port <b>/superquadric-detection/rpc</b> to play with the application. A possible rpc command sequence is the following:
         - <code>$ <b>set_object_name ball</b> </code> (e.g.), if you want to model the object "ball". If the object is known by IOL, the superquadric will be computed, otherwise the application will wait for another object name.
         - <code>$ <b> get_superq ball </b> </code> returns the 11 parameters of the reconstructed superquadric.
 
     The other possible rpc commands are described in the section <b>Services</b>.
     The result of the superquadric reconstruction is <b>shown</b> also on the <b>yarpview</b> showing the image caming from the left camera. Here, you can find a visualization of the superquadric, overlapped on the object.
 
+    In section <b>Parameters</b> each parameter is labeled as <b>default</b> or <b>advanced parameter</b>. You can change advanced parameter values <b>only</b> if you are skilled with the relative usage. For each parameter, it is also specified if a <b>thrift service</b> is available to play with them while the module is running.
+
+    The module execution provides <b>three output files</b>:
+    - <b>_object-name_.txt</b> or <b>output.txt</b> (if the point cloud is given through a file or a seed point), containing the reconstructed superquadric and some information about IPOPT algorithm;
+    - <b>SFM-_object-name_.off</b> containing the 3D points coming from SFM;
+    - <b>filtered-_object-name_.off</b> containing the filtered 3D points (if filtering is enabled).
+
   </description-long>
 
   <arguments>
-Each parameter is labeled as <b>default</b> or <b>advanced parameter</b>. You can change advanced parameter values <b>only</b> if you are skilled with the relative usage. For each parameter, it is also specified if a thrift service is available to play with them while the module is running.
     <param default="superquadric-detection" desc="Select the current context (default parameter).">context</param>
     <param default="config.ini" desc="Configuration file name (default parameter).">from</param>
     <param default="" desc="File containing the point cloud to be modeled (default parameter).">pointCloudFile</param>
     <param default="left" desc="Eye used for projection of the 3D points on the superquadric surface to the 2D pixels (default parameter - thrift service available).">eye</param>
     <param default="0.00001" desc="Desired convergence tolerance (relative). Determines the convergence tolerance for the IPOPT algorithm (default parameter - thrift service available).">tol</param>
     <param default="0" desc="IPOPT acceptable iter. Number of acceptable iterates before triggering termination.
-If the algorithm encounters this many successive acceptable iterates, it terminates, assuming that the problem has been solved to best possible accuracy given round-off. If it is set to zero, this heuristic is disabled. (default parameter)">acceptable_iter</param>
-    <param default="max numeric limit" desc="IPOPT maximum iteration. (default parameter)">max_iter</param>
-    <param default="0.6" desc="Maximum cpu time for IPOPT algorithm execution. (default parameter - thrift service available)">max_cpu_time</param> 
+If the algorithm encounters this many successive acceptable iterates, it terminates, assuming that the problem has been solved to best possible accuracy given round-off. If it is set to zero, this heuristic is disabled (default parameter).">acceptable_iter</param>
+    <param default="max numeric limit" desc="IPOPT maximum iteration (default parameter).">max_iter</param>
+    <param default="0.6" desc="Maximum cpu time for IPOPT algorithm execution (default parameter - thrift service available).">max_cpu_time</param> 
     <param default="adaptive" desc="IPOPT update strategy for barrier parameter.
-Determines which barrier parameter update strategy is to be used. POssible values: monotone or adaptive. (default parameter)">mu_strategy</param> 
-    <param default="none" desc="IPOPT nlp_scaling_method: Select the technique used for scaling the problem. Possible values: none, user-scaling, gradient-based, equilibration-based. (default parameter).">nlp_scaling_method</param>    
+Determines which barrier parameter update strategy is to be used. POssible values: monotone or adaptive (default parameter).">mu_strategy</param> 
+    <param default="none" desc="IPOPT nlp_scaling_method: Select the technique used for scaling the problem. Possible values: none, user-scaling, gradient-based, equilibration-based (default parameter).">nlp_scaling_method</param>    
     <param default="false" desc="Variable to decide to filter points or not (default parameter - thrift service available).">filter_on</param>  
     <param default="80" desc="Points used by the optimization algorithm to reconstruct the superquadric function (default parameter  - thrift service available).">optimizer_points</param>      
-    <param default="0.0002" desc="KNN radius value for filtering. (advanced parameter  - advanced thrift service available)">radius</param> 
-    <param default="80" desc="=NKK threshold value for filtering. (advanced parameter  - advanced thrift service available)">nnThreshold</param> 
+    <param default="0.0002" desc="KNN radius value for filtering (advanced parameter  - advanced thrift service available).">radius</param> 
+    <param default="80" desc="NKK threshold value for filtering (advanced parameter  - advanced thrift service available).">nnThreshold</param> 
   
   </arguments>
  
