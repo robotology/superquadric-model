@@ -10,19 +10,19 @@
   
   <description-long>
     This module allows object detection and modelling. You can run it in different modes:
-    - _on-line_, when the object is detected and modeled constantly;
-    - _one-shot_ mode. In this case it computes the superquadric model from a .off _file_, containing the point cloud of interest.
+    - _on-line_, if you want the object to be detected and modeled constantly;
+    - _one-shot_ mode, if you want to compute the superquadric model from a .off _file_, containing the point cloud of interest.
 
 
     To correctly launch the module, do the following:
-    - Put an <b>object</b> in the robot's sight (for example, on a table in front of it) and make sure that the <b>eye vergence</b> (<a href="http://wiki.icub.org/wiki/ICub_joints">iCub joints</a>) is equal to that value used during _SFM_ calibration.
+    - Put an <b>object</b> in the robot's sight (for example, on a table in front of it) and make sure that the <b>eye vergence</b> (<a href="http://wiki.icub.org/wiki/ICub_joints">iCub joints</a>) is equal to the value used during _SFM_ calibration.
     - Launch <a href="https://github.com/robotology/iol"><b>IOL</b></a> application from the _yarpmanager_ (all modules, except for 2 speech modules and lua module), make the connections and make sure that _SFM_ is giving a good disparity map (otherwise calibrate it thorugh the proper rpc port).
     - Launch <b>superquadric-detection</b> application (_superquadric-detection_ module and two _yarpviews_), through the _yarpmanager_ and make all the connections.
     - Open the rpc port <b>/superquadric-detection/rpc</b> to play with the application. A possible rpc command sequence if the following:
-        - <code>$ <b>set_object_name ball</b> </code> (e.g.), if we want to model the object "ball". If the object is known by IOL, the superquadric will be computed, otherwise, the application will wait to receive  the object or otherwise, it will wait for another object name.
+        - <code>$ <b>set_object_name ball</b> </code> (e.g.), if you want to model the object "ball". If the object is known by IOL, the superquadric will be computed, otherwise the application will wait for another object name.
         - <code>$ <b> get_superq ball </b> </code> returns the 11 parameters of the reconstructed superquadric.
 
-    The other possible rpc commands are described in the service section.
+    The other possible rpc commands are described in the section <b>Services</b>.
     The result of the superquadric reconstruction is <b>shown</b> also on the <b>yarpview</b> showing the image caming from the left camera. Here, you can find a visualization of the superquadric, overlapped on the object.
 
   </description-long>
