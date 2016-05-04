@@ -140,6 +140,7 @@ protected:
     ResourceFinder *rf;
     double t,t0;
     deque<string> advanced_params;
+    Mutex mutex;
 
     /************************************************************************/
     bool attach(RpcServer &source)
@@ -150,16 +151,19 @@ protected:
     /************************************************************************/
     bool set_object_name(const string &object_name)
     {
+        mutex.lock();
         objname=object_name;
         method="name";
         outputFileName=homeContextPath+"/"+objname+".txt";
         yDebug()<<"file output "<<outputFileName;
+        mutex.unlock();
         return true;
     }
 
     /************************************************************************/
     bool set_seed_point(const int &x, const int &y)
     {
+        mutex.lock();
         if ((x>0) && (y>0))
         {
             cv::Point p;
@@ -169,6 +173,7 @@ protected:
             contour.push_back(p);
         }
         method="point";
+        mutex.unlock();
         return true;
     }
 
@@ -187,26 +192,33 @@ protected:
     /************************************************************************/
     vector<int> get_color()
     {
+        mutex.lock();
         vector<int> rgb;
         rgb.clear();
         rgb.push_back(r);
         rgb.push_back(g);
         rgb.push_back(b);
+        mutex.unlock();
         return rgb;
     }
 
     /**********************************************************************/
     bool set_color(const int red, const int green, const int blue)
     {
+        mutex.lock();
         if ((red<=255) && (green<=255) && (blue<=255) && (red>=0) && (green>=0) && (blue>=0))
         {
             r=red;
             g=green;
             b=blue;
+            mutex.unlock();
             return true;
         }
         else
+        {
+            mutex.unlock();
             return false;
+        }
     }
 
     /**********************************************************************/
@@ -218,13 +230,18 @@ protected:
     /**********************************************************************/
     bool set_eye(const string &e)
     {
+        mutex.lock();
         if ((e=="left") || (e=="right"))
         {
             eye=e;
+            mutex.unlock();
             return true;
         }
         else
+        {
+            mutex.unlock();
             return false;
+        }
     }
 
     /**********************************************************************/
@@ -236,13 +253,18 @@ protected:
     /**********************************************************************/
     bool set_optimizer_points(const int max)
     {
+        mutex.lock();
         if ((max>0) && (max<500))
         {
             optimizer_points=max;
+            mutex.unlock();
             return true;
         }
         else
+        {
+            mutex.unlock();
             return false;
+        }
     }
 
     /**********************************************************************/
@@ -254,18 +276,24 @@ protected:
     /**********************************************************************/
     bool set_visualized_points(const int v)
     {
+        mutex.lock();
         if ((v>=10) && (v<=1000))
         {
             vis_points=v;
+            mutex.unlock();
             return true;
         }
         else
+        {
+            mutex.unlock();
             return false;
+        }
     }
 
     /**********************************************************************/
     vector<double> get_superq(const string &name)
     {
+        mutex.lock();
         vector<double> parameters;
         parameters.clear();
 
@@ -275,12 +303,15 @@ protected:
                 parameters.push_back(x[i]);
         }
 
+        mutex.unlock();
+
         return parameters;
     }
 
     /**********************************************************************/
     bool set_filtering(const string &entry)
     {
+        mutex.lock();
         if ((entry=="yes") || (entry=="no"))
         {
             filter_on= (entry=="yes");
@@ -289,31 +320,47 @@ protected:
                 radius=0.0002;
                 nnThreshold=60;
             }
+            mutex.unlock();
             return true;
         }
         else
+        {
+            mutex.unlock();
             return false;
+        }
     }
 
     /**********************************************************************/
     string get_filtering()
     {
+        mutex.lock();
         if (filter_on==1)
+        {
+            mutex.unlock();
             return "yes";
+        }
         else
+        {
+            mutex.unlock();
             return "no";
+        }
     }
 
     /**********************************************************************/
     bool set_tol(const double t)
     {
+        mutex.lock();
         if ((t<0.1) && (t>0.000001))
         {
             tol=t;
+            mutex.unlock();
             return true;
         }
         else
+        {
+            mutex.unlock();
             return false;
+        }
     }
 
     /**********************************************************************/
@@ -325,13 +372,18 @@ protected:
     /**********************************************************************/
     bool set_max_time(const double max_t)
     {
+        mutex.lock();
         if ((max_t>0.0) && (max_t<10.0))
         {
             max_cpu_time=max_t;
+            mutex.unlock();
             return true;
         }
         else
+        {
+            mutex.unlock();
             return false;
+        }
     }
 
     /**********************************************************************/
@@ -343,16 +395,19 @@ protected:
     /**********************************************************************/
     Property get_advanced_options()
     {
+        mutex.lock();
         Property advOptions;
         advOptions.put("filter_radius_advanced",radius);
         advOptions.put("filter_nnThreshold_advanced",nnThreshold);
 
+        mutex.unlock();
         return advOptions;
     }
 
     /**********************************************************************/
     bool set_advanced_options(const Property &newOptions)
     {
+        mutex.lock();
         Bottle &groupBottle=newOptions.findGroup("filter_radius_advanced");
         if (!groupBottle.isNull())
         {
@@ -362,6 +417,7 @@ protected:
             else
             {
                 yDebug()<<"no good radius value!";
+                mutex.unlock();
                 return false;
             }
         }
@@ -375,14 +431,19 @@ protected:
                     nnThreshold=nnThreValue;
             else
             {
-                yDebug()<<"no good nnThreshold value!";
+                yDebug()<<"no good nnThreshold value!";mutex.lock();
+                mutex.unlock();
                 return false;
             }
         }
 
         if ((groupBottle.isNull())&& (groupBottle2.isNull()))
+        {
+            mutex.unlock();
             return false;
+        }
 
+        mutex.unlock();
         return true;
     }
 
@@ -396,10 +457,10 @@ public:
     /***********************************************************************/
     bool updateModule()
     {
-        t0=Time::now();
+        t0=Time::now();        
 
         if (mode_online)
-        {
+        {           
             go_on=acquirePointsFromBlob();
 
             if ((go_on==false) && (!isStopping()))
@@ -500,6 +561,8 @@ public:
     /***********************************************************************/
     bool interruptModule()
     {
+        mutex.lock();
+
         portDispIn.interrupt();
         portDispOut.interrupt();
         portRgbIn.interrupt();
@@ -511,6 +574,8 @@ public:
 
         portImgIn.interrupt();
         portImgOut.interrupt();
+
+        mutex.unlock();
 
         return true;
     }
