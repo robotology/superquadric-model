@@ -40,18 +40,29 @@ compensated by the multiplication with the term _&lambda;1, &lambda;2, &lambda;3
 - [icub-contrib-common](https://github.com/robotology/icub-contrib-common)
 - [IPOPT](https://projects.coin-or.org/Ipopt)
 - [OpenCV](http://opencv.org/)
+- [IOL](https://github.com/robotology/iol)
+  
 
 ## Module pipeline
-There are <b>two different possibilities</b> for <b>selecting the object</b> to be detected and modeled:
+There are <b>two different modes</b> for running the module:
+ 1.  <b>online</b> mode, if you want the object to be detected and modeled in _real-time_;
+ 2.  <b>one-shot</b> mode, if you want to model the object described by a point cloud in a _.off file_.
 
-- selecting a seed point by clicking <b>on the image</b> coming from the camera;
-- typing the <b>object name</b>;
 
+In <b>online</b> mode you can <b>select the object</b> to be detected and modeled by sending through the rpc service:
+- the  <b>object seed-point</b>, i.e. a 2D point (_(x, y)_ pixel) representing the center of the object blob.
+- or the <b>object name</b> that is associated to the object and is stored in the robot memory.
+
+Both in <b>online</b> and <b>one-shot</b> mode, the 3D points can be <b>filtered</b> in order to remove possible outliers. The filter can be enabled by the users with a specific parameters.
+
+The module pipeline running in <b>online</b> mode is the following:
 
 
 <img src="https://github.com/giuliavezzani/superquadric-detection/blob/master/img/pipeline.png" width=1011 height=297>
 
-Then, all the points belonging to the object blob are processed and used for the superquadric computation. In the end, the superquadric model is overlapped on the image coming from the cameras.
+
+
+The seed-point/object name is used to get the 2D object blob. Then, the 2D pixels are converted in 3D points. The 3D points can be filtered (if the filter_on option is set on). Then, the superquadric is computed and shown in the image coming from the camera, overlapped on the object.
 
 
 ## Documentation
