@@ -58,7 +58,7 @@ Both in <b>online</b> and <b>one-shot</b> mode, the 3D points can be <b>filtered
 The module pipeline in <b>online</b> mode is the following:
 
 
-<img src="https://github.com/giuliavezzani/superquadric-detection/blob/master/img/pipeline.png" width=1011 height=297>
+<img src="https://github.com/giuliavezzani/superquadric-detection/blob/master/img/pipeline2.png" width=1011 height=297>
 
 
 
