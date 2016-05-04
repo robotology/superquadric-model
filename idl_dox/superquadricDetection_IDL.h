@@ -11,6 +11,10 @@
 class superquadricDetection_IDL;
 
 
+/**
+ * superquadricDetection_IDL
+ * IDL Interface to \ref superquadric-detection services.
+ */
 class superquadricDetection_IDL : public yarp::os::Wire {
 public:
   superquadricDetection_IDL();

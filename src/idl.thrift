@@ -4,18 +4,22 @@
 #
 # idl.thrift
 /**
-* superquadricDetection_IDL
+* Property
 *
-* IDL Interface to \ref superquadric-detection services.
+* IDL structure to set/show advanced parameters.
 */
-
-
 struct Property
 {
 } (
    yarp.name = "yarp::os::Property"
    yarp.includefile="yarp/os/Property.h"
   )
+
+/**
+* superquadricDetection_IDL
+*
+* IDL Interface to \ref superquadric-detection services.
+*/
 
 service superquadricDetection_IDL
 {
