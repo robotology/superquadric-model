@@ -9,6 +9,14 @@
 * IDL Interface to \ref superquadric-detection services.
 */
 
+
+struct Property
+{
+} (
+   yarp.name = "yarp::os::Property"
+   yarp.includefile="yarp/os/Property.h"
+  )
+
 service superquadricDetection_IDL
 {
     /**
@@ -159,30 +167,20 @@ service superquadricDetection_IDL
     double get_max_time()
 
     /**
-    * Get the nnthreshold of filtering algorithm.
-    * return the nnthreshold of filtering algorithm.
+    * Get the advanced parameters of the module. The user must pay attention
+    * in changing them.
+    * @return the Property including all the advanced parameter values.
     */
-    i32 get_nnthreshold()
+    Property get_advanced_options()
 
     /**
-    * Set the nnthreshold of filtering algorithm.
-    * @param nnthreshold value.
-    * @return true/false on success/failure.
+    * Set the advanced parameters of the module. The user must pay attention
+    * in changing them.
+    * You can set the advanced parameters typing: 
+    * command: ((filter_radius_advanced <radius-value>) (filter_nnThreshold_advanced <nnThreshold-value>))
+    * @return true/false on success/failure
     */
-    bool set_nnthreshold(1:i32 nnt)
-    
-     /**
-    * Get the radius of filtering algorithm.
-    * return the radius of filtering algorithm.
-    */
-    double get_radius()
-
-    /**
-    * Set the radius of filtering algorithm.
-    * @param radiu value.
-    * @return true/false on success/failure.
-    */
-    bool set_radius(1:double radius)
+    bool set_advanced_options(1:Property options)
 }
 
 

@@ -139,6 +139,7 @@ protected:
 
     ResourceFinder *rf;
     double t,t0;
+    deque<string> advanced_params;
 
     /************************************************************************/
     bool attach(RpcServer &source)
@@ -340,39 +341,49 @@ protected:
     }
 
     /**********************************************************************/
-    int get_nnthreshold()
+    Property get_advanced_options()
     {
-        return nnThreshold;
+        Property advOptions;
+        advOptions.put("filter_radius_advanced",radius);
+        advOptions.put("filter_nnThreshold_advanced",nnThreshold);
+
+        return advOptions;
     }
 
     /**********************************************************************/
-    bool set_nnthreshold(const int nnt)
+    bool set_advanced_options(const Property &newOptions)
     {
-        if ((nnt>0) && (nnt<100))
+        Bottle &groupBottle=newOptions.findGroup("filter_radius_advanced");
+        if (!groupBottle.isNull())
         {
-            nnThreshold=nnt;
-            return true;
+            double radiusValue=groupBottle.get(1).asDouble();
+            if ((radiusValue)>0.0000001 && (radiusValue<0.01))
+                    radius=radiusValue;
+            else
+            {
+                yDebug()<<"no good radius value!";
+                return false;
+            }
         }
-        else
-            return false;
-    }
 
-    /**********************************************************************/
-    double get_radius()
-    {
-        return radius;
-    }
 
-    /**********************************************************************/
-    bool set_radius(const double r)
-    {
-        if ((r<0.1) && (r>0.00000001))
+        Bottle &groupBottle2=newOptions.findGroup("filter_nnThreshold_advanced");
+        if (!groupBottle2.isNull())
         {
-            radius=r;
-            return true;
+            double nnThreValue=groupBottle2.get(1).asInt();
+            if ((nnThreValue)>0 && (nnThreValue<100))
+                    nnThreshold=nnThreValue;
+            else
+            {
+                yDebug()<<"no good nnThreshold value!";
+                return false;
+            }
         }
-        else
+
+        if ((groupBottle.isNull())&& (groupBottle2.isNull()))
             return false;
+
+        return true;
     }
 
 public:
@@ -455,7 +466,7 @@ public:
             }
 
             if( norm(x)!=0.0)
-                return false;
+                return true;
             else
                 return true;
         }
@@ -576,6 +587,8 @@ public:
     {
         radius=rf.check("radius", Value(0.0002)).asDouble();
         nnThreshold=rf.check("nn-threshold", Value(60)).asInt();
+        advanced_params.push_back("filter_radius_advanced");
+        advanced_params.push_back("filter_nnThreshold_advanced");
         return true;
     }
 
