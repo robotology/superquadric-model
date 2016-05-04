@@ -6,14 +6,11 @@
 
 #include <yarp/os/Wire.h>
 #include <yarp/os/idl/WireTypes.h>
+#include <yarp/os/Property.h>
 
 class superquadricDetection_IDL;
 
 
-/**
- * superquadricDetection_IDL
- * IDL Interface to \ref superquadric-detection services.
- */
 class superquadricDetection_IDL : public yarp::os::Wire {
 public:
   superquadricDetection_IDL();
@@ -146,27 +143,19 @@ public:
    */
   virtual double get_max_time();
   /**
-   * Get the nnthreshold of filtering algorithm.
-   * return the nnthreshold of filtering algorithm.
+   * Get the advanced parameters of the module. The user must pay attention
+   * in changing them.
+   * @return the Property including all the advanced parameter values.
    */
-  virtual int32_t get_nnthreshold();
+  virtual yarp::os::Property get_advanced_options();
   /**
-   * Set the nnthreshold of filtering algorithm.
-   * @param nnthreshold value.
-   * @return true/false on success/failure.
+   * Set the advanced parameters of the module. The user must pay attention
+   * in changing them.
+   * You can set the advanced parameters typing:
+   * command: ((filter_radius_advanced <radius-value>) (filter_nnThreshold_advanced <nnThreshold-value>))
+   * @return true/false on success/failure
    */
-  virtual bool set_nnthreshold(const int32_t nnt);
-  /**
-   * Get the radius of filtering algorithm.
-   * return the radius of filtering algorithm.
-   */
-  virtual double get_radius();
-  /**
-   * Set the radius of filtering algorithm.
-   * @param radiu value.
-   * @return true/false on success/failure.
-   */
-  virtual bool set_radius(const double radius);
+  virtual bool set_advanced_options(const yarp::os::Property& options);
   virtual bool read(yarp::os::ConnectionReader& connection);
   virtual std::vector<std::string> help(const std::string& functionName="--all");
 };
