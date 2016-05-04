@@ -53,7 +53,7 @@ In <b>online</b> mode you can <b>select the object</b> to be detected and modele
 - the  <b>object seed-point</b>, i.e. a 2D point ( _(x, y)_ pixel) representing the center of the object blob.
 - or the <b>object name</b> that is associated to the object and stored in the robot memory.
 
-Both in <b>online</b> and <b>one-shot</b> mode, the 3D points can be <b>filtered</b> in order to remove possible outliers. The filter can be enabled by the users with a specific parameters.
+Both in <b>online</b> and <b>one-shot</b> mode, the 3D points can be <b>filtered</b> in order to remove possible outliers. The filter can be enabled by the users with a specific parameter.
 
 The module pipeline in <b>online</b> mode is the following:
 
