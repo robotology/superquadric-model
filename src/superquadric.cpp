@@ -34,7 +34,6 @@
 #include <yarp/math/Math.h>
 #include <yarp/math/SVD.h>
 
-
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
@@ -208,7 +207,7 @@ public:
          double value=0.0;
 
          for (size_t i=0;i<points.size();i++)
-             value+=(pow(f_v(x,points[i]),x[3])-1)*(pow(f_v(x,points[i]),x[3])-1) ;
+            value+=(pow(f_v(x,points.at(i)),x[3])-1)*(pow(f_v(x,points.at(i)),x[3])-1) ;
 
          value*=x[0]*x[1]*x[2]/points.size();
          return value;

@@ -61,6 +61,7 @@ public:
         cv::Mat indices,dists;
 
         vector<int> res(data.rows);
+
         for (size_t i=0; i<res.size(); i++)
         {            
             for (int c=0; c<query.cols; c++)
@@ -145,7 +146,6 @@ protected:
     /************************************************************************/
     bool attach(RpcServer &source)
     {
-        LockGuard lg(mutex);
         return this->yarp().attachAsServer(source);
     }
 
@@ -163,9 +163,9 @@ protected:
     /************************************************************************/
     bool set_seed_point(const int &x, const int &y)
     {
-        LockGuard lg(mutex);
         if ((x>0) && (y>0))
         {
+            LockGuard lg(mutex);
             cv::Point p;
             p.x=x;
             p.y=y;
@@ -179,21 +179,18 @@ protected:
     /************************************************************************/
     string get_object_name()
     {
-        LockGuard lg(mutex);
         return objname;
     }
 
     /************************************************************************/
     string get_method()
     {
-        LockGuard lg(mutex);
         return method;
     }
 
     /************************************************************************/
     vector<int> get_color()
     {
-        LockGuard lg(mutex);
         vector<int> rgb;
         rgb.clear();
         rgb.push_back(r);
@@ -205,9 +202,9 @@ protected:
     /**********************************************************************/
     bool set_color(const int red, const int green, const int blue)
     {
-        LockGuard lg(mutex);
         if ((red<=255) && (green<=255) && (blue<=255) && (red>=0) && (green>=0) && (blue>=0))
         {
+            LockGuard lg(mutex);
             r=red;
             g=green;
             b=blue;
@@ -222,16 +219,15 @@ protected:
     /**********************************************************************/
     string get_eye()
     {
-        LockGuard lg(mutex);
         return eye;
     }
 
     /**********************************************************************/
     bool set_eye(const string &e)
     {
-        LockGuard lg(mutex);
         if ((e=="left") || (e=="right"))
         {
+            LockGuard lg(mutex);
             eye=e;
             return true;
         }
@@ -244,16 +240,15 @@ protected:
     /**********************************************************************/
     int get_optimizer_points()
     {
-        LockGuard lg(mutex);
         return optimizer_points;
     }
 
     /**********************************************************************/
     bool set_optimizer_points(const int max)
     {
-        LockGuard lg(mutex);
         if ((max>0) && (max<500))
         {
+            LockGuard lg(mutex);
             optimizer_points=max;
             return true;
         }
@@ -266,16 +261,15 @@ protected:
     /**********************************************************************/
     int get_visualized_points()
     {
-        LockGuard lg(mutex);
         return vis_points;
     }
 
     /**********************************************************************/
     bool set_visualized_points(const int v)
     {
-        LockGuard lg(mutex);
         if ((v>=10) && (v<=1000))
         {
+            LockGuard lg(mutex);
             vis_points=v;
             return true;
         }
@@ -288,7 +282,6 @@ protected:
     /**********************************************************************/
     vector<double> get_superq(const string &name)
     {
-        LockGuard lg(mutex);
         vector<double> parameters;
         parameters.clear();
 
@@ -304,9 +297,9 @@ protected:
     /**********************************************************************/
     bool set_filtering(const string &entry)
     {
-        LockGuard lg(mutex);
         if ((entry=="yes") || (entry=="no"))
         {
+            LockGuard lg(mutex);
             filter_on= (entry=="yes");
             if (filter_on==1)
             {
@@ -324,7 +317,6 @@ protected:
     /**********************************************************************/
     string get_filtering()
     {
-        LockGuard lg(mutex);
         if (filter_on==1)
         {
             return "yes";
@@ -338,9 +330,9 @@ protected:
     /**********************************************************************/
     bool set_tol(const double t)
     {
-        LockGuard lg(mutex);
         if ((t<0.1) && (t>0.000001))
         {
+            LockGuard lg(mutex);
             tol=t;
             return true;
         }
@@ -353,16 +345,15 @@ protected:
     /**********************************************************************/
     double get_tol()
     {
-        LockGuard lg(mutex);
         return tol;
     }
 
     /**********************************************************************/
     bool set_max_time(const double max_t)
     {
-        LockGuard lg(mutex);
         if ((max_t>0.0) && (max_t<10.0))
         {
+            LockGuard lg(mutex);
             max_cpu_time=max_t;
             return true;
         }
@@ -375,14 +366,12 @@ protected:
     /**********************************************************************/
     double get_max_time()
     {
-        LockGuard lg(mutex);
         return max_cpu_time;
     }
 
     /**********************************************************************/
     Property get_advanced_options()
     {
-        LockGuard lg(mutex);
         Property advOptions;
         advOptions.put("filter_radius_advanced",radius);
         advOptions.put("filter_nnThreshold_advanced",nnThreshold);
@@ -393,8 +382,9 @@ protected:
     /**********************************************************************/
     bool set_advanced_options(const Property &newOptions)
     {
-        LockGuard lg(mutex);
         Bottle &groupBottle=newOptions.findGroup("filter_radius_advanced");
+        LockGuard lg(mutex);
+
         if (!groupBottle.isNull())
         {
             double radiusValue=groupBottle.get(1).asDouble();
@@ -439,10 +429,11 @@ public:
     /***********************************************************************/
     bool updateModule()
     {
-        t0=Time::now();        
+        t0=Time::now();
+        LockGuard lg(mutex);
 
         if (mode_online)
-        {           
+        {
             go_on=acquirePointsFromBlob();
 
             if ((go_on==false) && (!isStopping()))
@@ -543,8 +534,6 @@ public:
     /***********************************************************************/
     bool interruptModule()
     {
-        LockGuard lg(mutex);
-
         portDispIn.interrupt();
         portDispOut.interrupt();
         portRgbIn.interrupt();
@@ -1114,7 +1103,6 @@ public:
     /***********************************************************************/
     bool filter()
     {
-
         numVertices=points.size();
 
         cv:: Mat data(numVertices,3,CV_32F);
@@ -1164,7 +1152,7 @@ public:
 
         double t0_superq=Time::now();
 
-        yDebug()<<"start IPOPT ";
+        yDebug()<<"start IPOPT ";        
 
         Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
 
