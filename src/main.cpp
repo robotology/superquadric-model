@@ -497,10 +497,7 @@ public:
                 saveSuperq();
             }
 
-            if( norm(x)>0.0)
-                return false;
-            else
-                return true;
+            return (norm(x)==0.0);
         }
 
         t=Time::now()-t0;
