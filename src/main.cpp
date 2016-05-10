@@ -157,6 +157,7 @@ protected:
         method="name";
         outputFileName=homeContextPath+"/"+objname+".txt";
         yDebug()<<"file output "<<outputFileName;
+        x.resize(11,0.0);
         return true;
     }
 
@@ -434,17 +435,17 @@ public:
 
         if (mode_online)
         {
-            go_on=acquirePointsFromBlob();
-
-            if ((go_on==false) && (!isStopping()))
-            {
-                yError("No image available! ");
+            if (isStopping())
                 return false;
-            }
 
-            if ((filter_on==true) && (points.size()>0) && (go_on==true))
+            acquirePointsFromBlob();
+
+            if (isStopping())
+                return false;
+
+            if ((filter_on==true) && (points.size()>0))
             {
-                go_on=filter();
+                filter();
             }
 
             if (points.size()>0)
@@ -453,7 +454,7 @@ public:
                 go_on=computeSuperq();
             }
 
-            if ((go_on==false) && (!isStopping()))
+            if ((go_on==false) && (points.size()>0))
             {
                 yError("Not found a suitable superquadric! ");
             }
@@ -461,12 +462,11 @@ public:
             {
                 go_on=showSuperq();
                 saveSuperq();
-                x.resize(11,0.0);
+                //x.resize(11,0.0);
 
                 if ((go_on==false) && (!isStopping()))
                 {
-                    yError("No image available! ");
-                    return false;
+                    yError("No image available for visualization! ");
                 }
             }
         }
@@ -475,7 +475,7 @@ public:
             go_on=readPointCloud();
 
             if ((filter_on==true) && (points.size()>0))
-                go_on=filter();
+                filter();
 
             if ((go_on==false) && (!isStopping()))
             {
@@ -500,7 +500,7 @@ public:
             }
 
             if( norm(x)!=0.0)
-                return true;
+                return false;
             else
                 return true;
         }
@@ -537,10 +537,7 @@ public:
         portDispIn.interrupt();
         portDispOut.interrupt();
         portRgbIn.interrupt();
-        portBlobRpc.interrupt();
         portContour.interrupt();
-        portSFMrpc.interrupt();
-        portOPCrpc.interrupt();
         portRpc.interrupt();
 
         portImgIn.interrupt();
@@ -561,7 +558,7 @@ public:
         if (!portRgbIn.isClosed())
             portRgbIn.close();
 
-        if (!portBlobRpc.asPort().isOpen())
+        if (portBlobRpc.asPort().isOpen())
             portBlobRpc.close();
 
         if (portContour.isOpen())
@@ -745,16 +742,16 @@ public:
     }
 
     /***********************************************************************/
-    bool acquirePointsFromBlob()
+    void acquirePointsFromBlob()
     {
         PixelRgb color(r,g,b);
         ImageOf<PixelMono> *imgDispIn=portDispIn.read();
-        if (imgDispIn==NULL)
-            return false;
+        //if (imgDispIn==NULL)
+            //return false;
 
         ImageOf<PixelRgb> *imgIn=portImgIn.read();
-        if (imgIn==NULL)
-            return false;
+        //if (imgIn==NULL)
+            //return false;
 
         ImageOf<PixelRgb> &imgDispOut=portDispOut.prepare();
         imgDispOut.resize(imgDispIn->width(),imgDispIn->height());
@@ -779,7 +776,7 @@ public:
         {
             pointFromName();
 
-            if (contour.size()>0)
+            if ((contour.size()>0) )
             {
                 getBlob(imgDispOut,color);
 
@@ -792,7 +789,7 @@ public:
 
         portDispOut.write();
 
-        return true;
+        //return true;
     }
 
     /***********************************************************************/
@@ -803,7 +800,6 @@ public:
         points.clear();
         cmd.addString("get_component_around");
         cmd.addInt(contour[0].x); cmd.addInt(contour[0].y);
-
 
         if (portBlobRpc.write(cmd,reply))
         {
@@ -831,7 +827,7 @@ public:
         else
         {
             points.clear();
-            yError("lbpExtract reply is fail!");
+            yError("lbpExtract query is fail!");
         }
     }
 
@@ -902,7 +898,7 @@ public:
         Bottle &cond_2=content.addList();
         cond_2.addString("name");
         cond_2.addString("==");
-        cond_2.addString(objname);        
+        cond_2.addString(objname);
 
         portOPCrpc.write(cmd,reply);
         if(reply.size()>1)
@@ -938,48 +934,54 @@ public:
                 }
 
                 Bottle reply;
-                portOPCrpc.write(cmd,reply);
-                if (reply.size()>1)
+                if (portOPCrpc.write(cmd,reply))
                 {
-                    if (reply.get(0).asVocab()==Vocab::encode("ack"))
+
+                    if (reply.size()>1)
                     {
-                        if (Bottle *b=reply.get(1).asList())
-                        {                           
-                            if (Bottle *b1=b->find("position_2d_left").asList())
+                        if (reply.get(0).asVocab()==Vocab::encode("ack"))
+                        {
+                            if (Bottle *b=reply.get(1).asList())
                             {
-                                cv::Point p1,p2,p;
-                                p1.x=b1->get(0).asInt();
-                                p1.y=b1->get(1).asInt();
-                                p2.x=b1->get(2).asInt();
-                                p2.y=b1->get(3).asInt();
-                                p.x=p1.x+(p2.x-p1.x)/2;
-                                p.y=p1.y+(p2.y-p1.y)/2;
-                                //contour.clear();
-                                contour.push_back(p);
+                                if (Bottle *b1=b->find("position_2d_left").asList())
+                                {
+                                    cv::Point p1,p2,p;
+                                    p1.x=b1->get(0).asInt();
+                                    p1.y=b1->get(1).asInt();
+                                    p2.x=b1->get(2).asInt();
+                                    p2.y=b1->get(3).asInt();
+                                    p.x=p1.x+(p2.x-p1.x)/2;
+                                    p.y=p1.y+(p2.y-p1.y)/2;
+                                    //contour.clear();
+                                    contour.push_back(p);
+                                }
+                                else
+                                {
+                                    yError("position_2d_left field not found in the OPC reply!");
+                                    x.resize(11,0.0);
+                                    contour.clear();
+                                }
                             }
                             else
                             {
-                                yError("position_2d_left field not found in the OPC reply!");
+                                yError("uncorrect reply structure received!");
                                 contour.clear();
                             }
                         }
                         else
                         {
-                            yError("uncorrect reply structure received!");
+                            yError("Failure in reply for object 2D point!");
                             contour.clear();
                         }
                     }
                     else
                     {
-                        yError("Failure in reply for object 2D point!");
+                        yError("reply size for 2D point less than 1!");
                         contour.clear();
                     }
                 }
                 else
-                {
-                    yError("reply size for 2D point less than 1!");
-                    contour.clear();
-                }
+                    yError("no reply from second OPC query!");
             }
             else
             {
@@ -1126,8 +1128,6 @@ public:
         colors[1]=255;
 
         savePoints("/filtered-"+objname, colors);
-
-        return true;
     }
 
     /***********************************************************************/
