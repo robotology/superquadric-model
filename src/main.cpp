@@ -102,7 +102,6 @@ protected:
 
     BufferedPort<ImageOf<PixelMono> > portDispIn;
     BufferedPort<ImageOf<PixelRgb> >  portDispOut;
-    BufferedPort<ImageOf<PixelRgb> >  portRgbIn;
     RpcClient portBlobRpc;
     Port portContour;
     RpcClient portSFMrpc;
@@ -474,7 +473,7 @@ public:
         {
             go_on=readPointCloud();
 
-            if ((filter_on==true) && (points.size()>0))
+            if ((filter_on==true) && (points.size()>0) && (go_on==true))
                 filter();
 
             if ((go_on==false) && (!isStopping()))
@@ -496,10 +495,9 @@ public:
             else if (go_on==true)
             {
                 saveSuperq();
-                go_on=showSuperq();
             }
 
-            if( norm(x)!=0.0)
+            if( norm(x)>0.0)
                 return false;
             else
                 return true;
@@ -535,14 +533,7 @@ public:
     bool interruptModule()
     {
         portDispIn.interrupt();
-        portDispOut.interrupt();
-        portRgbIn.interrupt();
-        portContour.interrupt();
-        portRpc.interrupt();
-
         portImgIn.interrupt();
-        portImgOut.interrupt();
-
         return true;
     }
 
@@ -554,9 +545,6 @@ public:
 
         if (!portDispOut.isClosed())
             portDispOut.close();
-
-        if (!portRgbIn.isClosed())
-            portRgbIn.close();
 
         if (portBlobRpc.asPort().isOpen())
             portBlobRpc.close();
@@ -628,7 +616,6 @@ public:
     {
         portDispIn.open("/superquadric-detection/disp:i");
         portDispOut.open("/superquadric-detection/disp:o");
-        portRgbIn.open("/superquadric-detection/rgb:i");
         portBlobRpc.open("/superquadric-detection/blob:rpc");
         portContour.open("/superquadric-detection/contour:i");
         portSFMrpc.open("/superquadric-detection/SFM:rpc");
@@ -1103,7 +1090,7 @@ public:
     }
 
     /***********************************************************************/
-    bool filter()
+    void filter()
     {
         numVertices=points.size();
 

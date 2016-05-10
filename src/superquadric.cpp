@@ -46,7 +46,6 @@ class  SuperQuadric_NLP : public Ipopt::TNLP
     Vector x0;
     Matrix bounds;
     double aux_objvalue;
-    Vector aux_gradf;
 
 public:
     Vector solution;
@@ -93,7 +92,6 @@ public:
         m=nnz_jac_g=nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
         x_v.resize(n,0.0);
-        aux_gradf.resize(n,0.0);
 
         return true;
     }
@@ -174,7 +172,10 @@ public:
              double value=0.0;
 
              for(size_t i=0;i<points.size();i++)
-                value+=(pow(f(x,points[i]),x[3])-1)*(pow(f(x,points[i]),x[3])-1);
+             {
+                 double tmp=pow(f(x,points[i]),x[3])-1;
+                 value+=tmp*tmp;
+             }
              value*=x[0]*x[1]*x[2]/points.size();
              aux_objvalue=value;
          }
@@ -184,18 +185,14 @@ public:
      double f(const Ipopt::Number *x, Vector &point_cloud)
      {
          Vector euler(3,0.0);
-         Matrix R(4,4);
-
          euler[0]=x[8];
          euler[1]=x[9];
          euler[2]=x[10];
-         R=euler2dcm(euler);
+         Matrix R=euler2dcm(euler);
 
-         double num1, num2, num3;
-         num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
-         num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[5]*R(1,0)-x[6]*R(1,1)-x[7]*R(1,2);
-         num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[5]*R(2,0)-x[6]*R(2,1)-x[7]*R(2,2);
-
+         double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
+         double num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[5]*R(1,0)-x[6]*R(1,1)-x[7]*R(1,2);
+         double num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[5]*R(2,0)-x[6]*R(2,1)-x[7]*R(2,2);
          double tmp=pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
 
          return pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]));
@@ -207,7 +204,10 @@ public:
          double value=0.0;
 
          for (size_t i=0;i<points.size();i++)
-            value+=(pow(f_v(x,points.at(i)),x[3])-1)*(pow(f_v(x,points.at(i)),x[3])-1) ;
+         {
+             double tmp=pow(f_v(x,points.at(i)),x[3])-1;
+             value+=tmp*tmp;
+         }
 
          value*=x[0]*x[1]*x[2]/points.size();
          return value;
@@ -217,27 +217,23 @@ public:
      double f_v(const Vector &x, const Vector &point_cloud)
      {
          Vector euler(3,0.0);
-         Matrix R(4,4);
 
          euler[0]=x[8];
          euler[1]=x[9];
          euler[2]=x[10];
-         R=euler2dcm(euler);
+         Matrix R=euler2dcm(euler);
 
-         double num1, num2, num3;
-         num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
-         num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[5]*R(1,0)-x[6]*R(1,1)-x[7]*R(1,2);
-         num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[5]*R(2,0)-x[6]*R(2,1)-x[7]*R(2,2);
-
-         double tmp;
-         tmp= pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
+         double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
+         double num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[5]*R(1,0)-x[6]*R(1,1)-x[7]*R(1,2);
+         double num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[5]*R(2,0)-x[6]*R(2,1)-x[7]*R(2,2);
+         double tmp=pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
 
          return pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]) );
      }
 
      /****************************************************************/
      bool eval_grad_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
-                          Ipopt::Number *grad_f)
+                      Ipopt::Number *grad_f)
      {
          Vector x_tmp(n,0.0);
          double grad_p, grad_n;
@@ -248,19 +244,16 @@ public:
 
          for (Ipopt::Index j=0;j<n;j++)
          {
-             x_tmp[j]=x_tmp[j]+eps;
+             x_tmp[j]+=eps;
 
              grad_p=F_v(x_tmp,points_downsampled);
 
-             x_tmp[j]=x_tmp[j]-eps;
+             x_tmp[j]-=eps;
 
              grad_n=F_v(x_tmp,points_downsampled);
 
-             aux_gradf[j]=(grad_p-grad_n)/eps;
+             grad_f[j]=(grad_p-grad_n)/eps;
           }
-
-         for (Ipopt::Index j=0;j<n;j++)
-            grad_f[j]=aux_gradf[j];
 
          return true;
      }
