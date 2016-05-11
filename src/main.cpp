@@ -536,7 +536,7 @@ public:
 
             if ((go_on==false) && (!isStopping()))
             {
-                yError("Something wrong in point filtering! ");
+                yError("Something wrong in point cloud! ");
                 return false;
             }
 
@@ -651,7 +651,7 @@ public:
             yDebug()<<"file output "<<outputFileName;
         }
 
-        filter_on=(rf.check("filter_on", Value("no"))=="yes");
+        filter_on=(rf.check("filter_on", Value("off"))=="on");
 
         return true;
     }
@@ -692,22 +692,22 @@ public:
 
         if (mode_online)
         {
-            optimizer_points=rf.check("optimizer_points", Value(150)).asInt();
+            optimizer_points=rf.check("optimizer_points", Value(300)).asInt();
             max_cpu_time=rf.check("max_cpu_time", Value(0.3)).asDouble();
         }
         else
         {            
-            optimizer_points=rf.check("optimizer_points", Value(80)).asInt();
+            optimizer_points=rf.check("optimizer_points", Value(300)).asInt();
             max_cpu_time=rf.check("max_cpu_time", Value(10.0)).asDouble();
         }
 
-        tol=rf.check("tol",Value(1e-4)).asDouble();
+        tol=rf.check("tol",Value(1e-5)).asDouble();
         acceptable_iter=rf.check("acceptable_iter",Value(0)).asInt();
         max_iter=rf.check("max_iter",Value(numeric_limits<int>::max())).asInt();
 
         mu_strategy=rf.find("mu_strategy").asString().c_str();
         if (rf.find("mu_strategy").isNull())
-            mu_strategy="adaptive";
+            mu_strategy="monotone";
 
         nlp_scaling_method=rf.find("nlp_scaling_method").asString().c_str();
         if (rf.find("nlp_scaling_method").isNull())
@@ -1187,7 +1187,7 @@ public:
         app->Options()->SetNumericValue("max_cpu_time",max_cpu_time);
         app->Options()->SetStringValue("nlp_scaling_method",nlp_scaling_method);
         app->Options()->SetStringValue("hessian_approximation","limited-memory");
-        app->Options()->SetIntegerValue("print_level",0);
+        app->Options()->SetIntegerValue("print_level",5);
         app->Initialize();
 
         Ipopt::SmartPtr<SuperQuadric_NLP> superQ_nlp= new SuperQuadric_NLP;

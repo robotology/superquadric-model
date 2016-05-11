@@ -11,13 +11,6 @@
        <name>superquadric-detection</name>
        <node>icub21</node>
     </module>
-
-    <module>
-       <name>yarpview</name>
-       <parameters>--name /disp --out /dispSuperq/out --x 1600 --y 0 --p 33</parameters>
-       <node>icub22</node>
-    </module>
-
     <module>
        <name>yarpview</name>
        <parameters>--name /dispSuperq --out /dispBlobs/out --x 1600 --y 370 --w 600 --h 600 --p 33</parameters>
@@ -63,12 +56,6 @@
     <connection>
         <from>/superquadric-detection/disp:o</from>
         <to>/disp</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/dispSuperq/out</from>
-        <to>/superquadric-detection/contour:i</to>
         <protocol>tcp</protocol>
     </connection>
 

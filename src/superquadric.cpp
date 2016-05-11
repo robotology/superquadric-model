@@ -101,12 +101,13 @@ public:
     {
         if (bounds_automatic==true)
         {
-            bounds(0,1)=x0[0]*2;
-            bounds(1,1)=x0[1]*2;
-            bounds(2,1)=x0[2]*2;
-            bounds(0,0)=0.02;
-            bounds(1,0)=0.02;
-            bounds(2,0)=0.02;
+            cout<<"x0 "<<x0.toString()<<endl;
+            bounds(0,1)=x0[0]*1.5;
+            bounds(1,1)=x0[1]*1.5;
+            bounds(2,1)=x0[2]*1.5;
+            bounds(0,0)=0.005;
+            bounds(1,0)=0.005;
+            bounds(2,0)=0.005;
             bounds(3,0)=0.1;
             bounds(4,0)=0.1;
             bounds(3,1)=1.9;
