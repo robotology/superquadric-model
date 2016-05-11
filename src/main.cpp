@@ -112,6 +112,7 @@ protected:
     int nnThreshold;
     int numVertices;
     bool filter_on;
+    string what_to_plot;
 
     bool mode_online;
     bool go_on;
@@ -322,7 +323,7 @@ protected:
             return "yes";
         }
         else
-        {
+        {/**********************************************************************/
             return "no";
         }
     }
@@ -419,6 +420,26 @@ protected:
         return true;
     }
 
+    /**********************************************************************/
+    bool set_plot(const string &plot)
+    {
+        yDebug() <<"PLOT "<<plot;
+        if ((plot=="superq") || (plot=="points") || (plot=="filtered-points"))
+        {
+            LockGuard lg(mutex);
+            what_to_plot=plot;
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**********************************************************************/
+    string get_plot()
+    {
+        return what_to_plot;
+    }
+
 public:
     /***********************************************************************/
     double getPeriod()
@@ -439,12 +460,17 @@ public:
 
             acquirePointsFromBlob();
 
+            if (what_to_plot=="points")
+                showPoints();
+
             if (isStopping())
                 return false;
 
             if ((filter_on==true) && (points.size()>0))
             {
                 filter();
+                if (what_to_plot=="filtered-points")
+                    showPoints();
             }
 
             if (points.size()>0)
@@ -459,7 +485,9 @@ public:
             }
             else if (go_on==true)
             {
-                go_on=showSuperq();
+                if (what_to_plot=="superq")
+                    go_on=showSuperq();
+
                 saveSuperq();
                 //x.resize(11,0.0);
 
@@ -664,6 +692,9 @@ public:
         portImgOut.open("/superquadric-detection/img:o");
 
         eye=rf.check("eye", Value("left")).asString();
+        what_to_plot=rf.find("plot").asString().c_str();
+        if (rf.find("plot").isNull())
+            what_to_plot="superq";
 
         if (Bottle *B=rf.find("color").asList())
         {
@@ -1160,6 +1191,61 @@ public:
         }
         else
             return false;
+    }
+
+    /***********************************************************************/
+    bool showPoints()
+    {
+        PixelRgb color(r,g,b);
+        Stamp *stamp=NULL;
+        Vector pos, orient;
+
+        ImageOf<PixelRgb> *imgIn=portImgIn.read();
+        if (imgIn==NULL)
+            return false;
+
+        ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
+        imgOut=*imgIn;
+
+        if (eye=="left")
+        {
+            if (igaze->getLeftEyePose(pos,orient,stamp))
+            {
+                H=axis2dcm(orient);
+                H.setSubcol(pos,0,3);
+                H=SE3inv(H);
+            }
+        }
+        else
+        {
+            if (igaze->getRightEyePose(pos,orient,stamp))
+            {
+                H=axis2dcm(orient);
+                H.setSubcol(pos,0,3);
+                H=SE3inv(H);
+            }
+        }
+
+        Vector point(3,0.0);
+
+         for (size_t i=0; i<points.size(); i+=10)
+         {
+             point=points[i];
+             point2D=from3Dto2D(point);
+
+             cv::Point target_point((int)point2D[0],(int)point2D[1]);
+
+             if ((target_point.x<0) || (target_point.y<0) || (target_point.x>=320) || (target_point.y>=240))
+             {
+                 yError("Not acceptable pixels!");
+             }
+             else
+                imgOut.pixel(target_point.x, target_point.y)=color;
+         }
+
+        portImgOut.write();
+
+        return true;
     }
 
     /***********************************************************************/

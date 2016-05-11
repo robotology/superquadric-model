@@ -60,7 +60,7 @@ service superquadricDetection_IDL
     * @return a list with the RGB values of the
     * superquadric and blob visualization.
     */
-    list<i32> get_color()
+    list<i32> get_color();
 
     /**
     * Set the RGB values of the superquadric
@@ -70,7 +70,7 @@ service superquadricDetection_IDL
     * @param b is blue value in [0,255].  
     * @return true/false on success/failure.
     */
-    bool set_color(1: i32 r, 2: i32 g, 3: i32 b)
+    bool set_color(1: i32 r, 2: i32 g, 3: i32 b);
 
     /**
     * Get the eye used for projection of the
@@ -78,7 +78,7 @@ service superquadricDetection_IDL
     * to the 2D pixels.
     * @return the name of the eye used.
     */
-    string get_eye()
+    string get_eye();
 
     /**
     * Set the eye used for projection of the
@@ -87,14 +87,14 @@ service superquadricDetection_IDL
     * @param eye is a string "left" or "right" for selecting the left or right eye.
     * @return true/false on success/failure.
     */
-    bool set_eye(1:string eye)
+    bool set_eye(1:string eye);
 
     /**
     * Get the maximum number of points used
     * for the superquadric reconstruction.
     * @return the maximum number of the points.
     */
-    i32 get_optimizer_points()
+    i32 get_optimizer_points();
 
     /**
     * Set the maximum number of points used
@@ -102,14 +102,14 @@ service superquadricDetection_IDL
     * @param max is the number of points for superquadric reconstruction
     * @return true/false on success/failur.
     */
-    bool set_optimizer_points(1:i32 max)
+    bool set_optimizer_points(1:i32 max);
 
     /**
     * Get max number of visualized points
     * on superquadric surface.
     * @return the number of the visualized points.
     */
-    i32 get_visualized_points()
+    i32 get_visualized_points();
 
     /**
     * Set max number of visualized points
@@ -117,7 +117,7 @@ service superquadricDetection_IDL
     * @param vis is the number of points to be visualized.
     * @return true/false on success/failure.
     */
-    bool set_visualized_points(1:i32 vis)
+    bool set_visualized_points(1:i32 vis);
 
     /**
     * Get the parameters of the reconstructed
@@ -129,7 +129,7 @@ service superquadricDetection_IDL
     * x5, x6, x7 are the coordinate of the superquadric center and
     * x8, x9, 10 are the Euler angles, representing the superquadric orientation.
     */
-    list<double> get_superq(1:string name)
+    list<double> get_superq(1:string name);
 
     /**
     * On/off point cloud filtering
@@ -149,33 +149,33 @@ service superquadricDetection_IDL
     * @param desired_tol is the stop tolerance of the optimization algorithm.
     * @return true/false on success/failure.
     */
-    bool set_tol(1:double desired_tol)
+    bool set_tol(1:double desired_tol);
     
     /**
     * Get the desired tolerance value of the optimization algorithm
     * @return tolerance value.
     */
-    double get_tol()
+    double get_tol();
 
     /**
     * Set the maximum time acceptable for running the optimization algorithm.
     * @param max_time is the maximum time acceptable for running the optimization algorithm.
     * @return true/false on success/failure.
     */
-    bool set_max_time(1:double max_time)
+    bool set_max_time(1:double max_time);
     
     /**
     * Get the maximum time for running the optimization algorithm.
     * @return maximum time.
     */
-    double get_max_time()
+    double get_max_time();
 
     /**
     * Get the advanced parameters of the module. The user must pay attention
     * in changing them.
     * @return the Property including all the advanced parameter values.
     */
-    Property get_advanced_options()
+    Property get_advanced_options();
 
     /**
     * Set the advanced parameters of the module. The user must pay attention
@@ -184,7 +184,20 @@ service superquadricDetection_IDL
     * command: ((filter_radius_advanced <radius-value>) (filter_nnThreshold_advanced <nnThreshold-value>))
     * @return true/false on success/failure
     */
-    bool set_advanced_options(1:Property options)
+    bool set_advanced_options(1:Property options);
+
+    /**
+    * Set what you want to show on the yarpview
+    *@param plot can be: "superq", "points", "filtered-points"
+    *@return true/false on success/failure
+    */
+    bool set_plot(1:string plot);
+
+    /**
+    * Get what is shown on the yarpview
+    *@return  "superq", "points" or "filtered-points"
+    */
+    string get_plot();
 }
 
 
