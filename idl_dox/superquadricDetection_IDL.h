@@ -115,13 +115,13 @@ public:
   virtual std::vector<double>  get_superq(const std::string& name);
   /**
    * On/off point cloud filtering
-   * @param entry is "yes/no" if you want/do not want to filter points.
+   * @param entry is "on/off" if you want/do not want to filter points.
    * @return true/false on success/failure.
    */
   virtual bool set_filtering(const std::string& entry);
   /**
    * Say if filtering is on or not.
-   * @return yes/no string if filtering is on/off.
+   * @return on/off string if filtering is on/off.
    */
   virtual std::string get_filtering();
   /**
@@ -160,6 +160,17 @@ public:
    * @return true/false on success/failure
    */
   virtual bool set_advanced_options(const yarp::os::Property& options);
+  /**
+   *  Set what you want to show on the yarpview
+   * @param plot can be: "superq", "points", "filtered-points"
+   * @return true/false on success/failure
+   */
+  virtual bool set_plot(const std::string& plot);
+  /**
+   *  Get what is shown on the yarpview
+   * @return  "superq", "points" or "filtered-points"
+   */
+  virtual std::string get_plot();
   virtual bool read(yarp::os::ConnectionReader& connection);
   virtual std::vector<std::string> help(const std::string& functionName="--all");
 };

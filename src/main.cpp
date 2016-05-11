@@ -290,6 +290,8 @@ protected:
         {
             for (size_t i=0; i<x.size(); i++)
                 parameters.push_back(x[i]);
+            if (mode_online)
+                showSuperq();
         }
 
         return parameters;
@@ -298,10 +300,10 @@ protected:
     /**********************************************************************/
     bool set_filtering(const string &entry)
     {
-        if ((entry=="yes") || (entry=="no"))
+        if ((entry=="on") || (entry=="off"))
         {
             LockGuard lg(mutex);
-            filter_on= (entry=="yes");
+            filter_on= (entry=="on");
             if (filter_on==1)
             {
                 radius=0.0002;
@@ -320,11 +322,11 @@ protected:
     {
         if (filter_on==1)
         {
-            return "yes";
+            return "on";
         }
         else
-        {/**********************************************************************/
-            return "no";
+        {
+            return "off";
         }
     }
 
@@ -667,20 +669,20 @@ public:
         }
         else
         {            
-            optimizer_points=rf.check("optimizer_points", Value(1000)).asInt();
+            optimizer_points=rf.check("optimizer_points", Value(80)).asInt();
             max_cpu_time=rf.check("max_cpu_time", Value(10.0)).asDouble();
         }
 
-        tol=rf.check("tol",Value(1e-5)).asDouble();
+        tol=rf.check("tol",Value(1e-4)).asDouble();
         acceptable_iter=rf.check("acceptable_iter",Value(0)).asInt();
         max_iter=rf.check("max_iter",Value(numeric_limits<int>::max())).asInt();
 
         mu_strategy=rf.find("mu_strategy").asString().c_str();
         if (rf.find("mu_strategy").isNull())
-            mu_strategy="monotone";
+            mu_strategy="adaptive";
         nlp_scaling_method=rf.find("nlp_scaling_method").asString().c_str();
         if (rf.find("nlp_scaling_method").isNull())
-            nlp_scaling_method="gradient-based";
+            nlp_scaling_method="none";
 
         return true;
     }

@@ -101,9 +101,9 @@ public:
     {
         if (bounds_automatic==true)
         {
-            bounds(0,1)=x0[0]*2.0;
-            bounds(1,1)=x0[1]*2.0;
-            bounds(2,1)=x0[2]*2.0;
+            bounds(0,1)=x0[0]*2;
+            bounds(1,1)=x0[1]*2;
+            bounds(2,1)=x0[2]*2;
             bounds(0,0)=0.02;
             bounds(1,0)=0.02;
             bounds(2,0)=0.02;
@@ -160,7 +160,6 @@ public:
      {
          F(x,points_downsampled, new_x);
          obj_value=aux_objvalue;
-
          return true;
      }
 
@@ -205,8 +204,8 @@ public:
 
          for (size_t i=0;i<points.size();i++)
          {
-             double tmp=pow(f_v(x,points.at(i)),x[3])-1;
-             value+=tmp*tmp;
+              double tmp=pow(f_v(x,points[i]),x[3])-1;
+              value+=tmp*tmp;
          }
 
          value*=x[0]*x[1]*x[2]/points.size();
@@ -279,6 +278,7 @@ public:
         bounds.resize(11,2);
 
         bounds_automatic=(rf->check("bounds_automatic",Value("yes")).asString()=="yes");
+        cout<<"bounds automatic"<<bounds_automatic<<endl;
 
         if (bounds_automatic==false)
             readMatrix("bounds",bounds, 11, rf);

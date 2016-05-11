@@ -133,14 +133,14 @@ service superquadricDetection_IDL
 
     /**
     * On/off point cloud filtering
-    * @param entry is "yes/no" if you want/do not want to filter points.
+    * @param entry is "on/off" if you want/do not want to filter points.
     * @return true/false on success/failure.
     */
     bool set_filtering(1:string entry);
 
     /**
     * Say if filtering is on or not.
-    * @return yes/no string if filtering is on/off.
+    * @return on/off string if filtering is on/off.
     */
     string get_filtering();
 
