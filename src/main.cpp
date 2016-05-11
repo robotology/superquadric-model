@@ -378,6 +378,8 @@ protected:
         Property advOptions;
         advOptions.put("filter_radius_advanced",radius);
         advOptions.put("filter_nnThreshold_advanced",nnThreshold);
+        advOptions.put("IPOPT_mu_strategy",mu_strategy);
+        advOptions.put("IPOPT_nlp_scaling_method",nlp_scaling_method);
 
         return advOptions;
     }
@@ -414,7 +416,33 @@ protected:
             }
         }
 
-        if ((groupBottle.isNull())&& (groupBottle2.isNull()))
+        Bottle &groupBottle3=newOptions.findGroup("mu_strategy");
+        if (!groupBottle3.isNull())
+        {
+            string mu_str=groupBottle2.get(1).asString();
+            if ((mu_str=="adaptive") || (mu_str=="monotone"))
+                    mu_strategy=mu_str;
+            else
+            {
+                yDebug()<<"no good mu_strategy!";
+                return false;
+            }
+        }
+
+        Bottle &groupBottle4=newOptions.findGroup("nlp_scaling_method");
+        if (!groupBottle4.isNull())
+        {
+            string nlp=groupBottle2.get(1).asString();
+            if ((nlp=="none") || (nlp=="gradient-based"))
+                   nlp_scaling_method=nlp;
+            else
+            {
+                yDebug()<<"no good mu_strategy!";
+                return false;
+            }
+        }
+
+        if ((groupBottle.isNull())&& (groupBottle2.isNull()) && (groupBottle3.isNull()) && (groupBottle4.isNull()))
         {
             return false;
         }
@@ -680,6 +708,7 @@ public:
         mu_strategy=rf.find("mu_strategy").asString().c_str();
         if (rf.find("mu_strategy").isNull())
             mu_strategy="adaptive";
+
         nlp_scaling_method=rf.find("nlp_scaling_method").asString().c_str();
         if (rf.find("nlp_scaling_method").isNull())
             nlp_scaling_method="none";
