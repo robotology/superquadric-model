@@ -198,6 +198,18 @@ service superquadricDetection_IDL
     *@return  "superq", "points" or "filtered-points"
     */
     string get_plot();
+
+    /**
+    * Set the step used to downsample the points to be show
+    * @param step must be a positive value
+    * @return true/false on success/failure
+    */
+    bool set_visualized_points_step(1:i32 step);
+
+    /** Get the step used to downsample the points to be show
+    * @return the step value
+    */
+    i32 get_visualized_points_step();
 }
 
 

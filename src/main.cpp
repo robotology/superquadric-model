@@ -100,10 +100,7 @@ protected:
     deque<Vector> points;
     deque<cv::Point> blob_points;
 
-    BufferedPort<ImageOf<PixelMono> > portDispIn;
-    BufferedPort<ImageOf<PixelRgb> >  portDispOut;
     RpcClient portBlobRpc;
-    Port portContour;
     RpcClient portSFMrpc;
     RpcClient portOPCrpc;
     RpcServer portRpc;
@@ -132,6 +129,7 @@ protected:
     IGazeControl *igaze;
 
     int vis_points;
+    int vis_step;
     string eye;
     Matrix R,H,K;
     Vector point,point1;
@@ -470,6 +468,28 @@ protected:
         return what_to_plot;
     }
 
+    /**********************************************************************/
+    bool set_visualized_points_step(const int step)
+    {
+        if (step>0)
+        {
+            vis_step=step;
+            return true;
+        }
+        else
+        {
+            yError()<<"Negativa step for visualized point downsampling!";
+            return false;
+        }
+    }
+
+    /**********************************************************************/
+    int get_visualized_points_step()
+    {
+        return vis_step;
+    }
+
+
 public:
     /***********************************************************************/
     double getPeriod()
@@ -519,7 +539,6 @@ public:
                     go_on=showSuperq();
 
                 saveSuperq();
-                //x.resize(11,0.0);
 
                 if ((go_on==false) && (!isStopping()))
                 {
@@ -587,7 +606,6 @@ public:
     /***********************************************************************/
     bool interruptModule()
     {
-        portDispIn.interrupt();
         portImgIn.interrupt();
         return true;
     }
@@ -595,17 +613,8 @@ public:
     /***********************************************************************/
     bool close()
     {
-        if (!portDispIn.isClosed())
-            portDispIn.close();
-
-        if (!portDispOut.isClosed())
-            portDispOut.close();
-
         if (portBlobRpc.asPort().isOpen())
             portBlobRpc.close();
-
-        if (portContour.isOpen())
-            portContour.close();
 
         if (portSFMrpc.asPort().isOpen())
             portSFMrpc.close();
@@ -669,15 +678,10 @@ public:
     /***********************************************************************/
     bool config3Dpoints(ResourceFinder &rf)
     {
-        portDispIn.open("/superquadric-detection/disp:i");
-        portDispOut.open("/superquadric-detection/disp:o");
         portBlobRpc.open("/superquadric-detection/blob:rpc");
-        portContour.open("/superquadric-detection/contour:i");
         portSFMrpc.open("/superquadric-detection/SFM:rpc");
         portOPCrpc.open("/superquadric-detection/OPC:rpc");
         portRpc.open("/superquadric-detection/rpc");
-
-        portContour.setReader(*this);
 
         attach(portRpc);
 
@@ -783,6 +787,7 @@ public:
         point1.resize(3,0.0);
 
         vis_points=50;
+        vis_step=10;
 
         return true;
     }
@@ -790,31 +795,17 @@ public:
     /***********************************************************************/
     void acquirePointsFromBlob()
     {
-        PixelRgb color(r,g,b);
-        ImageOf<PixelMono> *imgDispIn=portDispIn.read();
-        //if (imgDispIn==NULL)
-            //return false;
-
-        ImageOf<PixelRgb> *imgIn=portImgIn.read();
-        //if (imgIn==NULL)
-            //return false;
-
-        ImageOf<PixelRgb> &imgDispOut=portDispOut.prepare();
-        imgDispOut.resize(imgDispIn->width(),imgDispIn->height());
-
-        cv::Mat imgDispInMat=cv::cvarrToMat((IplImage*)imgDispIn->getIplImage());
-        cv::Mat imgDispOutMat=cv::cvarrToMat((IplImage*)imgDispOut.getIplImage());
-        cv::cvtColor(imgDispInMat,imgDispOutMat,CV_GRAY2RGB);
+        PixelRgb color(r,g,b);      
 
         if (method=="point")
         {
             if (contour.size()>0)
             {
-                getBlob(imgDispOut,color);
+                getBlob(color);
 
                 if (blob_points.size()>0)
                 {
-                    get3Dpoints(imgDispOut, color);
+                    get3Dpoints(color);
                 }
             }
         }
@@ -824,22 +815,19 @@ public:
 
             if ((contour.size()>0) )
             {
-                getBlob(imgDispOut,color);
+                getBlob(color);
 
                 if (blob_points.size()>0)
                 {
-                    get3Dpoints(imgDispOut, color);
+                    get3Dpoints(color);
                 }
             }
         }
-
-        portDispOut.write();
-
         //return true;
     }
 
     /***********************************************************************/
-    void getBlob(ImageOf<PixelRgb> &imgDispOut,const PixelRgb &color)
+    void getBlob(const PixelRgb &color)
     {
         Bottle cmd,reply;
         blob_points.clear();
@@ -855,9 +843,7 @@ public:
                 {
                     if (Bottle *blob_pair=blob_list->get(i).asList())
                     {
-                        cv:: Point pix=cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt());
                         blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt()));
-                        imgDispOut.pixel(pix.x, pix.y)=color;
                     }
                     else
                     {
@@ -878,19 +864,11 @@ public:
     }
 
     /***********************************************************************/
-    void get3Dpoints(ImageOf<PixelRgb> &imgDispOut, const PixelRgb &color)
+    void get3Dpoints(const PixelRgb &color)
     {
         Bottle cmd,reply;
         cmd.addString("Points");
         count=0;
-
-        for (size_t i=0; i<blob_points.size(); i++)
-        {
-            cv::Point single_point=blob_points[i];
-            cmd.addInt(single_point.x);
-            cmd.addInt(single_point.y);
-            imgDispOut.pixel(single_point.x, single_point.y)=color;
-        }
 
         if (portSFMrpc.write(cmd,reply))
         {
@@ -998,7 +976,6 @@ public:
                                     p2.y=b1->get(3).asInt();
                                     p.x=p1.x+(p2.x-p1.x)/2;
                                     p.y=p1.y+(p2.y-p1.y)/2;
-                                    //contour.clear();
                                     contour.push_back(p);
                                 }
                                 else
@@ -1259,7 +1236,7 @@ public:
 
         Vector point(3,0.0);
 
-         for (size_t i=0; i<points.size(); i+=10)
+         for (size_t i=0; i<points.size(); i+=vis_step)
          {
              point=points[i];
              point2D=from3Dto2D(point);
