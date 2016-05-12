@@ -171,6 +171,17 @@ public:
    * @return  "superq", "points" or "filtered-points"
    */
   virtual std::string get_plot();
+  /**
+   * Set the step used to downsample the points to be show
+   * @param step must be a positive value
+   * @return true/false on success/failure
+   */
+  virtual bool set_visualized_points_step(const int32_t step);
+  /**
+   * Get the step used to downsample the points to be show
+   * @return the step value
+   */
+  virtual int32_t get_visualized_points_step();
   virtual bool read(yarp::os::ConnectionReader& connection);
   virtual std::vector<std::string> help(const std::string& functionName="--all");
 };
