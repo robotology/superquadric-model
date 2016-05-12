@@ -60,13 +60,6 @@ Determines which barrier parameter update strategy is to be used. POssible value
 
   <data>
   <input>
-      <type>std::vector of Point</type>
-      <port carrier="tcp">/superquadric-detection/contour:i</port>
-      <description>
-        receive xy-coordinates of the pixel clicked on the image from the camera.
-      </description>
-  </input>
-  <input>
       <type>yarp::sig::ImageOfPixelRgb</type>
       <port carrier="tcp">/superquadric-detection/img:i</port>
       <description>
@@ -75,9 +68,9 @@ Determines which barrier parameter update strategy is to be used. POssible value
   </input>
     <output>
       <type>yarp::sig::ImageOfPixelMono</type>
-      <port carrier="tcp">/superquadric-detection/disp:o</port>
+      <port carrier="tcp">/superquadric-detection/img:o</port>
       <description>
-        send disparity map with the overlapped selected blob.
+        send the image from the left camera with the visualized superquadric or points.
       </description>
     </output>
 

@@ -19,12 +19,6 @@
     </module>
 
     <connection>
-        <from>/SFM/disp:o</from>
-        <to>/superquadric-detection/disp:i</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/superquadric-detection/SFM:rpc</from>
         <to>/SFM/rpc</to>
         <protocol>tcp</protocol>
