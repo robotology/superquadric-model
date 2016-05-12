@@ -3,8 +3,9 @@
 
     <dependencies>
         <port>/icub/camcalib/left/out</port>
-        <port>/icub/camcalib/right/out</port>
-        <port>/iKinGazeCtrl/rpc</port>
+        <port>/lbpExtract/rpc:i</port>
+        <port>/SFM/rpc/</port>
+        <port>/memory/rpc</port>
     </dependencies>
     
     <module>
@@ -18,44 +19,14 @@
     </module>
 
     <connection>
-        <from>/icub/camcalib/left/out</from>
-        <to>/SFM/left:i</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/icub/camcalib/right/out</from>
-        <to>/SFM/right:i</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/SFM/disp:o</from>
         <to>/superquadric-detection/disp:i</to>
         <protocol>tcp</protocol>
     </connection>
 
     <connection>
-        <from>/icub/cam/left</from>
-        <to>/lbpExtract/image:i</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/superquadric-detection/SFM:rpc</from>
         <to>/SFM/rpc</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/icub/camcalib/left/out</from>
-        <to>/superquadric-detection/rgb:i</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/superquadric-detection/disp:o</from>
-        <to>/disp</to>
         <protocol>tcp</protocol>
     </connection>
 

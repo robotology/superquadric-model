@@ -416,10 +416,10 @@ protected:
             }
         }
 
-        Bottle &groupBottle3=newOptions.findGroup("mu_strategy");
+        Bottle &groupBottle3=newOptions.findGroup("IPOPT_mu_strategy");
         if (!groupBottle3.isNull())
         {
-            string mu_str=groupBottle2.get(1).asString();
+            string mu_str=groupBottle3.get(1).asString().c_str();
             if ((mu_str=="adaptive") || (mu_str=="monotone"))
                     mu_strategy=mu_str;
             else
@@ -429,10 +429,10 @@ protected:
             }
         }
 
-        Bottle &groupBottle4=newOptions.findGroup("nlp_scaling_method");
+        Bottle &groupBottle4=newOptions.findGroup("IPOPT_nlp_scaling_method");
         if (!groupBottle4.isNull())
         {
-            string nlp=groupBottle2.get(1).asString();
+            string nlp=groupBottle4.get(1).asString().c_str();
             if ((nlp=="none") || (nlp=="gradient-based"))
                    nlp_scaling_method=nlp;
             else
@@ -693,7 +693,7 @@ public:
         if (mode_online)
         {
             optimizer_points=rf.check("optimizer_points", Value(300)).asInt();
-            max_cpu_time=rf.check("max_cpu_time", Value(0.3)).asDouble();
+            max_cpu_time=rf.check("max_cpu_time", Value(5.0)).asDouble();
         }
         else
         {            
@@ -707,7 +707,7 @@ public:
 
         mu_strategy=rf.find("mu_strategy").asString().c_str();
         if (rf.find("mu_strategy").isNull())
-            mu_strategy="monotone";
+            mu_strategy="adaptive";
 
         nlp_scaling_method=rf.find("nlp_scaling_method").asString().c_str();
         if (rf.find("nlp_scaling_method").isNull())
@@ -1187,7 +1187,7 @@ public:
         app->Options()->SetNumericValue("max_cpu_time",max_cpu_time);
         app->Options()->SetStringValue("nlp_scaling_method",nlp_scaling_method);
         app->Options()->SetStringValue("hessian_approximation","limited-memory");
-        app->Options()->SetIntegerValue("print_level",5);
+        app->Options()->SetIntegerValue("print_level",0);
         app->Initialize();
 
         Ipopt::SmartPtr<SuperQuadric_NLP> superQ_nlp= new SuperQuadric_NLP;
@@ -1295,6 +1295,7 @@ public:
         imgOut=*imgIn;
 
         R=euler2dcm(x.subVector(8,10));
+        R=R.transposed();
 
         if ((norm(x)>0.0))
         {
