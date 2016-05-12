@@ -613,6 +613,7 @@ public:
     /***********************************************************************/
     bool close()
     {
+
         if (portBlobRpc.asPort().isOpen())
             portBlobRpc.close();
 
@@ -795,7 +796,7 @@ public:
     /***********************************************************************/
     void acquirePointsFromBlob()
     {
-        PixelRgb color(r,g,b);      
+        PixelRgb color(r,g,b);
 
         if (method=="point")
         {
@@ -823,11 +824,10 @@ public:
                 }
             }
         }
-        //return true;
     }
 
     /***********************************************************************/
-    void getBlob(const PixelRgb &color)
+    void getBlob( const PixelRgb &color)
     {
         Bottle cmd,reply;
         blob_points.clear();
@@ -864,11 +864,18 @@ public:
     }
 
     /***********************************************************************/
-    void get3Dpoints(const PixelRgb &color)
+    void get3Dpoints( const PixelRgb &color)
     {
         Bottle cmd,reply;
         cmd.addString("Points");
         count=0;
+
+        for (size_t i=0; i<blob_points.size(); i++)
+        {
+            cv::Point single_point=blob_points[i];
+            cmd.addInt(single_point.x);
+            cmd.addInt(single_point.y);
+        }
 
         if (portSFMrpc.write(cmd,reply))
         {
