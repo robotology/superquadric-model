@@ -1,0 +1,51 @@
+<application>
+    <name>superquadric-detection</name>
+
+    <dependencies>
+        <port>/icub/camcalib/left/out</port>
+        <port>/lbpExtract/rpc:i</port>
+        <port>/SFM/rpc/</port>
+        <port>/memory/rpc</port>
+    </dependencies>
+    
+    <module>
+       <name>superquadric-detection</name>
+       <node>icub21</node>
+    </module>
+    <module>
+       <name>yarpview</name>
+       <parameters>--name /dispSuperq --out /dispBlobs/out --x 1600 --y 370 --w 600 --h 600 --p 200</parameters>
+       <node>icub22</node>
+    </module>
+
+    <connection>
+        <from>/superquadric-detection/SFM:rpc</from>
+        <to>/SFM/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/superquadric-detection/img:o</from>
+        <to>/dispSuperq</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/icub/camcalib/left/out</from>
+        <to>/superquadric-detection/img:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/superquadric-detection/blob:rpc</from>
+        <to>/lbpExtract/rpc:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/superquadric-detection/OPC:rpc</from>
+        <to>/memory/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+</application>
+
