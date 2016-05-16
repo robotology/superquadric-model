@@ -32,7 +32,10 @@ The problem can be solved by minimizing the following quantity:
 The _F_ function is raised to the power of _&epsilon;1_ in order to make the error metric independent from the shape of the superquadric and provide faster convergence. This change causes a bias towards larger superquadrics. This effect is
 compensated by the multiplication with the term _&lambda;1, &lambda;2, &lambda;3_ which is proportional to the volume of the superquadric.
 
+## Module description
 
+You can find an overview on superquadric-detection module in the following pdf: [superquadric-detection.pdf](https://github.com/giuliavezzani/superquadric-detection/blob/master/img/superquadric-detection.pdf). 
+If you want to _browse_ the prezi version of the presentation, you can have a look at the link: [superquadric-detection-prezi](https://prezi.com/zlx2l4ekonuc/superquadric-detection/).
 
 ## Dependencies
 - [YARP](https://github.com/robotology/yarp)
