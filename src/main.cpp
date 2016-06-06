@@ -38,7 +38,7 @@
 
 #include "superquadric.cpp"
 
-#include "src/superquadricDetection_IDL.h"
+#include "src/superquadricModel_IDL.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -85,7 +85,7 @@ public:
 
 /*******************************************************************************/
 class SuperqModule : public RFModule,
-                     public superquadricDetection_IDL
+                     public superquadricModel_IDL
 {
 protected:
 
@@ -679,10 +679,10 @@ public:
     /***********************************************************************/
     bool config3Dpoints(ResourceFinder &rf)
     {
-        portBlobRpc.open("/superquadric-detection/blob:rpc");
-        portSFMrpc.open("/superquadric-detection/SFM:rpc");
-        portOPCrpc.open("/superquadric-detection/OPC:rpc");
-        portRpc.open("/superquadric-detection/rpc");
+        portBlobRpc.open("/superquadric-model/blob:rpc");
+        portSFMrpc.open("/superquadric-model/SFM:rpc");
+        portOPCrpc.open("/superquadric-model/OPC:rpc");
+        portRpc.open("/superquadric-model/rpc");
 
         attach(portRpc);
 
@@ -724,8 +724,8 @@ public:
     /***********************************************************************/
     bool configViewer(ResourceFinder &rf)
     {        
-        portImgIn.open("/superquadric-detection/img:i");
-        portImgOut.open("/superquadric-detection/img:o");
+        portImgIn.open("/superquadric-model/img:i");
+        portImgOut.open("/superquadric-model/img:o");
 
         eye=rf.check("eye", Value("left")).asString();
         what_to_plot=rf.find("plot").asString().c_str();
@@ -750,7 +750,7 @@ public:
         Property optionG;
         optionG.put("device","gazecontrollerclient");
         optionG.put("remote","/iKinGazeCtrl");
-        optionG.put("local","/superquadric-detection/gaze");
+        optionG.put("local","/superquadric-model/gaze");
 
         GazeCtrl.open(optionG);
         igaze=NULL;
@@ -1366,7 +1366,7 @@ int main(int argc,char *argv[])
 
     SuperqModule mod;
     ResourceFinder rf;
-    rf.setDefaultContext("superquadric-detection");
+    rf.setDefaultContext("superquadric-model");
     rf.configure(argc,argv);
     return mod.runModule(rf);
 }

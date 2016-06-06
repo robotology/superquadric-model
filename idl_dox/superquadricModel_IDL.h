@@ -1,23 +1,23 @@
 // This is an automatically-generated file.
 // It could get re-generated if the ALLOW_IDL_GENERATION flag is on.
 
-#ifndef YARP_THRIFT_GENERATOR_superquadricDetection_IDL
-#define YARP_THRIFT_GENERATOR_superquadricDetection_IDL
+#ifndef YARP_THRIFT_GENERATOR_superquadricModel_IDL
+#define YARP_THRIFT_GENERATOR_superquadricModel_IDL
 
 #include <yarp/os/Wire.h>
 #include <yarp/os/idl/WireTypes.h>
 #include <yarp/os/Property.h>
 
-class superquadricDetection_IDL;
+class superquadricModel_IDL;
 
 
 /**
- * superquadricDetection_IDL
- * IDL Interface to \ref superquadric-detection services.
+ * superquadricModel_IDL
+ * IDL Interface to \ref superquadric-model services.
  */
-class superquadricDetection_IDL : public yarp::os::Wire {
+class superquadricModel_IDL : public yarp::os::Wire {
 public:
-  superquadricDetection_IDL();
+  superquadricModel_IDL();
   /**
    * Set the name of the object
    * to be detected and modeled.

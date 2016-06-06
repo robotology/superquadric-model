@@ -16,12 +16,12 @@ struct Property
   )
 
 /**
-* superquadricDetection_IDL
+* superquadricModel_IDL
 *
-* IDL Interface to \ref superquadric-detection services.
+* IDL Interface to \ref superquadric-model services.
 */
 
-service superquadricDetection_IDL
+service superquadricModel_IDL
 {
     /**
     * Set the name of the object

@@ -1,5 +1,5 @@
 <application>
-    <name>superquadric-detection</name>
+    <name>superquadric-model</name>
 
     <dependencies>
         <port>/icub/camcalib/left/out</port>
@@ -9,7 +9,7 @@
     </dependencies>
     
     <module>
-       <name>superquadric-detection</name>
+       <name>superquadric-model</name>
        <node>icub21</node>
     </module>
     <module>
@@ -19,31 +19,31 @@
     </module>
 
     <connection>
-        <from>/superquadric-detection/SFM:rpc</from>
+        <from>/superquadric-model/SFM:rpc</from>
         <to>/SFM/rpc</to>
         <protocol>tcp</protocol>
     </connection>
 
     <connection>
-        <from>/superquadric-detection/img:o</from>
+        <from>/superquadric-model/img:o</from>
         <to>/dispSuperq</to>
         <protocol>tcp</protocol>
     </connection>
 
     <connection>
         <from>/icub/camcalib/left/out</from>
-        <to>/superquadric-detection/img:i</to>
+        <to>/superquadric-model/img:i</to>
         <protocol>tcp</protocol>
     </connection>
 
     <connection>
-        <from>/superquadric-detection/blob:rpc</from>
+        <from>/superquadric-model/blob:rpc</from>
         <to>/lbpExtract/rpc:i</to>
         <protocol>tcp</protocol>
     </connection>
 
     <connection>
-        <from>/superquadric-detection/OPC:rpc</from>
+        <from>/superquadric-model/OPC:rpc</from>
         <to>/memory/rpc</to>
         <protocol>tcp</protocol>
     </connection>
