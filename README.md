@@ -44,6 +44,17 @@ If you want to _browse_ the prezi version of the presentation, you can have a lo
 - [IPOPT](https://projects.coin-or.org/Ipopt)
 - [OpenCV](http://opencv.org/)
 - [IOL](https://github.com/robotology/iol)
+
+## How to compile
+
+In `Linux systems` code can be compiled as follows:
+```
+git clone https://github.com/robotology/superquadric-model.git
+cd superquadric-model
+mkdir build; cd build
+ccmake ..
+make install
+```
   
 
 ## Module pipeline
