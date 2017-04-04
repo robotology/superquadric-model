@@ -642,7 +642,7 @@ public:
     {
         homeContextPath=rf.getHomeContextPath().c_str();
         pointCloudFileName=rf.findFile("pointCloudFile");
-        mode_online=(rf.check("online", Value("yes"))=="yes");
+        mode_online=(rf.check("online", Value("yes")).asString()=="yes");
 
         yDebug()<<"file points "<<pointCloudFileName;
 
@@ -661,7 +661,7 @@ public:
             yDebug()<<"file output "<<outputFileName;
         }
 
-        filter_on=(rf.check("filter_on", Value("off"))=="on");
+        filter_on=(rf.check("filter_on", Value("off")).asString()=="on");
 
         return true;
     }
