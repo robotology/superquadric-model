@@ -670,7 +670,7 @@ public:
     bool configFilter(ResourceFinder &rf)
     {
         radius=rf.check("radius", Value(0.0002)).asDouble();
-        nnThreshold=rf.check("nn-threshold", Value(60)).asInt();
+        nnThreshold=rf.check("nn-threshold", Value(20)).asInt();
         advanced_params.push_back("filter_radius_advanced");
         advanced_params.push_back("filter_nnThreshold_advanced");
         return true;
@@ -881,10 +881,13 @@ public:
         {
             for (int idx=0;idx<reply.size();idx+=3)
             {
-                Vector point(3,0.0);
+                Vector point(6,0.0);
                 point[0]=reply.get(idx+0).asDouble();
                 point[1]=reply.get(idx+1).asDouble();
                 point[2]=reply.get(idx+2).asDouble();
+                point[3]=reply.get(idx+0).asDouble();
+                point[4]=reply.get(idx+1).asDouble();
+                point[5]=reply.get(idx+2).asDouble();
                 count++;
 
                 if ((norm(point)>0))
@@ -1040,8 +1043,7 @@ public:
             fout<<endl;
             for (size_t i=0; i<points.size(); i++)
             {
-                fout<<points[i].subVector(0,2).toString(3,4).c_str()<<
-                      " "<<colors[0]<<" "<<colors[1]<<" "<<colors[2]<<endl;
+                fout<<points[i].toString(3,4).c_str()<<endl;
             }
 
             fout<<endl;
@@ -1102,7 +1104,7 @@ public:
             {
                 string tmp=firstItem.asString().c_str();
                 std::transform(tmp.begin(),tmp.end(),tmp.begin(),::toupper);
-                if (tmp=="OFF")
+                if (tmp=="OFF" || tmp=="COFF")
                     state++;
             }
             else if (state==1)

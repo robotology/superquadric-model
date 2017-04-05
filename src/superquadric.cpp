@@ -65,7 +65,7 @@ public:
         {
             for (size_t i=0;i<point_cloud.size();i++)
             {
-                points_downsampled.push_back(point_cloud[i]);
+                points_downsampled.push_back(point_cloud[i].subVector(0,2));
             }
         }
         else
@@ -74,7 +74,7 @@ public:
 
             for (size_t i=0; i<point_cloud.size(); i+=count)
             {
-                points_downsampled.push_back(point_cloud[i]);
+                points_downsampled.push_back(point_cloud[i].subVector(0,2));
             }
         }
 
@@ -104,7 +104,7 @@ public:
             bounds(0,1)=x0[0]*2.0;
             bounds(1,1)=x0[1]*2.0;
             bounds(2,1)=x0[2]*2.0;
-            //yDebug()<<"bounding box "<<(2*x0).subVector(0,2).toString();
+            yDebug()<<"bounding box "<<(2*x0).subVector(0,2).toString();
             bounds(0,0)=0.001;
             bounds(1,0)=0.001;
             bounds(2,0)=0.001;
