@@ -869,6 +869,9 @@ public:
         Bottle cmd,reply;
         cmd.addString("Points");
         count=0;
+        int count_blob=0;
+
+        ImageOf<PixelRgb> *imgIn=portImgIn.read();
 
         for (size_t i=0; i<blob_points.size(); i++)
         {
@@ -879,16 +882,22 @@ public:
 
         if (portSFMrpc.write(cmd,reply))
         {
+            count_blob=0;
             for (int idx=0;idx<reply.size();idx+=3)
             {
-                Vector point(6,0.0);
+                Vector point(6,0.0);           
                 point[0]=reply.get(idx+0).asDouble();
                 point[1]=reply.get(idx+1).asDouble();
                 point[2]=reply.get(idx+2).asDouble();
-                point[3]=reply.get(idx+0).asDouble();
-                point[4]=reply.get(idx+1).asDouble();
-                point[5]=reply.get(idx+2).asDouble();
                 count++;
+                
+
+                PixelRgb px=imgIn->pixel(cmd.get(count_blob+1).asInt(),cmd.get(count_blob).asInt());
+                point[3]=px.r;
+                point[4]=px.g;
+                point[5]=px.b;
+
+                count_blob+=2;
 
                 if ((norm(point)>0))
                 {
@@ -1043,7 +1052,8 @@ public:
             fout<<endl;
             for (size_t i=0; i<points.size(); i++)
             {
-                fout<<points[i].toString(3,4).c_str()<<endl;
+                fout<<points[i].subVector(0,2).toString(3,4).c_str()<<" "<<
+                        (int)points[i][3]<<" "<<(int)points[i][4]<<" "<<(int)points[i][5]<<endl;
             }
 
             fout<<endl;
