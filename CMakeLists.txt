@@ -35,7 +35,7 @@ add_definitions(${YARP_DEFINES} ${IPOPT_DEFINITIONS} -D_USE_MATH_DEFINES)
 
 add_executable(${PROJECT_NAME} ${sources} src/idl.thrift ${PROJECT_NAME}.xml ${IDL_GEN_FILES})
 #add_executable(${PROJECT_NAME} ${sources} src/idl.thrift ${IDL_GEN_FILES})
-target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES} ${IPOPT_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES} ${IPOPT_LIBRARIES} ctrlLib)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 icubcontrib_add_uninstall_target()

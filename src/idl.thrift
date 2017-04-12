@@ -145,6 +145,32 @@ service superquadricModel_IDL
     string get_filtering();
 
     /**
+    * On/off superquadric filtering
+    * @param entry is "on/off" if you want/do not want to filter points.
+    * @return true/false on success/failure.
+    */
+    bool set_filtering_superq(1:string entry);
+
+    /**
+    * Say if superquadric filtering is on or not.
+    * @return on/off string if filtering is on/off.
+    */
+    string get_filtering_superq();
+
+    /**
+    * Set the order of the median filter.
+    * @param m is the desired order.
+    * @return true/false on success/failure.
+    */
+    bool median_order(1:double m);
+    
+    /**
+    * Get the desired tolerance value of the optimization algorithm
+    * @return tolerance value.
+    */
+    double get_median_filter();
+
+    /**
     * Set the desired tolerance value of the optimization algorithm
     * @param desired_tol is the stop tolerance of the optimization algorithm.
     * @return true/false on success/failure.

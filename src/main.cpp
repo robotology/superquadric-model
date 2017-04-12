@@ -36,6 +36,8 @@
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 
+#include <iCub/ctrl/filters.h>
+
 #include "superquadric.cpp"
 
 #include "src/superquadricModel_IDL.h"
@@ -45,6 +47,7 @@ using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
+using namespace iCub::ctrl;
 
 /*******************************************************************************/
 class SpatialDensityFilter
@@ -108,7 +111,9 @@ protected:
     double radius;
     int nnThreshold;
     int numVertices;
+    int median_order;
     bool filter_on;
+    bool filter_superq;
     string what_to_plot;
 
     bool mode_online;
@@ -119,6 +124,8 @@ protected:
     unsigned int optimizer_points;
     string mu_strategy,nlp_scaling_method;    
     Vector x;
+    Vector x_filtered;
+    deque<Vector> x_window;
     double t_superq;
 
     BufferedPort<ImageOf<PixelRgb> > portImgIn;
@@ -156,6 +163,7 @@ protected:
         outputFileName=homeContextPath+"/"+objname+".txt";
         yDebug()<<"file output "<<outputFileName;
         x.resize(11,0.0);
+        x_filtered.resize(11,0.0);
         return true;
     }
 
@@ -279,7 +287,7 @@ protected:
     }
 
     /**********************************************************************/
-    vector<double> get_superq(const string &name)
+    vector<double> get_superq(const string &name, const string &filtered_or_not)
     {
         vector<double> parameters;
         parameters.clear();
@@ -287,9 +295,19 @@ protected:
         if (name==objname)
         {
             for (size_t i=0; i<x.size(); i++)
-                parameters.push_back(x[i]);
+            {
+                if (filtered_or_not=="no")
+                    parameters.push_back(x[i]);
+                else
+                    parameters.push_back(x_filtered[i]);
+            }
             if (mode_online)
-                showSuperq();
+            {
+                if (filter_superq)
+                    go_on=showSuperq(x_filtered);
+                else
+                    go_on=showSuperq(x);
+            }
         }
 
         return parameters;
@@ -326,6 +344,52 @@ protected:
         {
             return "off";
         }
+    }
+
+    /**********************************************************************/
+    bool set_filtering_superq(const string &entry)
+    {
+        if ((entry=="on") || (entry=="off"))
+        {
+            LockGuard lg(mutex);
+            filter_superq= (entry=="on");
+            if (filter_superq==1)
+            {
+                median_order=5;
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    /**********************************************************************/
+    string get_filtering_superq()
+    {
+        if (filter_superq==1)
+        {
+            return "on";
+        }
+        else
+        {
+            return "off";
+        }
+    }
+
+    /**********************************************************************/
+    bool set_median_order(const double m)
+    {
+        LockGuard lg(mutex);
+        median_order=m;
+        return true;
+    }
+
+    /**********************************************************************/
+    double get_median_order()
+    {
+        return median_order;
     }
 
     /**********************************************************************/
@@ -535,8 +599,16 @@ public:
             }
             else if (go_on==true)
             {
+                if (filter_superq)
+                    filterSuperq();
+
                 if (what_to_plot=="superq")
-                    go_on=showSuperq();
+                {
+                    if (filter_superq)
+                        go_on=showSuperq(x_filtered);
+                    else
+                        go_on=showSuperq(x);
+                }
 
                 saveSuperq();
 
@@ -571,6 +643,9 @@ public:
             }
             else if (go_on==true)
             {
+                if (filter_superq)
+                    filterSuperq();
+
                 saveSuperq();
             }
 
@@ -590,6 +665,8 @@ public:
 
         if (filter_on==true)
             config_ok=configFilter(rf);
+        if (filter_superq==true)
+            config_ok=configFilterSuperq(rf);
 
         if (config_ok)
             config_ok=config3Dpoints(rf);
@@ -662,6 +739,7 @@ public:
         }
 
         filter_on=(rf.check("filter_on", Value("off")).asString()=="on");
+        filter_superq=(rf.check("filter_superq", Value("off")).asString()=="on");
 
         return true;
     }
@@ -675,6 +753,14 @@ public:
         advanced_params.push_back("filter_nnThreshold_advanced");
         return true;
     }
+
+    /***********************************************************************/
+    bool configFilterSuperq(ResourceFinder &rf)
+    {
+        median_order=rf.check("median_order", Value(5)).asDouble();
+        return true;
+    }
+
 
     /***********************************************************************/
     bool config3Dpoints(ResourceFinder &rf)
@@ -694,6 +780,7 @@ public:
     {
         this->rf=&rf;
         x.resize(11,0.0);
+        x_filtered.resize(11,0.0);
 
         if (mode_online)
         {
@@ -1001,6 +1088,7 @@ public:
                                 {
                                     yError("position_2d_left field not found in the OPC reply!");
                                     x.resize(11,0.0);
+                                    x_filtered.resize(11,0.0);
                                     contour.clear();
                                 }
                             }
@@ -1074,6 +1162,9 @@ public:
             fout<<"*****Result*****"<<endl;
             fout<<"Computed superquadric: "<<endl;
             fout<<" "<<x.toString(3,3);
+            fout<<endl;
+            fout<<"Filtered superquadric: "<<endl;
+            fout<<" "<<x_filtered.toString(3,3);
             fout<<endl;
             fout<<"Execution time: "<<endl;
             fout<<" "<<t_superq <<endl;
@@ -1221,6 +1312,45 @@ public:
     }
 
     /***********************************************************************/
+    void filterSuperq()
+    {
+        Vector tmp(1,0.0);
+        Vector tmp2(median_order, 0.0);
+        x_window.push_back(x);
+        x_window.push_back(x);
+        x_window.push_back(x);
+
+        yDebug()<<"Current window size: "<<x_window.size();
+        yDebug()<< "Median order: "<<median_order;
+
+        MedianFilter mFilter(median_order, tmp2);
+
+        //mFilter.setOrder(median_order);
+
+        //mFilter.init(tmp);
+
+        if (x_window.size() >= median_order)
+        {
+            cout<< "Filtering the last "<< x_window.size() << " superquadrics..."<<endl;
+
+            for (size_t i=0; i<x.size(); i++)
+            {
+                for (size_t j=0; j<median_order; j++)
+                {
+                    tmp2[j]=x_window[j][i];
+                }
+
+                tmp=mFilter.filt(tmp2);
+                x_filtered[i]=tmp[0];
+            }
+
+            cout<< "Filtered superq "<< x_filtered.toString(3,3)<<endl;
+
+            x_window.pop_front();
+        }
+    }
+
+    /***********************************************************************/
     bool showPoints()
     {
         PixelRgb color(r,g,b);
@@ -1276,7 +1406,7 @@ public:
     }
 
     /***********************************************************************/
-    bool showSuperq()
+    bool showSuperq(Vector &x_toshow)
     {
         PixelRgb color(r,g,b);
         Vector pos, orient;
@@ -1290,10 +1420,10 @@ public:
         ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
         imgOut=*imgIn;
 
-        R=euler2dcm(x.subVector(8,10));
+        R=euler2dcm(x_toshow.subVector(8,10));
         R=R.transposed();
 
-        if ((norm(x)>0.0))
+        if ((norm(x_toshow)>0.0))
         {
             if (eye=="left")
             {
@@ -1323,17 +1453,17 @@ public:
                      co=cos(omega); so=sin(omega);
                      ce=cos(eta); se=sin(eta);
 
-                     point[0]=x[0] * sign(ce)*(pow(abs(ce),x[3])) * sign(co)*(pow(abs(co),x[4])) * R(0,0) +
-                                x[1] * sign(ce)*(pow(abs(ce),x[3]))* sign(so)*(pow(abs(so),x[4])) * R(0,1)+
-                                    x[2] * sign(se)*(pow(abs(se),x[3])) * R(0,2) + x[5];
+                     point[0]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(0,0) +
+                                x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3]))* sign(so)*(pow(abs(so),x_toshow[4])) * R(0,1)+
+                                    x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(0,2) + x_toshow[5];
 
-                     point[1]=x[0] * sign(ce)*(pow(abs(ce),x[3])) * sign(co)*(pow(abs(co),x[4])) * R(1,0) +
-                                x[1] * sign(ce)*(pow(abs(ce),x[3])) * sign(so)*(pow(abs(so),x[4])) * R(1,1)+
-                                    x[2] * sign(se)*(pow(abs(se),x[3])) * R(1,2) + x[6];
+                     point[1]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(1,0) +
+                                x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(so)*(pow(abs(so),x_toshow[4])) * R(1,1)+
+                                    x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(1,2) + x_toshow[6];
 
-                     point[2]=x[0] * sign(ce)*(pow(abs(ce),x[3])) * sign(co)*(pow(abs(co),x[4])) * R(2,0) +
-                                x[1] * sign(ce)*(pow(abs(ce),x[3])) * sign(so)*(pow(abs(so),x[4])) * R(2,1)+
-                                    x[2] * sign(se)*(pow(abs(se),x[3])) * R(2,2) + x[7];
+                     point[2]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(2,0) +
+                                x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(so)*(pow(abs(so),x_toshow[4])) * R(2,1)+
+                                    x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(2,2) + x_toshow[7];
 
                      point2D=from3Dto2D(point);
 
