@@ -562,6 +562,19 @@ protected:
         return vis_step;
     }
 
+    /**********************************************************************/
+    bool set_fixed_window(const string &entry)
+    {      
+        fixed_window=(entry=="yes");
+        return true;
+    }
+
+    /**********************************************************************/
+    bool get_fixed_window()
+    {
+        return fixed_window;
+    }
+
 public:
     /***********************************************************************/
     double getPeriod()
@@ -778,7 +791,7 @@ public:
         x.resize(11,0.0);
         elem_x.resize(max_median_order, 0.0);
         mFilter = new MedianFilter(median_order, x);
-        linEst =new AWLinEstimator(max_median_order, threshold_median);
+        linEst =new AWLinEstimator(3, threshold_median);
         return true;
     }
 
@@ -1342,6 +1355,7 @@ public:
         else
         {
             adaptWindComputation();
+
             mFilter->setOrder(median_order);
             x_filtered=mFilter->filt(x);
         }
@@ -1352,38 +1366,37 @@ public:
     /***********************************************************************/
     void adaptWindComputation()
     {
-        x_window.push_back(x);
-        Time::delay(2.0);
-        x_window.push_back(x);
-        Time::delay(2.0);
-        x_window.push_back(x);
-        Time::delay(2.0);
-        x_window.push_back(x);
-        x_window.push_back(x);
-        x_window.push_back(x);
+        /*if (norm(x)>0.0)
+            x_window.push_back(x);
 
-        if (x_window.size()>max_median_order)
-            x_window.pop_front();
-
-        for (size_t i=0; i<x_window.size(); i++)
+        if (x_window.size()==max_median_order)
         {
-            elem_x[i]=x_window[i][5];
-        }
+            
 
-        cout<<" elem x "<<elem_x.toString()<<endl;
-        cout<<"median order "<<median_order<<endl;
+            for (size_t i=0; i<max_median_order; i++)
+            {   
+                 elem_x[i]=x_window[i][5];
+            }*/
+        
 
-        cout<<"time now "<<Time::now()<<endl;
+            elem_x.resize(3,0.0);
+            elem_x=x.subVector(5,7);
+            cout<<" elem x "<<elem_x.toString()<<endl;
+            cout<<"median order "<<median_order<<endl;
 
-        AWPolyElement el(elem_x,Time::now());
+            AWPolyElement el(elem_x,Time::now());
 
-        cout<<" estimate "<<linEst->estimate(el).toString()<<endl;
-        cout<<"win lenght "<<(linEst->getWinLen()).toString()<<endl;
+            cout<<" estimate "<<linEst->estimate(el).toString()<<endl;
+            cout<<"win lenght "<<(linEst->getWinLen()).toString()<<endl;
 
-        Vector tmp=linEst->getWinLen();
+            Vector tmp=linEst->getWinLen();
 
-        median_order=tmp[0];
+            median_order=(int)tmp[0];
 
+           // x_window.pop_front();
+       // }
+
+        cout<<"new median order "<<median_order<<endl;
     }
 
     /***********************************************************************/

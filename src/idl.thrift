@@ -236,6 +236,20 @@ service superquadricModel_IDL
     * @return the step value
     */
     i32 get_visualized_points_step();
+
+    /**
+    * Set fixed_window value on or off
+    *@param entry can be: "yes", "no"
+    *@return true
+    */
+    bool set_fixed_window(1:string entry);
+
+    /**
+    * Get if the window value is fixed or not
+    *@return  true/false
+    */
+    bool get_fixed_window();
+
 }
 
 
