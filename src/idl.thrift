@@ -236,6 +236,12 @@ service superquadricModel_IDL
     * @return the step value
     */
     i32 get_visualized_points_step();
+
+    /**
+    * Clear window of past models
+    * @return true
+    */
+    bool clear_old_poses();
 }
 
 

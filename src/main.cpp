@@ -553,6 +553,13 @@ protected:
         return vis_step;
     }
 
+    /**********************************************************************/
+    bool clear_old_poses()
+    {
+
+        x_window.clear();
+        return true;
+    }
 
 public:
     /***********************************************************************/
@@ -1317,17 +1324,11 @@ public:
         Vector tmp(1,0.0);
         Vector tmp2(median_order, 0.0);
         x_window.push_back(x);
-        x_window.push_back(x);
-        x_window.push_back(x);
 
         yDebug()<<"Current window size: "<<x_window.size();
         yDebug()<< "Median order: "<<median_order;
 
         MedianFilter mFilter(median_order, tmp2);
-
-        //mFilter.setOrder(median_order);
-
-        //mFilter.init(tmp);
 
         if (x_window.size() >= median_order)
         {
@@ -1340,7 +1341,10 @@ public:
                     tmp2[j]=x_window[j][i];
                 }
 
+                mFilter.init(tmp2);
+
                 tmp=mFilter.filt(tmp2);
+
                 x_filtered[i]=tmp[0];
             }
 
