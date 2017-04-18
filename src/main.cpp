@@ -125,7 +125,6 @@ protected:
     string mu_strategy,nlp_scaling_method;    
     Vector x;
     Vector x_filtered;
-    deque<Vector> x_window;
     double t_superq;
 
     BufferedPort<ImageOf<PixelRgb> > portImgIn;
@@ -147,6 +146,8 @@ protected:
     double t,t0;
     deque<string> advanced_params;
     Mutex mutex;
+
+    MedianFilter *mFilter;
 
     /************************************************************************/
     bool attach(RpcServer &source)
@@ -379,10 +380,11 @@ protected:
     }
 
     /**********************************************************************/
-    bool set_median_order(const double m)
+    bool set_median_order(const int m)
     {
         LockGuard lg(mutex);
         median_order=m;
+        mFilter->setOrder(median_order);
         return true;
     }
 
@@ -553,14 +555,6 @@ protected:
         return vis_step;
     }
 
-    /**********************************************************************/
-    bool clear_old_poses()
-    {
-
-        x_window.clear();
-        return true;
-    }
-
 public:
     /***********************************************************************/
     double getPeriod()
@@ -718,6 +712,9 @@ public:
 
         GazeCtrl.close();
 
+        if (mFilter!=NULL)
+            delete mFilter;
+
         return true;
     }
 
@@ -764,7 +761,9 @@ public:
     /***********************************************************************/
     bool configFilterSuperq(ResourceFinder &rf)
     {
-        median_order=rf.check("median_order", Value(5)).asDouble();
+        median_order=rf.check("median_order", Value(5)).asInt();
+        x.resize(11,0.0);
+        mFilter = new MedianFilter(median_order, x);
         return true;
     }
 
@@ -785,8 +784,7 @@ public:
     /***********************************************************************/
     bool configSuperq(ResourceFinder &rf)
     {
-        this->rf=&rf;
-        x.resize(11,0.0);
+        this->rf=&rf;        
         x_filtered.resize(11,0.0);
 
         if (mode_online)
@@ -1322,36 +1320,18 @@ public:
     void filterSuperq()
     {
         Vector tmp(1,0.0);
-        Vector tmp2(median_order, 0.0);
-        x_window.push_back(x);
+        Vector tmp2(median_order, 0.0);     
 
-        yDebug()<<"Current window size: "<<x_window.size();
-        yDebug()<< "Median order: "<<median_order;
+        cout<< "Filtering the last "<< median_order << " superquadrics..."<<endl;
 
-        MedianFilter mFilter(median_order, tmp2);
+        cout<<"x "<<x.toString()<<endl;
+        
+        //if (norm(x.subVector(5,7) - x_filtered.subVector(5,7)) <= 0.04)
+            x_filtered=mFilter->filt(x);
+        //else
+         //   x_filtered=x;
 
-        if (x_window.size() >= median_order)
-        {
-            cout<< "Filtering the last "<< x_window.size() << " superquadrics..."<<endl;
-
-            for (size_t i=0; i<x.size(); i++)
-            {
-                for (size_t j=0; j<median_order; j++)
-                {
-                    tmp2[j]=x_window[j][i];
-                }
-
-                mFilter.init(tmp2);
-
-                tmp=mFilter.filt(tmp2);
-
-                x_filtered[i]=tmp[0];
-            }
-
-            cout<< "Filtered superq "<< x_filtered.toString(3,3)<<endl;
-
-            x_window.pop_front();
-        }
+        cout<< "Filtered superq "<< x_filtered.toString(3,3)<<endl;
     }
 
     /***********************************************************************/

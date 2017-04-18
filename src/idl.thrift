@@ -162,13 +162,13 @@ service superquadricModel_IDL
     * @param m is the desired order.
     * @return true/false on success/failure.
     */
-    bool median_order(1:double m);
+    bool set_median_order(1:i32 m);
     
     /**
     * Get the desired tolerance value of the optimization algorithm
     * @return tolerance value.
     */
-    double get_median_filter();
+    double get_median_order();
 
     /**
     * Set the desired tolerance value of the optimization algorithm
@@ -236,12 +236,6 @@ service superquadricModel_IDL
     * @return the step value
     */
     i32 get_visualized_points_step();
-
-    /**
-    * Clear window of past models
-    * @return true
-    */
-    bool clear_old_poses();
 }
 
 
