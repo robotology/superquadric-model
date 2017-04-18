@@ -37,6 +37,7 @@
 #include <yarp/math/Math.h>
 
 #include <iCub/ctrl/filters.h>
+#include <iCub/ctrl/adaptWinPolyEstimator.h>
 
 #include "superquadric.cpp"
 
@@ -112,9 +113,12 @@ protected:
     int nnThreshold;
     int numVertices;
     int median_order;
+    int max_median_order;
     bool filter_on;
+    bool fixed_window;
     bool filter_superq;
     string what_to_plot;
+    double threshold_median;
 
     bool mode_online;
     bool go_on;
@@ -124,7 +128,9 @@ protected:
     unsigned int optimizer_points;
     string mu_strategy,nlp_scaling_method;    
     Vector x;
+    Vector elem_x;
     Vector x_filtered;
+    deque<Vector> x_window;
     double t_superq;
 
     BufferedPort<ImageOf<PixelRgb> > portImgIn;
@@ -148,6 +154,7 @@ protected:
     Mutex mutex;
 
     MedianFilter *mFilter;
+    AWLinEstimator *linEst;
 
     /************************************************************************/
     bool attach(RpcServer &source)
@@ -715,6 +722,9 @@ public:
         if (mFilter!=NULL)
             delete mFilter;
 
+        if (linEst!=NULL)
+            delete linEst;
+
         return true;
     }
 
@@ -761,12 +771,16 @@ public:
     /***********************************************************************/
     bool configFilterSuperq(ResourceFinder &rf)
     {
-        median_order=rf.check("median_order", Value(5)).asInt();
+        fixed_window=(rf.check("fixed_window", Value("no")).asString()=="yes");
+        median_order=rf.check("median_order", Value(1)).asInt();
+        max_median_order=rf.check("max_median_order", Value(3)).asInt();
+        threshold_median=rf.check("threshold_median", Value(1.0)).asDouble();
         x.resize(11,0.0);
+        elem_x.resize(max_median_order, 0.0);
         mFilter = new MedianFilter(median_order, x);
+        linEst =new AWLinEstimator(max_median_order, threshold_median);
         return true;
     }
-
 
     /***********************************************************************/
     bool config3Dpoints(ResourceFinder &rf)
@@ -1319,19 +1333,57 @@ public:
     /***********************************************************************/
     void filterSuperq()
     {
-        Vector tmp(1,0.0);
-        Vector tmp2(median_order, 0.0);     
-
         cout<< "Filtering the last "<< median_order << " superquadrics..."<<endl;
 
         cout<<"x "<<x.toString()<<endl;
-        
-        //if (norm(x.subVector(5,7) - x_filtered.subVector(5,7)) <= 0.04)
+
+        if (fixed_window)
             x_filtered=mFilter->filt(x);
-        //else
-         //   x_filtered=x;
+        else
+        {
+            adaptWindComputation();
+            mFilter->setOrder(median_order);
+            x_filtered=mFilter->filt(x);
+        }
 
         cout<< "Filtered superq "<< x_filtered.toString(3,3)<<endl;
+    }
+
+    /***********************************************************************/
+    void adaptWindComputation()
+    {
+        x_window.push_back(x);
+        Time::delay(2.0);
+        x_window.push_back(x);
+        Time::delay(2.0);
+        x_window.push_back(x);
+        Time::delay(2.0);
+        x_window.push_back(x);
+        x_window.push_back(x);
+        x_window.push_back(x);
+
+        if (x_window.size()>max_median_order)
+            x_window.pop_front();
+
+        for (size_t i=0; i<x_window.size(); i++)
+        {
+            elem_x[i]=x_window[i][5];
+        }
+
+        cout<<" elem x "<<elem_x.toString()<<endl;
+        cout<<"median order "<<median_order<<endl;
+
+        cout<<"time now "<<Time::now()<<endl;
+
+        AWPolyElement el(elem_x,Time::now());
+
+        cout<<" estimate "<<linEst->estimate(el).toString()<<endl;
+        cout<<"win lenght "<<(linEst->getWinLen()).toString()<<endl;
+
+        Vector tmp=linEst->getWinLen();
+
+        median_order=tmp[0];
+
     }
 
     /***********************************************************************/
