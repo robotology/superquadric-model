@@ -1354,31 +1354,39 @@ public:
             x_filtered=mFilter->filt(x);
         else
         {
-            adaptWindComputation();
+            int new_median_order=adaptWindComputation();
 
-            mFilter->setOrder(median_order);
+            if (median_order != new_median_order)
+            {
+                median_order=new_median_order;
+                mFilter->setOrder(median_order);
+                x_filtered=mFilter->filt(x);
+            }
+
             x_filtered=mFilter->filt(x);
         }
+
 
         cout<< "Filtered superq "<< x_filtered.toString(3,3)<<endl;
     }
 
     /***********************************************************************/
-    void adaptWindComputation()
+    int adaptWindComputation()
     {
+        int new_median_order;
         elem_x.resize(6,0.0);
         elem_x=x.subVector(5,10);
-        cout<<" elem x "<<elem_x.toString()<<endl;
-        cout<<"median order "<<median_order<<endl;
+        cout<<"elem x "<<elem_x.toString()<<endl;
+        cout<<"old median order "<<median_order<<endl;
 
         AWPolyElement el(elem_x,Time::now());
-        cout<<" estimate "<<PolyEst->estimate(el).toString()<<endl;
-        cout<<"win lenght "<<(PolyEst->getWinLen()).toString()<<endl;
+        cout<<"estimate "<<PolyEst->estimate(el).toString()<<endl;
+        cout<<"window lenght "<<(PolyEst->getWinLen()).toString()<<endl;
         cout<<"error "<<(PolyEst->getMSE()).toString()<<endl;
         Vector tmp=PolyEst->getWinLen();
 
         int min;
-        min=1;
+        min=tmp[0];
 
         for (size_t i=0; i<tmp.size(); i++)
         {
@@ -1386,9 +1394,9 @@ public:
                 min=tmp[i];
         }
 
-        median_order=min;
-
-        cout<<"new median order "<<median_order<<endl;
+        new_median_order=min;
+        cout<<"new median order "<<new_median_order<<endl;
+        return new_median_order;
     }
 
     /***********************************************************************/
