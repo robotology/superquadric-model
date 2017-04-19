@@ -154,7 +154,7 @@ protected:
     Mutex mutex;
 
     MedianFilter *mFilter;
-    AWLinEstimator *linEst;
+    AWPolyEstimator *PolyEst;
 
     /************************************************************************/
     bool attach(RpcServer &source)
@@ -735,8 +735,8 @@ public:
         if (mFilter!=NULL)
             delete mFilter;
 
-        if (linEst!=NULL)
-            delete linEst;
+        if (PolyEst!=NULL)
+            delete PolyEst;
 
         return true;
     }
@@ -786,12 +786,12 @@ public:
     {
         fixed_window=(rf.check("fixed_window", Value("no")).asString()=="yes");
         median_order=rf.check("median_order", Value(1)).asInt();
-        max_median_order=rf.check("max_median_order", Value(3)).asInt();
-        threshold_median=rf.check("threshold_median", Value(1.0)).asDouble();
+        max_median_order=rf.check("max_median_order", Value(30)).asInt();
+        threshold_median=rf.check("threshold_median", Value(0.1)).asDouble();
         x.resize(11,0.0);
         elem_x.resize(max_median_order, 0.0);
         mFilter = new MedianFilter(median_order, x);
-        linEst =new AWLinEstimator(3, threshold_median);
+        PolyEst =new AWLinEstimator(max_median_order, threshold_median);
         return true;
     }
 
@@ -1366,35 +1366,27 @@ public:
     /***********************************************************************/
     void adaptWindComputation()
     {
-        /*if (norm(x)>0.0)
-            x_window.push_back(x);
+        elem_x.resize(6,0.0);
+        elem_x=x.subVector(5,10);
+        cout<<" elem x "<<elem_x.toString()<<endl;
+        cout<<"median order "<<median_order<<endl;
 
-        if (x_window.size()==max_median_order)
+        AWPolyElement el(elem_x,Time::now());
+        cout<<" estimate "<<PolyEst->estimate(el).toString()<<endl;
+        cout<<"win lenght "<<(PolyEst->getWinLen()).toString()<<endl;
+        cout<<"error "<<(PolyEst->getMSE()).toString()<<endl;
+        Vector tmp=PolyEst->getWinLen();
+
+        int min;
+        min=1;
+
+        for (size_t i=0; i<tmp.size(); i++)
         {
-            
+            if (min> tmp[i])
+                min=tmp[i];
+        }
 
-            for (size_t i=0; i<max_median_order; i++)
-            {   
-                 elem_x[i]=x_window[i][5];
-            }*/
-        
-
-            elem_x.resize(3,0.0);
-            elem_x=x.subVector(5,7);
-            cout<<" elem x "<<elem_x.toString()<<endl;
-            cout<<"median order "<<median_order<<endl;
-
-            AWPolyElement el(elem_x,Time::now());
-
-            cout<<" estimate "<<linEst->estimate(el).toString()<<endl;
-            cout<<"win lenght "<<(linEst->getWinLen()).toString()<<endl;
-
-            Vector tmp=linEst->getWinLen();
-
-            median_order=(int)tmp[0];
-
-           // x_window.pop_front();
-       // }
+        median_order=min;
 
         cout<<"new median order "<<median_order<<endl;
     }
