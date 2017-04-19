@@ -131,7 +131,9 @@ protected:
     Vector elem_x;
     Vector x_filtered;
     deque<Vector> x_window;
+
     double t_superq;
+    double t_shows1, t_shows2;
 
     BufferedPort<ImageOf<PixelRgb> > portImgIn;
     BufferedPort<ImageOf<PixelRgb> > portImgOut;
@@ -1200,8 +1202,10 @@ public:
             fout<<endl;
             fout<<"Execution time: "<<endl;
             fout<<" "<<t_superq <<endl;
+            fout<<"Visualization time: "<<endl;
+            fout<<" "<<t_shows2 <<endl;
             fout<<"Update module time"<<endl;
-            fout<<" "<<t_superq+Time::now()-t0<<endl<<endl;
+            fout<<" "<<t<<endl<<endl;
             fout<<"*****Optimizer parameters*****"<<endl;
             fout<<"Optimizer points: "<<optimizer_points<<endl;
             fout<<"Tolerance :"<<tol<<endl;
@@ -1374,27 +1378,34 @@ public:
     int adaptWindComputation()
     {
         int new_median_order;
-        elem_x.resize(6,0.0);
-        elem_x=x.subVector(5,10);
+        elem_x.resize(3,0.0);
+        elem_x=x.subVector(5,7);
         cout<<"elem x "<<elem_x.toString()<<endl;
         cout<<"old median order "<<median_order<<endl;
 
         AWPolyElement el(elem_x,Time::now());
-        cout<<"estimate "<<PolyEst->estimate(el).toString()<<endl;
-        cout<<"window lenght "<<(PolyEst->getWinLen()).toString()<<endl;
-        cout<<"error "<<(PolyEst->getMSE()).toString()<<endl;
-        Vector tmp=PolyEst->getWinLen();
+        Vector vel=PolyEst->estimate(el);
+        cout<<"velocity estimate "<<PolyEst->estimate(el).toString()<<endl;
+        //cout<<"window lenght "<<(PolyEst->getWinLen()).toString()<<endl;
+        //cout<<"error "<<(PolyEst->getMSE()).toString()<<endl;
+        //Vector tmp=PolyEst->getWinLen();
 
-        int min;
+        /*int min;
         min=tmp[0];
 
         for (size_t i=0; i<tmp.size(); i++)
         {
             if (min> tmp[i])
                 min=tmp[i];
-        }
+        }*/
 
-        new_median_order=min;
+        //new_median_order=min;
+
+        if (norm(vel)>=0.01)
+            new_median_order=1;
+        else
+            new_median_order=30;
+
         cout<<"new median order "<<new_median_order<<endl;
         return new_median_order;
     }
@@ -1457,6 +1468,8 @@ public:
     /***********************************************************************/
     bool showSuperq(Vector &x_toshow)
     {
+        t_shows1=Time::now();
+
         PixelRgb color(r,g,b);
         Vector pos, orient;
         double co,so,ce,se;
@@ -1530,6 +1543,7 @@ public:
         }
         
         portImgOut.write();
+        t_shows2=Time::now()-t_shows1;
 
         return true;
     }
