@@ -1312,6 +1312,7 @@ public:
         numVertices=points.size();
 
         cv:: Mat data(numVertices,3,CV_32F);
+
         for (int i=0; i<numVertices; i++)
         {
             Vector point=points[i];
@@ -1404,7 +1405,6 @@ public:
 
             x_filtered=mFilter->filt(x);
         }
-
 
         cout<< "Filtered superq "<< x_filtered.toString(3,3)<<endl;
     }

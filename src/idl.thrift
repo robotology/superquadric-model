@@ -158,17 +158,43 @@ service superquadricModel_IDL
     string get_filtering_superq();
 
     /**
-    * Set the order of the median filter.
+    * Set the order of the median filter (if fixed).
     * @param m is the desired order.
     * @return true/false on success/failure.
     */
-    bool set_median_order(1:i32 m);
+    bool set_fixed_median_order(1:i32 m);
     
     /**
-    * Get the desired tolerance value of the optimization algorithm
+    * Get the order of the median filter (if fixed)
     * @return tolerance value.
     */
-    double get_median_order();
+    double get_fixed_median_order();
+
+    /**
+    * Set the maximum order of the median filter (when the object is static)
+    * @param m is the desired order.
+    * @return true/false on success/failure.
+    */
+    bool set_max_median_order(1:i32 m);
+    
+    /**
+    * Get the maximum order of the median filter (when the object is static)
+    * @return tolerance value.
+    */
+    double get_max_median_order();
+
+    /**
+    * Set the  minimum order of the median filter (when the object is moving)
+    * @param m is the desired order.
+    * @return true/false on success/failure.
+    */
+    bool set_min_median_order(1:i32 m);
+    
+    /**
+    * Get the  minimum order of the median filter (when the object is moving)
+    * @return tolerance value.
+    */
+    double get_min_median_order();
 
     /**
     * Set the desired tolerance value of the optimization algorithm
