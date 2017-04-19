@@ -113,6 +113,7 @@ protected:
     int nnThreshold;
     int numVertices;
     int median_order;
+    int min_median_order;
     int max_median_order;
     bool filter_on;
     bool fixed_window;
@@ -389,18 +390,51 @@ protected:
     }
 
     /**********************************************************************/
-    bool set_median_order(const int m)
+    bool set_fixed_median_order(const int m)
     {
         LockGuard lg(mutex);
-        median_order=m;
-        mFilter->setOrder(median_order);
+        if (fixed_window)
+        {
+            median_order=m;
+            mFilter->setOrder(median_order);
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**********************************************************************/
+    double get_fixed_median_order()
+    {
+        return median_order;
+    }
+
+    /**********************************************************************/
+    bool set_max_median_order(const int m)
+    {
+        LockGuard lg(mutex);
+        max_median_order=m;
         return true;
     }
 
     /**********************************************************************/
-    double get_median_order()
+    double get_max_median_order()
     {
         return median_order;
+    }
+
+    /**********************************************************************/
+    bool set_min_median_order(const int m)
+    {
+        LockGuard lg(mutex);
+        min_median_order=m;
+        return true;
+    }
+
+    /**********************************************************************/
+    double get_min_median_order()
+    {
+        return min_median_order;
     }
 
     /**********************************************************************/
@@ -788,6 +822,7 @@ public:
     {
         fixed_window=(rf.check("fixed_window", Value("no")).asString()=="yes");
         median_order=rf.check("median_order", Value(1)).asInt();
+        min_median_order=rf.check("min_median_order", Value(1)).asInt();
         max_median_order=rf.check("max_median_order", Value(30)).asInt();
         threshold_median=rf.check("threshold_median", Value(0.1)).asDouble();
         x.resize(11,0.0);
@@ -1386,25 +1421,14 @@ public:
         AWPolyElement el(elem_x,Time::now());
         Vector vel=PolyEst->estimate(el);
         cout<<"velocity estimate "<<PolyEst->estimate(el).toString()<<endl;
-        //cout<<"window lenght "<<(PolyEst->getWinLen()).toString()<<endl;
-        //cout<<"error "<<(PolyEst->getMSE()).toString()<<endl;
-        //Vector tmp=PolyEst->getWinLen();
-
-        /*int min;
-        min=tmp[0];
-
-        for (size_t i=0; i<tmp.size(); i++)
-        {
-            if (min> tmp[i])
-                min=tmp[i];
-        }*/
-
-        //new_median_order=min;
 
         if (norm(vel)>=0.01)
-            new_median_order=1;
+            new_median_order=min_median_order;
         else
-            new_median_order=30;
+        {
+            if (new_median_order<max_median_order)
+                new_median_order++;
+        }
 
         cout<<"new median order "<<new_median_order<<endl;
         return new_median_order;
