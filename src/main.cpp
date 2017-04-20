@@ -58,6 +58,7 @@ public:
     /*******************************************************************************/
     static vector<int>  filter(const cv::Mat &data,const double radius, const int maxResults, deque<Vector> &points)
     {
+        deque<Vector> ind;
         cv::flann::KDTreeIndexParams indexParams;
         cv::flann::Index kdtree(data,indexParams);
 
@@ -335,8 +336,8 @@ protected:
             filter_on= (entry=="on");
             if (filter_on==1)
             {
-                radius=0.0002;
-                nnThreshold=60;
+                radius=0.005;
+                nnThreshold=100;
             }
             return true;
         }
@@ -812,8 +813,8 @@ public:
     /***********************************************************************/
     bool configFilter(ResourceFinder &rf)
     {
-        radius=rf.check("radius", Value(0.0002)).asDouble();
-        nnThreshold=rf.check("nn-threshold", Value(20)).asInt();
+        radius=rf.check("radius", Value(0.005)).asDouble();
+        nnThreshold=rf.check("nn-threshold", Value(100)).asInt();
         advanced_params.push_back("filter_radius_advanced");
         advanced_params.push_back("filter_nnThreshold_advanced");
         return true;
