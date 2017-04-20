@@ -23,8 +23,8 @@ icubcontrib_set_default_prefix()
 
 find_package(IPOPT REQUIRED)
 
-set(headers   include/superquadric.h include/superqModule.h)
-set(sources src/superqModule.cpp  src/main.cpp src/superquadric.cpp)
+set(headers   include/superquadric.h include/superqModule.h include/superqComputation.h)
+set(sources src/superqModule.cpp  src/main.cpp src/superquadric.cpp src/superqComputation.cpp)
 yarp_add_idl(IDL_GEN_FILES src/idl.thrift)
 source_group("IDL Files" FILES src/idl.thrift)
 source_group("DOC Files" FILES ${PROJECT_NAME}.xml)
