@@ -115,11 +115,13 @@ protected:
     int median_order;
     int min_median_order;
     int max_median_order;
+    int new_median_order;
     bool filter_on;
     bool fixed_window;
     bool filter_superq;
     string what_to_plot;
     double threshold_median;
+    double min_norm_vel;
 
     bool mode_online;
     bool go_on;
@@ -825,7 +827,9 @@ public:
         min_median_order=rf.check("min_median_order", Value(1)).asInt();
         max_median_order=rf.check("max_median_order", Value(30)).asInt();
         threshold_median=rf.check("threshold_median", Value(0.1)).asDouble();
+        min_norm_vel=rf.check("min_norm_vel", Value(0.01)).asDouble();
         x.resize(11,0.0);
+        new_median_order=1;
         elem_x.resize(max_median_order, 0.0);
         mFilter = new MedianFilter(median_order, x);
         PolyEst =new AWLinEstimator(max_median_order, threshold_median);
@@ -1412,7 +1416,6 @@ public:
     /***********************************************************************/
     int adaptWindComputation()
     {
-        int new_median_order;
         elem_x.resize(3,0.0);
         elem_x=x.subVector(5,7);
         cout<<"elem x "<<elem_x.toString()<<endl;
@@ -1422,7 +1425,8 @@ public:
         Vector vel=PolyEst->estimate(el);
         cout<<"velocity estimate "<<PolyEst->estimate(el).toString()<<endl;
 
-        if (norm(vel)>=0.01)
+
+        if (norm(vel)>=min_norm_vel)
             new_median_order=min_median_order;
         else
         {
