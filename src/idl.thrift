@@ -90,21 +90,6 @@ service superquadricModel_IDL
     bool set_eye(1:string eye);
 
     /**
-    * Get the maximum number of points used
-    * for the superquadric reconstruction.
-    * @return the maximum number of the points.
-    */
-    i32 get_optimizer_points();
-
-    /**
-    * Set the maximum number of points used
-    * for the superquadric reconstruction.
-    * @param max is the number of points for superquadric reconstruction
-    * @return true/false on success/failur.
-    */
-    bool set_optimizer_points(1:i32 max);
-
-    /**
     * Get max number of visualized points
     * on superquadric surface.
     * @return the number of the visualized points.
@@ -129,7 +114,7 @@ service superquadricModel_IDL
     * x5, x6, x7 are the coordinate of the superquadric center and
     * x8, x9, 10 are the Euler angles, representing the superquadric orientation.
     */
-    list<double> get_superq(1:string name);
+    list<double> get_superq(1:string name, 2:bool filtered_or_not);
 
     /**
     * On/off point cloud filtering
@@ -158,76 +143,11 @@ service superquadricModel_IDL
     string get_filtering_superq();
 
     /**
-    * Set the order of the median filter (if fixed).
-    * @param m is the desired order.
-    * @return true/false on success/failure.
-    */
-    bool set_fixed_median_order(1:i32 m);
-    
-    /**
-    * Get the order of the median filter (if fixed)
-    * @return tolerance value.
-    */
-    double get_fixed_median_order();
-
-    /**
-    * Set the maximum order of the median filter (when the object is static)
-    * @param m is the desired order.
-    * @return true/false on success/failure.
-    */
-    bool set_max_median_order(1:i32 m);
-    
-    /**
-    * Get the maximum order of the median filter (when the object is static)
-    * @return tolerance value.
-    */
-    double get_max_median_order();
-
-    /**
-    * Set the  minimum order of the median filter (when the object is moving)
-    * @param m is the desired order.
-    * @return true/false on success/failure.
-    */
-    bool set_min_median_order(1:i32 m);
-    
-    /**
-    * Get the  minimum order of the median filter (when the object is moving)
-    * @return tolerance value.
-    */
-    double get_min_median_order();
-
-    /**
-    * Set the desired tolerance value of the optimization algorithm
-    * @param desired_tol is the stop tolerance of the optimization algorithm.
-    * @return true/false on success/failure.
-    */
-    bool set_tol(1:double desired_tol);
-    
-    /**
-    * Get the desired tolerance value of the optimization algorithm
-    * @return tolerance value.
-    */
-    double get_tol();
-
-    /**
-    * Set the maximum time acceptable for running the optimization algorithm.
-    * @param max_time is the maximum time acceptable for running the optimization algorithm.
-    * @return true/false on success/failure.
-    */
-    bool set_max_time(1:double max_time);
-    
-    /**
-    * Get the maximum time for running the optimization algorithm.
-    * @return maximum time.
-    */
-    double get_max_time();
-
-    /**
     * Get the advanced parameters of the module. The user must pay attention
     * in changing them.
     * @return the Property including all the advanced parameter values.
     */
-    Property get_advanced_options();
+    Property get_advanced_options(1: string field);
 
     /**
     * Set the advanced parameters of the module. The user must pay attention
@@ -236,7 +156,7 @@ service superquadricModel_IDL
     * command: ((filter_radius_advanced <radius-value>) (filter_nnThreshold_advanced <nnThreshold-value>))
     * @return true/false on success/failure
     */
-    bool set_advanced_options(1:Property options);
+    bool set_advanced_options(1:Property options, 2: string field);
 
     /**
     * Set what you want to show on the yarpview

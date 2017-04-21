@@ -19,13 +19,12 @@
 #define __MODULE_H__
 
 #include <yarp/dev/all.h>
+#include <yarp/os/all.h>
+#include <yarp/sig/all.h>
 
 #include <opencv2/opencv.hpp>
 
-#include <iCub/ctrl/filters.h>
-#include <iCub/ctrl/adaptWinPolyEstimator.h>
-
-#include "superquadric.h"
+#include "superqComputation.h"
 
 #include "src/superquadricModel_IDL.h"
 
@@ -33,16 +32,6 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::sig;
-using namespace iCub::ctrl;
-
-/*******************************************************************************/
-class SpatialDensityFilter
-{
-public:
-
-    /*******************************************************************************/
-    static vector<int>  filter(const cv::Mat &data,const double radius, const int maxResults, deque<Vector> &points);
-};
 
 /*******************************************************************************/
 class SuperqModule : public RFModule,
@@ -52,6 +41,7 @@ protected:
 
     int r,g,b;
     int count;
+    int rate;
     string objname;
     string method;
     string homeContextPath;
@@ -73,7 +63,7 @@ protected:
     int min_median_order;
     int max_median_order;
     int new_median_order;
-    bool filter_on;
+    bool filter_points;
     bool fixed_window;
     bool filter_superq;
     string what_to_plot;
@@ -85,7 +75,7 @@ protected:
     double tol, sum;
     double max_cpu_time;
     int acceptable_iter,max_iter;
-    unsigned int optimizer_points;
+    int optimizer_points;
     string mu_strategy,nlp_scaling_method;
     Vector x;
     Vector elem_x;
@@ -115,8 +105,11 @@ protected:
     deque<string> advanced_params;
     Mutex mutex;
 
-    MedianFilter *mFilter;
-    AWPolyEstimator *PolyEst;
+    SuperqComputation *superqCom;
+
+    Property filter_points_par;
+    Property filter_superq_par;
+    Property ipopt_par;
 
     /************************************************************************/
     bool attach(RpcServer &source);
@@ -145,12 +138,6 @@ protected:
     bool set_eye(const string &e);
 
     /**********************************************************************/
-    int get_optimizer_points();
-
-    /**********************************************************************/
-    bool set_optimizer_points(const int max);
-
-    /**********************************************************************/
     int get_visualized_points();
 
     /**********************************************************************/
@@ -172,40 +159,10 @@ protected:
     string get_filtering_superq();
 
     /**********************************************************************/
-    bool set_fixed_median_order(const int m);
+    Property get_advanced_options(const string &field);
 
     /**********************************************************************/
-    double get_fixed_median_order();
-
-    /**********************************************************************/
-    bool set_max_median_order(const int m);
-
-    /**********************************************************************/
-    double get_max_median_order();
-
-    /**********************************************************************/
-    bool set_min_median_order(const int m);
-
-    /**********************************************************************/
-    double get_min_median_order();
-
-    /**********************************************************************/
-    bool set_tol(const double t);
-
-    /**********************************************************************/
-    double get_tol();
-
-    /**********************************************************************/
-    bool set_max_time(const double max_t);
-
-    /**********************************************************************/
-    double get_max_time();
-
-    /**********************************************************************/
-    Property get_advanced_options();
-
-    /**********************************************************************/
-    bool set_advanced_options(const Property &newOptions);
+    bool set_advanced_options(const Property &newOptions, const string &field);
 
     /**********************************************************************/
     bool set_plot(const string &plot);
@@ -227,6 +184,7 @@ protected:
 public:
     /***********************************************************************/
     double getPeriod();
+
     /***********************************************************************/
     bool updateModule();
 
@@ -257,38 +215,12 @@ public:
     /***********************************************************************/
     bool configViewer(ResourceFinder &rf);
 
-    /***********************************************************************/
-    void acquirePointsFromBlob();
-
-    /***********************************************************************/
-    void getBlob( const PixelRgb &color);
-
-    /***********************************************************************/
-    void get3Dpoints( const PixelRgb &color);
-
-    /***********************************************************************/
-    void pointFromName();
-
-    /***********************************************************************/
-    void savePoints(const string &namefile, const Vector &colors);
 
     /***********************************************************************/
     void saveSuperq();
 
     /***********************************************************************/
     bool readPointCloud();
-
-    /***********************************************************************/
-    void filter();
-
-    /***********************************************************************/
-    bool computeSuperq();
-
-    /***********************************************************************/
-    void filterSuperq();
-
-    /***********************************************************************/
-    int adaptWindComputation();
 
     /***********************************************************************/
     bool showPoints();

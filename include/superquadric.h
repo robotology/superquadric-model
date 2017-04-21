@@ -119,7 +119,7 @@ public:
     void init();
 
     /****************************************************************/
-    void setPoints(const deque<Vector> &point_cloud, bool &mode_on, const unsigned int &optimizer_points);
+    void setPoints(const deque<Vector> &point_cloud, const unsigned int &optimizer_points);
 
     /****************************************************************/
     void configure(ResourceFinder *rf);

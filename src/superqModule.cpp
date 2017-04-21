@@ -29,40 +29,6 @@
 
 using namespace yarp::math;
 
-/*******************************************************************************/
-vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radius, const int maxResults, deque<Vector> &points)
-{
-    deque<Vector> ind;
-    cv::flann::KDTreeIndexParams indexParams;
-    cv::flann::Index kdtree(data,indexParams);
-
-    cv::Mat query(1,data.cols,CV_32F);
-    cv::Mat indices,dists;
-
-    vector<int> res(data.rows);
-
-    for (size_t i=0; i<res.size(); i++)
-    {
-        for (int c=0; c<query.cols; c++)
-            query.at<float>(0,c)=data.at<float>(i,c);
-
-        res[i]=kdtree.radiusSearch(query,indices,dists,radius,maxResults,cv::flann::SearchParams(128));
-
-        Vector point(3,0.0);
-        if (res[i]>=maxResults)
-        {
-            point[0]=data.at<float>(i,0);
-            point[1]=data.at<float>(i,1);
-            point[2]=data.at<float>(i,2);
-            points.push_back(point);
-        }
-    }
-
-    return res;
-}
-
-
-
 
 /************************************************************************/
 bool SuperqModule::attach(RpcServer &source)
@@ -80,6 +46,10 @@ bool SuperqModule::set_object_name(const string &object_name)
     yDebug()<<"file output "<<outputFileName;
     x.resize(11,0.0);
     x_filtered.resize(11,0.0);
+
+    superqCom->setPar("object_name", objname);
+    superqCom->setPar("method", method);
+
     return true;
 }
 
@@ -160,26 +130,6 @@ bool SuperqModule::set_eye(const string &e)
     }
 }
 
-/**********************************************************************/
-int SuperqModule::get_optimizer_points()
-{
-    return optimizer_points;
-}
-
-/**********************************************************************/
-bool SuperqModule::set_optimizer_points(const int max)
-{
-    if ((max>0) && (max<500))
-    {
-        LockGuard lg(mutex);
-        optimizer_points=max;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
 
 /**********************************************************************/
 int SuperqModule::get_visualized_points()
@@ -208,23 +158,20 @@ vector<double> SuperqModule::get_superq(const string &name, const string &filter
     vector<double> parameters;
     parameters.clear();
 
-    if (name==objname)
+    Vector sol=superqCom->getSolution(name, filtered_or_not);
+
+    for (size_t i=0; i<sol.size(); i++)
     {
-        for (size_t i=0; i<x.size(); i++)
-        {
-            if (filtered_or_not=="no")
-                parameters.push_back(x[i]);
-            else
-                parameters.push_back(x_filtered[i]);
-        }
-        if (mode_online)
-        {
-            if (filter_superq)
-                go_on=showSuperq(x_filtered);
-            else
-                go_on=showSuperq(x);
-        }
+            parameters.push_back(sol[i]);
     }
+//        if (mode_online)
+//        {
+//            if (filter_superq)
+//                go_on=showSuperq(x_filtered);
+//            else
+//                go_on=showSuperq(x);
+//        }
+
 
     return parameters;
 }
@@ -235,8 +182,8 @@ bool SuperqModule::set_filtering(const string &entry)
     if ((entry=="on") || (entry=="off"))
     {
         LockGuard lg(mutex);
-        filter_on= (entry=="on");
-        if (filter_on==1)
+        filter_points= (entry=="on");
+        if (filter_points==1)
         {
             radius=0.005;
             nnThreshold=100;
@@ -252,7 +199,7 @@ bool SuperqModule::set_filtering(const string &entry)
 /**********************************************************************/
 string SuperqModule::get_filtering()
 {
-    if (filter_on==1)
+    if (filter_points==1)
     {
         return "on";
     }
@@ -294,170 +241,38 @@ string SuperqModule::get_filtering_superq()
     }
 }
 
-/**********************************************************************/
-bool SuperqModule::set_fixed_median_order(const int m)
-{
-    LockGuard lg(mutex);
-    if (fixed_window)
-    {
-        median_order=m;
-        mFilter->setOrder(median_order);
-        return true;
-    }
-    else
-        return false;
-}
+
+
+
+
+
 
 /**********************************************************************/
-double SuperqModule::get_fixed_median_order()
-{
-    return median_order;
-}
-
-/**********************************************************************/
-bool SuperqModule::set_max_median_order(const int m)
-{
-    LockGuard lg(mutex);
-    max_median_order=m;
-    return true;
-}
-
-/**********************************************************************/
-double SuperqModule::get_max_median_order()
-{
-    return median_order;
-}
-
-/**********************************************************************/
-bool SuperqModule::set_min_median_order(const int m)
-{
-    LockGuard lg(mutex);
-    min_median_order=m;
-    return true;
-}
-
-/**********************************************************************/
-double SuperqModule::get_min_median_order()
-{
-    return min_median_order;
-}
-
-/**********************************************************************/
-bool SuperqModule::set_tol(const double t)
-{
-    if ((t<0.1) && (t>0.000001))
-    {
-        LockGuard lg(mutex);
-        tol=t;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-/**********************************************************************/
-double SuperqModule::get_tol()
-{
-    return tol;
-}
-
-/**********************************************************************/
-bool SuperqModule::set_max_time(const double max_t)
-{
-    if ((max_t>0.0) && (max_t<10.0))
-    {
-        LockGuard lg(mutex);
-        max_cpu_time=max_t;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-/**********************************************************************/
-double SuperqModule::get_max_time()
-{
-    return max_cpu_time;
-}
-
-/**********************************************************************/
-Property SuperqModule::get_advanced_options()
+Property SuperqModule::get_advanced_options(const string &field)
 {
     Property advOptions;
-    advOptions.put("filter_radius_advanced",radius);
-    advOptions.put("filter_nnThreshold_advanced",nnThreshold);
-    advOptions.put("IPOPT_mu_strategy",mu_strategy);
-    advOptions.put("IPOPT_nlp_scaling_method",nlp_scaling_method);
+    if (field=="points_filter")
+        advOptions=getPointsFilterPar();
+    else if (field=="superq_filter")
+        advOptions=superqCom->getSuperqFilterPar();
+    else if (field=="optimization")
+        advOptions=superqCom->getIpoptPar();
+
 
     return advOptions;
 }
 
 /**********************************************************************/
-bool SuperqModule::set_advanced_options(const Property &newOptions)
+bool SuperqModule::set_advanced_options(const Property &newOptions, const string &field)
 {
-    Bottle &groupBottle=newOptions.findGroup("filter_radius_advanced");
-    LockGuard lg(mutex);
-
-    if (!groupBottle.isNull())
-    {
-        double radiusValue=groupBottle.get(1).asDouble();
-        if ((radiusValue)>0.0000001 && (radiusValue<0.01))
-                radius=radiusValue;
-        else
-        {
-            yDebug()<<"no good radius value!";
+    if (field=="points_filter")
+        superqCom->setPointsFilterPar(newOptions);
+    else if (field=="superq_filter")
+        superqCom->setSuperqFilterPar(newOptions);
+    else if (field=="optimization")
+        superqCom->setIpoptPar(newOptions);
+    else
             return false;
-        }
-    }
-
-
-    Bottle &groupBottle2=newOptions.findGroup("filter_nnThreshold_advanced");
-    if (!groupBottle2.isNull())
-    {
-        double nnThreValue=groupBottle2.get(1).asInt();
-        if ((nnThreValue)>0 && (nnThreValue<100))
-                nnThreshold=nnThreValue;
-        else
-        {
-            yDebug()<<"no good nnThreshold value!";
-            return false;
-        }
-    }
-
-    Bottle &groupBottle3=newOptions.findGroup("IPOPT_mu_strategy");
-    if (!groupBottle3.isNull())
-    {
-        string mu_str=groupBottle3.get(1).asString().c_str();
-        if ((mu_str=="adaptive") || (mu_str=="monotone"))
-                mu_strategy=mu_str;
-        else
-        {
-            yDebug()<<"no good mu_strategy!";
-            return false;
-        }
-    }
-
-    Bottle &groupBottle4=newOptions.findGroup("IPOPT_nlp_scaling_method");
-    if (!groupBottle4.isNull())
-    {
-        string nlp=groupBottle4.get(1).asString().c_str();
-        if ((nlp=="none") || (nlp=="gradient-based"))
-               nlp_scaling_method=nlp;
-        else
-        {
-            yDebug()<<"no good mu_strategy!";
-            return false;
-        }
-    }
-
-    if ((groupBottle.isNull())&& (groupBottle2.isNull()) && (groupBottle3.isNull()) && (groupBottle4.isNull()))
-    {
-        return false;
-    }
 
     return true;
 }
@@ -528,90 +343,10 @@ bool SuperqModule::updateModule()
     t0=Time::now();
     LockGuard lg(mutex);
 
-    if (mode_online)
-    {
-        if (isStopping())
-            return false;
+    ImageOf<PixelRgb> *imgIn=portImgIn.read();
 
-        acquirePointsFromBlob();
+    superqCom->imgIn=imgIn;
 
-        if (what_to_plot=="points")
-            showPoints();
-
-        if (isStopping())
-            return false;
-
-        if ((filter_on==true) && (points.size()>0))
-        {
-            filter();
-            if (what_to_plot=="filtered-points")
-                showPoints();
-        }
-
-        if (points.size()>0)
-        {
-            yInfo()<<"number of points acquired:"<< points.size();
-            go_on=computeSuperq();
-        }
-
-        if ((go_on==false) && (points.size()>0))
-        {
-            yError("Not found a suitable superquadric! ");
-        }
-        else if (go_on==true)
-        {
-            if (filter_superq)
-                filterSuperq();
-
-            if (what_to_plot=="superq")
-            {
-                if (filter_superq)
-                    go_on=showSuperq(x_filtered);
-                else
-                    go_on=showSuperq(x);
-            }
-
-            saveSuperq();
-
-            if ((go_on==false) && (!isStopping()))
-            {
-                yError("No image available for visualization! ");
-            }
-        }
-    }
-    else
-    {
-        go_on=readPointCloud();
-
-        if ((filter_on==true) && (points.size()>0) && (go_on==true))
-            filter();
-
-        if ((go_on==false) && (!isStopping()))
-        {
-            yError("Something wrong in point cloud! ");
-            return false;
-        }
-
-        if (points.size()>0)
-        {
-            yInfo()<<"number of points received for superquadric computation:"<< points.size();
-            go_on=computeSuperq();
-        }
-
-        if ((go_on==false) && (!isStopping()))
-        {
-            yError("Not found a suitable superquadric! ");
-        }
-        else if (go_on==true)
-        {
-            if (filter_superq)
-                filterSuperq();
-
-            saveSuperq();
-        }
-
-        return (norm(x)==0.0);
-    }
 
     t=Time::now()-t0;
     return true;
@@ -624,7 +359,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
 
     config_ok=configOnOff(rf);
 
-    if (filter_on==true)
+    if (filter_points==true)
         config_ok=configFilter(rf);
     if (filter_superq==true)
         config_ok=configFilterSuperq(rf);
@@ -637,6 +372,9 @@ bool SuperqModule::configure(ResourceFinder &rf)
 
     if ((config_ok==true) && (mode_online==true))
         config_ok=configViewer(rf);
+
+    superqCom= new SuperqComputation(rate, filter_points, filter_superq,fixed_window, objname,
+                                     method,filter_points_par, filter_superq_par, ipopt_par);
 
     return config_ok;
 }
@@ -651,6 +389,7 @@ bool SuperqModule::interruptModule()
 /***********************************************************************/
 bool SuperqModule::close()
 {
+    saveSuperq();
 
     if (portBlobRpc.asPort().isOpen())
         portBlobRpc.close();
@@ -672,11 +411,8 @@ bool SuperqModule::close()
 
     GazeCtrl.close();
 
-    if (mFilter!=NULL)
-        delete mFilter;
-
-    if (PolyEst!=NULL)
-        delete PolyEst;
+    superqCom->stop();
+    delete superqCom;
 
     return true;
 }
@@ -687,6 +423,8 @@ bool SuperqModule::configOnOff(ResourceFinder &rf)
     homeContextPath=rf.getHomeContextPath().c_str();
     pointCloudFileName=rf.findFile("pointCloudFile");
     mode_online=(rf.check("online", Value("yes")).asString()=="yes");
+
+    rate=rf.check("rate", Value(100)).asInt();
 
     yDebug()<<"file points "<<pointCloudFileName;
 
@@ -705,7 +443,7 @@ bool SuperqModule::configOnOff(ResourceFinder &rf)
         yDebug()<<"file output "<<outputFileName;
     }
 
-    filter_on=(rf.check("filter_on", Value("off")).asString()=="on");
+    filter_points=(rf.check("filter_points", Value("off")).asString()=="on");
     filter_superq=(rf.check("filter_superq", Value("off")).asString()=="on");
 
     return true;
@@ -716,8 +454,10 @@ bool SuperqModule::configFilter(ResourceFinder &rf)
 {
     radius=rf.check("radius", Value(0.005)).asDouble();
     nnThreshold=rf.check("nn-threshold", Value(100)).asInt();
-    advanced_params.push_back("filter_radius_advanced");
-    advanced_params.push_back("filter_nnThreshold_advanced");
+
+    filter_points_par.put("filter_radius_advanced",radius);
+    filter_points_par.put("filter_nnThreshold_advanced",nnThreshold);
+
     return true;
 }
 
@@ -731,10 +471,13 @@ bool SuperqModule::configFilterSuperq(ResourceFinder &rf)
     threshold_median=rf.check("threshold_median", Value(0.1)).asDouble();
     min_norm_vel=rf.check("min_norm_vel", Value(0.01)).asDouble();
     x.resize(11,0.0);
-    new_median_order=1;
-    elem_x.resize(max_median_order, 0.0);
-    mFilter = new MedianFilter(median_order, x);
-    PolyEst =new AWLinEstimator(max_median_order, threshold_median);
+
+    filter_superq_par.put("median_order_advanced",median_order);
+    filter_superq_par.put("min_median_order_advanced",min_median_order);
+    filter_superq_par.put("max_median_order_advanced",max_median_order);
+    filter_superq_par.put("threshold_median_advanced",threshold_median);
+    filter_superq_par.put("min_norm_vel_advanced",min_norm_vel);
+
     return true;
 }
 
@@ -779,6 +522,15 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     nlp_scaling_method=rf.find("nlp_scaling_method").asString().c_str();
     if (rf.find("nlp_scaling_method").isNull())
         nlp_scaling_method="none";
+
+    ipopt_par.put("optimizer_points_advanced",optimizer_points);
+    ipopt_par.put("max_cpu_time_advanced", max_cpu_time);
+    ipopt_par.put("tol_advanced",tol);
+    ipopt_par.put("acceptable_iter_advanced",acceptable_iter);
+    ipopt_par.put("max_iter_advanced",max_iter);
+    ipopt_par.put("mu_strategy_advanced",mu_strategy);
+    ipopt_par.put("nlp_scaling_method_advanced",nlp_scaling_method);
+
 
     return true;
 }
@@ -853,278 +605,6 @@ bool SuperqModule::configViewer(ResourceFinder &rf)
     vis_step=10;
 
     return true;
-}
-
-/***********************************************************************/
-void SuperqModule::acquirePointsFromBlob()
-{
-    PixelRgb color(r,g,b);
-
-    if (method=="point")
-    {
-        if (contour.size()>0)
-        {
-            getBlob(color);
-
-            if (blob_points.size()>0)
-            {
-                get3Dpoints(color);
-            }
-        }
-    }
-    else if (method=="name")
-    {
-        pointFromName();
-
-        if ((contour.size()>0) )
-        {
-            getBlob(color);
-
-            if (blob_points.size()>0)
-            {
-                get3Dpoints(color);
-            }
-        }
-    }
-}
-
-/***********************************************************************/
-void SuperqModule::getBlob( const PixelRgb &color)
-{
-    Bottle cmd,reply;
-    blob_points.clear();
-    points.clear();
-    cmd.addString("get_component_around");
-    cmd.addInt(contour[0].x); cmd.addInt(contour[0].y);
-
-    if (portBlobRpc.write(cmd,reply))
-    {
-        if (Bottle *blob_list=reply.get(0).asList())
-        {
-            for (int i=0; i<blob_list->size();i++)
-            {
-                if (Bottle *blob_pair=blob_list->get(i).asList())
-                {
-                    blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt()));
-                }
-                else
-                {
-                    yError()<<"Some problems in blob pixels!";
-                }
-            }
-        }
-        else
-        {
-            yError()<<"Some problem  in object blob!";
-        }
-    }
-    else
-    {
-        points.clear();
-        yError("lbpExtract query is fail!");
-    }
-}
-
-/***********************************************************************/
-void SuperqModule::get3Dpoints( const PixelRgb &color)
-{
-    Bottle cmd,reply;
-    cmd.addString("Points");
-    count=0;
-    int count_blob=0;
-
-    ImageOf<PixelRgb> *imgIn=portImgIn.read();
-
-    for (size_t i=0; i<blob_points.size(); i++)
-    {
-        cv::Point single_point=blob_points[i];
-        cmd.addInt(single_point.x);
-        cmd.addInt(single_point.y);
-    }
-
-    if (portSFMrpc.write(cmd,reply))
-    {
-        count_blob=0;
-        for (int idx=0;idx<reply.size();idx+=3)
-        {
-            Vector point(6,0.0);
-            point[0]=reply.get(idx+0).asDouble();
-            point[1]=reply.get(idx+1).asDouble();
-            point[2]=reply.get(idx+2).asDouble();
-            count++;
-
-
-            PixelRgb px=imgIn->pixel(cmd.get(count_blob+1).asInt(),cmd.get(count_blob).asInt());
-            point[3]=px.r;
-            point[4]=px.g;
-            point[5]=px.b;
-
-            count_blob+=2;
-
-            if ((norm(point)>0))
-            {
-                points.push_back(point);
-                count=0;
-            }
-        }
-
-        if (points.size()<=0)
-        {
-            yError("Some problems in point acquisition!");
-        }
-        else
-        {
-            Vector colors(3,0.0);
-            colors[0]=255;
-            savePoints("/SFM-"+objname, colors);
-        }
-    }
-    else
-    {
-        yError("SFM reply is fail!");
-        points.clear();
-    }
-}
-
-/***********************************************************************/
-void SuperqModule::pointFromName()
-{
-    Bottle cmd,reply;
-    blob_points.clear();
-    points.clear();
-    contour.clear();
-    cmd.addVocab(Vocab::encode("ask"));
-    Bottle &content=cmd.addList();
-    Bottle &cond_1=content.addList();
-    cond_1.addString("entity");
-    cond_1.addString("==");
-    cond_1.addString("object");
-    content.addString("&&");
-    Bottle &cond_2=content.addList();
-    cond_2.addString("name");
-    cond_2.addString("==");
-    cond_2.addString(objname);
-
-    portOPCrpc.write(cmd,reply);
-    if(reply.size()>1)
-    {
-        if(reply.get(0).asVocab()==Vocab::encode("ack"))
-        {
-            if (Bottle *b=reply.get(1).asList())
-            {
-                if (Bottle *b1=b->get(1).asList())
-                {
-                    cmd.clear();
-                    int id=b1->get(0).asInt();
-                    cmd.addVocab(Vocab::encode("get"));
-                    Bottle &info=cmd.addList();
-                    Bottle &info2=info.addList();
-                    info2.addString("id");
-                    info2.addInt(id);
-                    Bottle &info3=info.addList();
-                    info3.addString("propSet");
-                    Bottle &info4=info3.addList();
-                    info4.addString("position_2d_left");
-                }
-                else
-                {
-                    yError("no object id provided by OPC!");
-                    contour.clear();
-                }
-            }
-            else
-            {
-                yError("uncorrect reply from OPC!");
-                contour.clear();
-            }
-
-            Bottle reply;
-            if (portOPCrpc.write(cmd,reply))
-            {
-
-                if (reply.size()>1)
-                {
-                    if (reply.get(0).asVocab()==Vocab::encode("ack"))
-                    {
-                        if (Bottle *b=reply.get(1).asList())
-                        {
-                            if (Bottle *b1=b->find("position_2d_left").asList())
-                            {
-                                cv::Point p1,p2,p;
-                                p1.x=b1->get(0).asInt();
-                                p1.y=b1->get(1).asInt();
-                                p2.x=b1->get(2).asInt();
-                                p2.y=b1->get(3).asInt();
-                                p.x=p1.x+(p2.x-p1.x)/2;
-                                p.y=p1.y+(p2.y-p1.y)/2;
-                                contour.push_back(p);
-                            }
-                            else
-                            {
-                                yError("position_2d_left field not found in the OPC reply!");
-                                x.resize(11,0.0);
-                                x_filtered.resize(11,0.0);
-                                contour.clear();
-                            }
-                        }
-                        else
-                        {
-                            yError("uncorrect reply structure received!");
-                            contour.clear();
-                        }
-                    }
-                    else
-                    {
-                        yError("Failure in reply for object 2D point!");
-                        contour.clear();
-                    }
-                }
-                else
-                {
-                    yError("reply size for 2D point less than 1!");
-                    contour.clear();
-                }
-            }
-            else
-                yError("no reply from second OPC query!");
-        }
-        else
-        {
-            yError("Failure in reply for object id!");
-            contour.clear();
-        }
-    }
-    else
-    {
-        yError("reply size for object id less than 1!");
-        contour.clear();
-    }
-}
-
-
-/***********************************************************************/
-void SuperqModule::savePoints(const string &namefile, const Vector &colors)
-{
-    ofstream fout;
-    fout.open((homeContextPath+namefile+".off").c_str());
-
-    if (fout.is_open())
-    {
-        fout<<"COFF"<<endl;
-        fout<<points.size()<<" 0 0"<<endl;
-        fout<<endl;
-        for (size_t i=0; i<points.size(); i++)
-        {
-            fout<<points[i].subVector(0,2).toString(3,4).c_str()<<" "<<
-                    (int)points[i][3]<<" "<<(int)points[i][4]<<" "<<(int)points[i][5]<<endl;
-        }
-
-        fout<<endl;
-    }
-    else
-        yError()<<"Some problems in opening output file!";
-
-    fout.close();
 }
 
 /***********************************************************************/
@@ -1212,133 +692,6 @@ bool SuperqModule::readPointCloud()
     return false;
 }
 
-/***********************************************************************/
-void SuperqModule::filter()
-{
-    numVertices=points.size();
-
-    cv:: Mat data(numVertices,3,CV_32F);
-
-    for (int i=0; i<numVertices; i++)
-    {
-        Vector point=points[i];
-        data.at<float>(i,0)=(float)point[0];
-        data.at<float>(i,1)=(float)point[1];
-        data.at<float>(i,2)=(float)point[2];
-    }
-
-    points.clear();
-
-    yInfo()<<"Processing points...";
-    double t0=yarp::os::Time::now();
-    SpatialDensityFilter::filter(data,radius,nnThreshold+1, points);
-    double t1=yarp::os::Time::now();
-    yInfo()<<"Processed in "<<1e3*(t1-t0)<<" [ms]";
-
-    Vector colors(3,0.0);
-    colors[1]=255;
-
-    savePoints("/filtered-"+objname, colors);
-}
-
-/***********************************************************************/
-bool SuperqModule::computeSuperq()
-{
-    Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
-    app->Options()->SetNumericValue("tol",tol);
-    app->Options()->SetIntegerValue("acceptable_iter",acceptable_iter);
-    app->Options()->SetStringValue("mu_strategy",mu_strategy);
-    app->Options()->SetIntegerValue("max_iter",max_iter);
-    app->Options()->SetNumericValue("max_cpu_time",max_cpu_time);
-    app->Options()->SetStringValue("nlp_scaling_method",nlp_scaling_method);
-    app->Options()->SetStringValue("hessian_approximation","limited-memory");
-    app->Options()->SetIntegerValue("print_level",0);
-    app->Initialize();
-
-    Ipopt::SmartPtr<SuperQuadric_NLP> superQ_nlp= new SuperQuadric_NLP;
-
-    superQ_nlp->init();
-    superQ_nlp->configure(this->rf);
-    superQ_nlp->setPoints(points, mode_online,optimizer_points);
-
-    double t0_superq=Time::now();
-
-    yDebug()<<"start IPOPT ";
-
-    Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
-
-    yDebug()<<"finish IPOPT ";
-    t_superq=Time::now()-t0_superq;
-
-    points.clear();
-
-    if (status==Ipopt::Solve_Succeeded)
-    {
-        x=superQ_nlp->get_result();
-        yInfo("Solution of the optimization problem: %s", x.toString(3,3).c_str());
-        yInfo("Execution time : %f", t_superq);
-        return true;
-    }
-    else if(status==Ipopt::Maximum_CpuTime_Exceeded)
-    {
-        x=superQ_nlp->get_result();
-        yWarning("Solution after maximum time exceeded: %s", x.toString(3,3).c_str());
-        return true;
-    }
-    else
-        return false;
-}
-
-/***********************************************************************/
-void SuperqModule::filterSuperq()
-{
-    cout<< "Filtering the last "<< median_order << " superquadrics..."<<endl;
-
-    cout<<"x "<<x.toString()<<endl;
-
-    if (fixed_window)
-        x_filtered=mFilter->filt(x);
-    else
-    {
-        int new_median_order=adaptWindComputation();
-
-        if (median_order != new_median_order)
-        {
-            median_order=new_median_order;
-            mFilter->setOrder(median_order);
-            x_filtered=mFilter->filt(x);
-        }
-
-        x_filtered=mFilter->filt(x);
-    }
-
-    cout<< "Filtered superq "<< x_filtered.toString(3,3)<<endl;
-}
-
-/***********************************************************************/
-int SuperqModule::adaptWindComputation()
-{
-    elem_x.resize(3,0.0);
-    elem_x=x.subVector(5,7);
-    cout<<"elem x "<<elem_x.toString()<<endl;
-    cout<<"old median order "<<median_order<<endl;
-
-    AWPolyElement el(elem_x,Time::now());
-    Vector vel=PolyEst->estimate(el);
-    cout<<"velocity estimate "<<PolyEst->estimate(el).toString()<<endl;
-
-
-    if (norm(vel)>=min_norm_vel)
-        new_median_order=min_median_order;
-    else
-    {
-        if (new_median_order<max_median_order)
-            new_median_order++;
-    }
-
-    cout<<"new median order "<<new_median_order<<endl;
-    return new_median_order;
-}
 
 /***********************************************************************/
 bool SuperqModule::showPoints()

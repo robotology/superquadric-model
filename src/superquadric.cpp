@@ -38,7 +38,7 @@ void SuperQuadric_NLP::init()
 }
 
 /****************************************************************/
-void SuperQuadric_NLP::setPoints(const deque<Vector> &point_cloud, bool &mode_on, const unsigned int &optimizer_points)
+void SuperQuadric_NLP::setPoints(const deque<Vector> &point_cloud, const unsigned int &optimizer_points)
 {
     if (point_cloud.size()<optimizer_points)
     {

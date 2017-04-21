@@ -15,8 +15,8 @@
  * Public License for more details
 */
 
-#ifndef __MODULE_H__
-#define __MODULE_H__
+#ifndef __COMPUTATION_H__
+#define __COMPUTATION_H__
 
 #include <yarp/dev/all.h>
 
@@ -53,9 +53,7 @@ protected:
     int count;
     string objname;
     string method;
-   // string homeContextPath;
-   // ConstString pointCloudFileName;
-   // string outputFileName;
+    ConstString pointCloudFileName;
     vector<cv::Point> contour;
     deque<Vector> points;
     deque<cv::Point> blob_points;
@@ -63,7 +61,6 @@ protected:
     RpcClient portBlobRpc;
     RpcClient portSFMrpc;
     RpcClient portOPCrpc;
-    RpcServer portRpc;
 
     double radius;
     int nnThreshold;
@@ -92,7 +89,7 @@ protected:
 
     double t_superq;
 
-    string eye;
+//    string eye;
 //    Matrix R,H,K;
 //    Vector point,point1;
 //    Vector point2D;
@@ -109,13 +106,12 @@ protected:
     Property filter_points_par;
     Property filter_superq_par;
     Property ipopt_par;
+public:
 
     ImageOf<PixelRgb> *imgIn;
-
-public:
     /***********************************************************************/
-    superqComputation(bool _filter_points, bool _filter_superq,
-                      Property &filters_points_par, Property &filters_superq_par, Property &optimizer_par);
+    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool fixed_window,string _objname, string _method,
+                      const Property &filters_points_par, const Property &filters_superq_par, const Property &optimizer_par);
     /***********************************************************************/
     void setPointsFilterPar(const Property &newOptions);
 
@@ -126,20 +122,23 @@ public:
     void setIpoptPar(const Property &newOptions);
 
     /***********************************************************************/
-    virtual bool threadInit(ImageOf<PixelRgb> *img);
+    void setPar(const string &par_name, string &value);
+
+    /***********************************************************************/
+    virtual bool threadInit();
     /***********************************************************************/
     virtual void run();
     /***********************************************************************/
     virtual void threadRelease();
 
     /***********************************************************************/
-    void acquirePointsFromBlob();
+    void acquirePointsFromBlob(ImageOf<PixelRgb> *imgIn);
 
     /***********************************************************************/
     void getBlob( const PixelRgb &color);
 
     /***********************************************************************/
-    void get3Dpoints( const PixelRgb &color);
+    void get3Dpoints(ImageOf<PixelRgb> *imgIn);
 
     /***********************************************************************/
     void pointFromName();
@@ -161,6 +160,15 @@ public:
 
     /***********************************************************************/
     int adaptWindComputation();
+
+    /***********************************************************************/
+    bool configFilterSuperq();
+
+    /***********************************************************************/
+    bool config3Dpoints();
+
+    /***********************************************************************/
+    Vector getSolution(const string &name, const string &filtered_or_not);
 };
 
 #endif

@@ -25,8 +25,6 @@
 
 #include "superqComputation.h"
 
-#include "src/superquadricModel_IDL.h"
-
 using namespace yarp::math;
 
 /*******************************************************************************/
@@ -62,12 +60,11 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 }
 
 /***********************************************************************/
-SuperqComputation::superqComputation(bool _filter_points, bool _filter_superq, bool fixed_window,
-                                Property &_filter_points_par, Property &_filter_superq_par, Property &_ipopt_par):
-                                filter_points(_filter_points), filter_superq (_filter_superq), fixed_window (_fixed_window), filter_points_par(_filter_points_par),
-                                filter_superq_par(_filter_superq_par), ipopt_par(_ipopt_par)
+SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, string _objname, string _method,
+                                const Property &_filter_points_par, const Property &_filter_superq_par, const Property &_ipopt_par):
+                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window(_fixed_window),objname(_objname), method(_method),
+                                filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate)
 {
-
 }
 
 /***********************************************************************/
@@ -98,6 +95,17 @@ void SuperqComputation::setPointsFilterPar(const Property &newOptions)
             nnThreshold=100;
         }
     }
+}
+
+/***********************************************************************/
+Property SuperqComputation::getPointsFilterPar()
+{
+    LockGuard lg(mutex);
+
+    Property advOptions;
+    advOptions.put("filter_radius_advanced",radius);
+    advOptions.put("filter_nnThreshold_advanced",nnThreshold);
+    return advOptions;
 }
 
 /***********************************************************************/
@@ -157,6 +165,20 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
 }
 
 /***********************************************************************/
+Property SuperqComputation::getSuperqFilterPar()
+{
+    LockGuard lg(mutex);
+
+    Property advOptions;
+    advOptions.put("median_order_advanced",median_order);
+    advOptions.put("min_median_order_advanced",min_median_order);
+    advOptions.put("median_order_advanced",max_median_order);
+    advOptions.put("threshold_median_advanced",threshold_median);
+    advOptions.put("min_norm_vel_advanced",min_norm_vel);
+    return advOptions;
+}
+
+/***********************************************************************/
 void SuperqComputation::setIpoptPar(const Property &newOptions)
 {
     Bottle &groupBottle=newOptions.findGroup("optimizer_points_advanced");
@@ -165,7 +187,7 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
     if (!groupBottle.isNull())
     {
         int points=groupBottle.get(1).asInt();
-        if ((mOrderValue)>=1 && (mOrderValue<=300))
+        if ((points)>=1 && (points<=300))
                 optimizer_points=points;
         else
             optimizer_points=50;
@@ -191,27 +213,27 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
             tol=1e-5;
     }
 
-    Bottle &groupBottle4=newOptions.findGroup("threshold_median_advanced");
+    Bottle &groupBottle4=newOptions.findGroup("acceptable_iter_advanced");
     if (!groupBottle4.isNull())
     {
-        double threValue=groupBottle4.get(1).asDouble();
-        if ((threValue)>0.005 && (threValue<=2.0))
-                threshold_median=threValue;
+        int accIter=groupBottle4.get(1).asInt();
+        if ((accIter)>=0 && (accIter<=100))
+                acceptable_iter=accIter;
         else
             threshold_median=0.1;
     }
 
-    Bottle &groupBottle5=newOptions.findGroup("min_norm_vel");
+    Bottle &groupBottle5=newOptions.findGroup("max_iter_advanced");
     if (!groupBottle5.isNull())
     {
-        double minNormVel=groupBottle5.get(1).asDouble();
-        if ((threValue)>0.005 && (threValue<=0.1))
-                min_norm_vel=minNormVel;
+        int maxIter=groupBottle5.get(1).asInt();
+        if ((maxIter)>1 && (maxIter<=1000))
+                max_iter=maxIter;
         else
             min_norm_vel=0.01;
     }
 
-    Bottle &groupBottle6=newOptions.findGroup("IPOPT_mu_strategy");
+    Bottle &groupBottle6=newOptions.findGroup("IPOPT_mu_strategy_advanced");
     if (!groupBottle6.isNull())
     {
         string mu_str=groupBottle6.get(1).asString().c_str();
@@ -223,7 +245,7 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
         }
     }
 
-    Bottle &groupBottle7=newOptions.findGroup("IPOPT_nlp_scaling_method");
+    Bottle &groupBottle7=newOptions.findGroup("IPOPT_nlp_scaling_method_advanced");
     if (!groupBottle7.isNull())
     {
         string nlp=groupBottle7.get(1).asString().c_str();
@@ -238,15 +260,38 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
 
 
 /***********************************************************************/
-bool SuperqComputation::threadInit(ImageOg<PixelRgb> *img)
+Property SuperqComputation::getSuperqFilterPar()
+{
+    LockGuard lg(mutex);
+
+    Property advOptions;
+    advOptions.put("optimizer_points_advanced",optimizer_points);
+    advOptions.put("max_cpu_time_advanced",max_cpu_time);
+    advOptions.put("tol_advanced",tol);
+    advOptions.put("max_iter_advanced",max_iter);
+    advOptions.put("acceptable_iter_advanced",acceptable_iter);
+    advOptions.put("IPOPT_mu_strategy_advanced",mu_strategy);
+    advOptions.put("IPOPT_nlp_scaling_method_advanced",nlp_scaling_method);
+    return advOptions;
+}
+
+/***********************************************************************/
+void SuperqComputation::setPar(const string &par_name, string &value)
+{
+    LockGuard lg(mutex);
+    if (par_name=="object_name")
+        objname=value;
+    else if (par_name=="method")
+        method=value;
+}
+
+/***********************************************************************/
+bool SuperqComputation::threadInit()
 {
     bool config_ok;
 
-    imgIn=img;
-
-    if (filter_on==true)
+    if (filter_points==true)
         setPointsFilterPar(filter_points_par);
-        //config_ok=configFilter(rf);
 
     if (filter_superq==true)
         config_ok=configFilterSuperq();
@@ -264,15 +309,9 @@ void SuperqComputation::run()
     t0=Time::now();
     LockGuard lg(mutex);
 
-    if (isStopping())
-        return false;
+    acquirePointsFromBlob(imgIn);
 
-    acquirePointsFromBlob();
-
-    if (isStopping())
-        return false;
-
-    if ((filter_on==true) && (points.size()>0))
+    if ((filter_points==true) && (points.size()>0))
     {
         filter();
     }
@@ -298,7 +337,7 @@ void SuperqComputation::run()
 }
 
 /***********************************************************************/
-bool SuperqComputation::threadRelease()
+void SuperqComputation::threadRelease()
 {
 
     if (portBlobRpc.asPort().isOpen())
@@ -310,24 +349,11 @@ bool SuperqComputation::threadRelease()
     if (portOPCrpc.asPort().isOpen())
         portOPCrpc.close();
 
-    if (portRpc.asPort().isOpen())
-        portRpc.close();
-
     if (mFilter!=NULL)
         delete mFilter;
 
     if (PolyEst!=NULL)
         delete PolyEst;
-
-    return true;
-}
-
-/***********************************************************************/
-bool SuperqComputation::configFilter()
-{
-    //advanced_params.push_back("filter_radius_advanced");
-    //advanced_params.push_back("filter_nnThreshold_advanced");
-    return true;
 }
 
 /***********************************************************************/
@@ -348,15 +374,12 @@ bool SuperqComputation::config3Dpoints()
     portBlobRpc.open("/superquadric-model/blob:rpc");
     portSFMrpc.open("/superquadric-model/SFM:rpc");
     portOPCrpc.open("/superquadric-model/OPC:rpc");
-    portRpc.open("/superquadric-model/rpc");
-
-    attach(portRpc);
 
     return true;
 }
 
 /***********************************************************************/
-void SuperqComputation::acquirePointsFromBlob()
+void SuperqComputation::acquirePointsFromBlob(ImageOf<PixelRgb>  *ImgIn)
 {
     PixelRgb color(r,g,b);
 
@@ -368,7 +391,7 @@ void SuperqComputation::acquirePointsFromBlob()
 
             if (blob_points.size()>0)
             {
-                get3Dpoints(color);
+                get3Dpoints(ImgIn);
             }
         }
     }
@@ -382,7 +405,7 @@ void SuperqComputation::acquirePointsFromBlob()
 
             if (blob_points.size()>0)
             {
-                get3Dpoints(color);
+                get3Dpoints(ImgIn);
             }
         }
     }
@@ -426,14 +449,12 @@ void SuperqComputation::getBlob( const PixelRgb &color)
 }
 
 /***********************************************************************/
-void SuperqComputation::get3Dpoints( const PixelRgb &color)
+void SuperqComputation::get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
 {
     Bottle cmd,reply;
     cmd.addString("Points");
     count=0;
     int count_blob=0;
-
-    //ImageOf<PixelRgb> *imgIn=portImgIn.read();
 
     for (size_t i=0; i<blob_points.size(); i++)
     {
@@ -606,7 +627,7 @@ void SuperqComputation::pointFromName()
 void SuperqComputation::savePoints(const string &namefile, const Vector &colors)
 {
     ofstream fout;
-    fout.open((homeContextPath+namefile+".off").c_str());
+    fout.open((namefile+".off").c_str());
 
     if (fout.is_open())
     {
@@ -730,7 +751,7 @@ bool SuperqComputation::computeSuperq()
 
     superQ_nlp->init();
     superQ_nlp->configure(this->rf);
-    superQ_nlp->setPoints(points, mode_online,optimizer_points);
+    superQ_nlp->setPoints(points, optimizer_points);
 
     double t0_superq=Time::now();
 
@@ -811,7 +832,23 @@ int SuperqComputation::adaptWindComputation()
     return new_median_order;
 }
 
-
+/***********************************************************************/
+Vector SuperqComputation::getSolution(const string &name, const string &filtered_or_not)
+{
+    LockGuard lg(mutex);
+    if (name==objname)
+    {
+        if (filtered_or_not=="no")
+            return x;
+        else
+            return x_filtered;
+    }
+    else
+    {
+        Vector zeroVect(11,0.0);
+        return zeroVect;
+    }
+}
 
 
 
