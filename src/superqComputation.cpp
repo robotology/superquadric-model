@@ -260,7 +260,7 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
 
 
 /***********************************************************************/
-Property SuperqComputation::getSuperqFilterPar()
+Property SuperqComputation::getIpoptPar()
 {
     LockGuard lg(mutex);
 
@@ -294,10 +294,10 @@ bool SuperqComputation::threadInit()
         setPointsFilterPar(filter_points_par);
 
     if (filter_superq==true)
-        config_ok=configFilterSuperq();
+        setSuperqFilterPar(filter_superq_par);
 
     if (config_ok)
-        config_ok=config3Dpoints();
+        setIpoptPar(ipopt_par);
 
     return config_ok;
 }
@@ -833,12 +833,12 @@ int SuperqComputation::adaptWindComputation()
 }
 
 /***********************************************************************/
-Vector SuperqComputation::getSolution(const string &name, const string &filtered_or_not)
+Vector SuperqComputation::getSolution(const string &name, bool filtered_or_not)
 {
     LockGuard lg(mutex);
     if (name==objname)
     {
-        if (filtered_or_not=="no")
+        if (filtered_or_not==false)
             return x;
         else
             return x_filtered;
@@ -848,6 +848,13 @@ Vector SuperqComputation::getSolution(const string &name, const string &filtered
         Vector zeroVect(11,0.0);
         return zeroVect;
     }
+}
+
+/***********************************************************************/
+void SuperqComputation::sendImg(ImageOf<PixelRgb> *Img)
+{
+    LockGuard lg(mutex);
+    imgIn=Img;
 }
 
 

@@ -153,7 +153,7 @@ bool SuperqModule::set_visualized_points(const int v)
 }
 
 /**********************************************************************/
-vector<double> SuperqModule::get_superq(const string &name, const string &filtered_or_not)
+vector<double> SuperqModule::get_superq(const string &name, bool filtered_or_not)
 {
     vector<double> parameters;
     parameters.clear();
@@ -183,7 +183,7 @@ bool SuperqModule::set_filtering(const string &entry)
     {
         LockGuard lg(mutex);
         filter_points= (entry=="on");
-        if (filter_points==1)
+        if (filter_points==true)
         {
             radius=0.005;
             nnThreshold=100;
@@ -216,7 +216,7 @@ bool SuperqModule::set_filtering_superq(const string &entry)
     {
         LockGuard lg(mutex);
         filter_superq= (entry=="on");
-        if (filter_superq==1)
+        if (filter_superq==true)
         {
             median_order=5;
         }
@@ -231,7 +231,7 @@ bool SuperqModule::set_filtering_superq(const string &entry)
 /**********************************************************************/
 string SuperqModule::get_filtering_superq()
 {
-    if (filter_superq==1)
+    if (filter_superq==true)
     {
         return "on";
     }
@@ -241,18 +241,12 @@ string SuperqModule::get_filtering_superq()
     }
 }
 
-
-
-
-
-
-
 /**********************************************************************/
 Property SuperqModule::get_advanced_options(const string &field)
 {
     Property advOptions;
     if (field=="points_filter")
-        advOptions=getPointsFilterPar();
+        advOptions=superqCom->getPointsFilterPar();
     else if (field=="superq_filter")
         advOptions=superqCom->getSuperqFilterPar();
     else if (field=="optimization")
@@ -345,7 +339,10 @@ bool SuperqModule::updateModule()
 
     ImageOf<PixelRgb> *imgIn=portImgIn.read();
 
-    superqCom->imgIn=imgIn;
+    superqCom->sendImg(imgIn);
+
+    x=superqCom->getSolution(objname,false);
+    x_filtered=superqCom->getSolution(objname,false);
 
 
     t=Time::now()-t0;
@@ -365,7 +362,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
         config_ok=configFilterSuperq(rf);
 
     if (config_ok)
-        config_ok=config3Dpoints(rf);
+        config_ok=configServices(rf);
 
     if (config_ok)
         config_ok=configSuperq(rf);
@@ -482,11 +479,8 @@ bool SuperqModule::configFilterSuperq(ResourceFinder &rf)
 }
 
 /***********************************************************************/
-bool SuperqModule::config3Dpoints(ResourceFinder &rf)
+bool SuperqModule::configServices(ResourceFinder &rf)
 {
-    portBlobRpc.open("/superquadric-model/blob:rpc");
-    portSFMrpc.open("/superquadric-model/SFM:rpc");
-    portOPCrpc.open("/superquadric-model/OPC:rpc");
     portRpc.open("/superquadric-model/rpc");
 
     attach(portRpc);

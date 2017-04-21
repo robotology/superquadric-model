@@ -144,7 +144,7 @@ protected:
     bool set_visualized_points(const int v);
 
     /**********************************************************************/
-    vector<double> get_superq(const string &name, const string &filtered_or_not);
+    vector<double> get_superq(const string &name, bool filtered_or_not);
 
     /**********************************************************************/
     bool set_filtering(const string &entry);
@@ -207,7 +207,7 @@ public:
     bool configFilterSuperq(ResourceFinder &rf);
 
     /***********************************************************************/
-    bool config3Dpoints(ResourceFinder &rf);
+    bool configServices(ResourceFinder &rf);
 
     /***********************************************************************/
     bool configSuperq(ResourceFinder &rf);

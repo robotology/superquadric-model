@@ -80,7 +80,7 @@ protected:
     double tol, sum;
     double max_cpu_time;
     int acceptable_iter,max_iter;
-    unsigned int optimizer_points;
+    int optimizer_points;
     string mu_strategy,nlp_scaling_method;
     Vector x;
     Vector elem_x;
@@ -120,6 +120,15 @@ public:
 
     /***********************************************************************/
     void setIpoptPar(const Property &newOptions);
+
+    /***********************************************************************/
+    Property getPointsFilterPar();
+
+    /***********************************************************************/
+    Property getSuperqFilterPar();
+
+    /***********************************************************************/
+    Property getIpoptPar();
 
     /***********************************************************************/
     void setPar(const string &par_name, string &value);
@@ -168,7 +177,10 @@ public:
     bool config3Dpoints();
 
     /***********************************************************************/
-    Vector getSolution(const string &name, const string &filtered_or_not);
+    void sendImg(ImageOf<PixelRgb> *Img);
+
+    /***********************************************************************/
+    Vector getSolution(const string &name, bool filtered_or_not);
 };
 
 #endif
