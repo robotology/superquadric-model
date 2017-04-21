@@ -72,6 +72,7 @@ protected:
 
     bool mode_online;
     bool go_on;
+    bool save_points;
     double tol, sum;
     double max_cpu_time;
     int acceptable_iter,max_iter;
@@ -117,7 +118,7 @@ protected:
     bool set_object_name(const string &object_name);
 
     /************************************************************************/
-    bool set_seed_point(const int &x, const int &y);
+    bool set_seed_point(const int x, const int y);
 
     /************************************************************************/
     string get_object_name();
@@ -228,8 +229,14 @@ public:
     /***********************************************************************/
     bool showSuperq(Vector &x_toshow);
 
-    /*******************************************************************************/
+    /***********************************************************************/
     Vector from3Dto2D(const Vector &point3D);
+
+    /***********************************************************************/
+    bool set_save_points(const string &entry);
+
+    /***********************************************************************/
+    string get_save_points();
 };
 
 #endif

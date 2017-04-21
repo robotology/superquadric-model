@@ -143,6 +143,19 @@ service superquadricModel_IDL
     string get_filtering_superq();
 
     /**
+    * Set if you want to save the acquired point cloud
+    *@param entry can be: "on" or "off"
+    *@return true/false on success/failure
+    */
+    bool set_save_points(1:string entry);
+
+    /**
+    * Set if you are saving the acquired point cloud
+    *@return  "on" or "off"
+    */
+    string get_save_points();
+
+    /**
     * Get the advanced parameters of the module. The user must pay attention
     * in changing them.
     * @return the Property including all the advanced parameter values.

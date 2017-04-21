@@ -51,8 +51,10 @@ protected:
 
     int r,g,b;
     int count;
+    bool save_points;
     string objname;
     string method;
+    string homeContextPath;
     ConstString pointCloudFileName;
     vector<cv::Point> contour;
     deque<Vector> points;
@@ -81,6 +83,7 @@ protected:
     double max_cpu_time;
     int acceptable_iter,max_iter;
     int optimizer_points;
+    bool bounds_automatic;
     string mu_strategy,nlp_scaling_method;
     Vector x;
     Vector elem_x;
@@ -88,13 +91,7 @@ protected:
     deque<Vector> x_window;
 
     double t_superq;
-
-//    string eye;
-//    Matrix R,H,K;
-//    Vector point,point1;
-//    Vector point2D;
-//    deque<int> Color;
-
+    
     ResourceFinder *rf;
     double t,t0;
     deque<string> advanced_params;
@@ -110,8 +107,8 @@ public:
 
     ImageOf<PixelRgb> *imgIn;
     /***********************************************************************/
-    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool fixed_window,string _objname, string _method,
-                      const Property &filters_points_par, const Property &filters_superq_par, const Property &optimizer_par);
+    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,string _objname, string _method,
+                      const Property &filters_points_par, const Property &filters_superq_par, const Property &optimizer_par, const string &_homeContextPath, bool _save_points);
     /***********************************************************************/
     void setPointsFilterPar(const Property &newOptions);
 
@@ -131,7 +128,7 @@ public:
     Property getIpoptPar();
 
     /***********************************************************************/
-    void setPar(const string &par_name, string &value);
+    void setPar(const string &par_name, const string &value);
 
     /***********************************************************************/
     virtual bool threadInit();

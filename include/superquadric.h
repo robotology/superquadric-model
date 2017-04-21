@@ -91,7 +91,7 @@ protected:
                      Ipopt::Index *jCol, Ipopt::Number *values);
 
      /****************************************************************/
-     bool readMatrix(const string &tag, Matrix &matrix, const int &dimension, ResourceFinder *rf);
+     //bool readMatrix(const string &tag, Matrix &matrix, const int &dimension, ResourceFinder *rf);
 
     /****************************************************************/
     void computeX0(Vector &x0, deque<Vector> &point_cloud);
@@ -122,7 +122,7 @@ public:
     void setPoints(const deque<Vector> &point_cloud, const unsigned int &optimizer_points);
 
     /****************************************************************/
-    void configure(ResourceFinder *rf);
+    void configure(bool bounds_aut);
 
     /****************************************************************/
     Vector get_result() const;

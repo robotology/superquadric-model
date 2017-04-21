@@ -61,9 +61,9 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 
 /***********************************************************************/
 SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, string _objname, string _method,
-                                const Property &_filter_points_par, const Property &_filter_superq_par, const Property &_ipopt_par):
-                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window(_fixed_window),objname(_objname), method(_method),
-                                filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate)
+                                const Property &_filter_points_par, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points):
+                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window(_fixed_window),objname(_objname), method(_method), save_points(_save_points),
+                                filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate), homeContextPath(_homeContextPath)
 {
 }
 
@@ -87,7 +87,7 @@ void SuperqComputation::setPointsFilterPar(const Property &newOptions)
     Bottle &groupBottle2=newOptions.findGroup("filter_nnThreshold_advanced");
     if (!groupBottle2.isNull())
     {
-        double nnThreValue=groupBottle2.get(1).asInt();
+        int nnThreValue=groupBottle2.get(1).asInt();
         if ((nnThreValue)>0 && (nnThreValue<100))
                 nnThreshold=nnThreValue;
         else
@@ -220,20 +220,20 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
         if ((accIter)>=0 && (accIter<=100))
                 acceptable_iter=accIter;
         else
-            threshold_median=0.1;
+            acceptable_iter=0;
     }
 
     Bottle &groupBottle5=newOptions.findGroup("max_iter_advanced");
     if (!groupBottle5.isNull())
     {
         int maxIter=groupBottle5.get(1).asInt();
-        if ((maxIter)>1 && (maxIter<=1000))
+        if ((maxIter)>1)
                 max_iter=maxIter;
         else
-            min_norm_vel=0.01;
+            max_iter=100;
     }
 
-    Bottle &groupBottle6=newOptions.findGroup("IPOPT_mu_strategy_advanced");
+    Bottle &groupBottle6=newOptions.findGroup("mu_strategy_advanced");
     if (!groupBottle6.isNull())
     {
         string mu_str=groupBottle6.get(1).asString().c_str();
@@ -245,7 +245,7 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
         }
     }
 
-    Bottle &groupBottle7=newOptions.findGroup("IPOPT_nlp_scaling_method_advanced");
+    Bottle &groupBottle7=newOptions.findGroup("nlp_scaling_method_advanced");
     if (!groupBottle7.isNull())
     {
         string nlp=groupBottle7.get(1).asString().c_str();
@@ -276,30 +276,45 @@ Property SuperqComputation::getIpoptPar()
 }
 
 /***********************************************************************/
-void SuperqComputation::setPar(const string &par_name, string &value)
+void SuperqComputation::setPar(const string &par_name, const string &value)
 {
     LockGuard lg(mutex);
     if (par_name=="object_name")
         objname=value;
     else if (par_name=="method")
         method=value;
+    else if (par_name=="filter_points")
+        filter_points=(value=="on");
+    else if (par_name=="filter_superq")
+        filter_superq=(value=="on");
+    else if (par_name=="save_points")
+        save_points=(value=="on");
 }
 
 /***********************************************************************/
 bool SuperqComputation::threadInit()
 {
-    bool config_ok;
+    cout<<endl<<"[SuperqComputation] thread initing ... "<<endl<<endl;
 
     if (filter_points==true)
         setPointsFilterPar(filter_points_par);
 
     if (filter_superq==true)
         setSuperqFilterPar(filter_superq_par);
+    
 
-    if (config_ok)
-        setIpoptPar(ipopt_par);
+    setIpoptPar(ipopt_par);
 
-    return config_ok;
+
+    configFilterSuperq();
+    config3Dpoints();
+
+    bounds_automatic=true;
+    
+    x.resize(11,0.00);
+    x_filtered.resize(11,0.0);
+
+    return true;
 }
 
 
@@ -326,7 +341,7 @@ void SuperqComputation::run()
     {
         yError("Not found a suitable superquadric! ");
     }
-    else if (go_on==true)
+    else if (go_on==true && norm(x)>0.0)
     {
         if (filter_superq)
             filterSuperq();
@@ -339,6 +354,7 @@ void SuperqComputation::run()
 /***********************************************************************/
 void SuperqComputation::threadRelease()
 {
+    cout<<endl<<"[SuperComputation] thread releasing ... "<<endl<<endl;
 
     if (portBlobRpc.asPort().isOpen())
         portBlobRpc.close();
@@ -359,7 +375,6 @@ void SuperqComputation::threadRelease()
 /***********************************************************************/
 bool SuperqComputation::configFilterSuperq()
 {
-    setSuperqFilterPar(filter_superq_par);
     x.resize(11,0.0);
     new_median_order=1;
     elem_x.resize(max_median_order, 0.0);
@@ -497,7 +512,11 @@ void SuperqComputation::get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
         {
             Vector colors(3,0.0);
             colors[0]=255;
-            savePoints("/SFM-"+objname, colors);
+            if (save_points)
+            {
+                cout<<endl<<"[SuperqComputation] Saving point cloud ... "<<endl<<endl;
+                savePoints("/SFM-"+objname, colors);
+            }
         }
     }
     else
@@ -627,7 +646,7 @@ void SuperqComputation::pointFromName()
 void SuperqComputation::savePoints(const string &namefile, const Vector &colors)
 {
     ofstream fout;
-    fout.open((namefile+".off").c_str());
+    fout.open((homeContextPath+namefile+".off").c_str());
 
     if (fout.is_open())
     {
@@ -750,7 +769,7 @@ bool SuperqComputation::computeSuperq()
     Ipopt::SmartPtr<SuperQuadric_NLP> superQ_nlp= new SuperQuadric_NLP;
 
     superQ_nlp->init();
-    superQ_nlp->configure(this->rf);
+    superQ_nlp->configure(bounds_automatic);
     superQ_nlp->setPoints(points, optimizer_points);
 
     double t0_superq=Time::now();
@@ -789,7 +808,9 @@ void SuperqComputation::filterSuperq()
     cout<<"x "<<x.toString()<<endl;
 
     if (fixed_window)
+    {
         x_filtered=mFilter->filt(x);
+    }
     else
     {
         int new_median_order=adaptWindComputation();

@@ -253,14 +253,14 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
  }
 
 /****************************************************************/
-void SuperQuadric_NLP::configure(ResourceFinder *rf)
+void SuperQuadric_NLP::configure(bool bounds_automatic)
 {
     bounds.resize(11,2);
 
-    bounds_automatic=(rf->check("bounds_automatic",Value("yes")).asString()=="yes");
+    //bounds_automatic=(rf->check("bounds_automatic",Value("yes")).asString()=="yes");
 
-    if (bounds_automatic==false)
-        readMatrix("bounds",bounds, 11, rf);
+    //if (bounds_automatic==false)
+     //   readMatrix("bounds",bounds, 11, rf);
 }
 
 /****************************************************************/
@@ -386,7 +386,7 @@ Matrix SuperQuadric_NLP::computeBoundingBox(deque<Vector> &points, const Vector 
 }
 
 /****************************************************************/
-bool SuperQuadric_NLP::readMatrix(const string &tag, Matrix &matrix, const int &dimension, ResourceFinder *rf)
+/*bool SuperQuadric_NLP::readMatrix(const string &tag, Matrix &matrix, const int &dimension, ResourceFinder *rf)
 {
    string tag_x=tag+"_x";
    string tag_y=tag+"_y";
