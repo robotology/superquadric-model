@@ -181,6 +181,9 @@ public:
 
     /***********************************************************************/
     Vector getSolution(const string &name, bool filtered_or_not);
+
+    /***********************************************************************/
+    void setContour(cv::Point p);
 };
 
 #endif

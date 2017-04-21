@@ -857,6 +857,13 @@ void SuperqComputation::sendImg(ImageOf<PixelRgb> *Img)
     imgIn=Img;
 }
 
+/***********************************************************************/
+void SuperqComputation::setContour(cv::Point p)
+{
+    LockGuard lg(mutex);
+    contour.push_back(p);
+}
+
 
 
 

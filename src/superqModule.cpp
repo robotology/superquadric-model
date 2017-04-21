@@ -62,10 +62,10 @@ bool SuperqModule::set_seed_point(const int &x, const int &y)
         cv::Point p;
         p.x=x;
         p.y=y;
-        yDebug()<<"file output "<<outputFileName;
-        contour.push_back(p);
+        superqCom->setContour(p);
+        method="point";
     }
-    method="point";
+
     return true;
 }
 
@@ -129,7 +129,6 @@ bool SuperqModule::set_eye(const string &e)
         return false;
     }
 }
-
 
 /**********************************************************************/
 int SuperqModule::get_visualized_points()
