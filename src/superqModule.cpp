@@ -205,20 +205,26 @@ vector<double> SuperqModule::get_superq(const string &name, bool filtered_or_not
     vector<double> parameters;
     parameters.clear();
 
-    Vector sol=superqCom->getSolution(name, filtered_or_not);
-
-    for (size_t i=0; i<sol.size(); i++)
+    if (!one_shot_mode)
     {
-            parameters.push_back(sol[i]);
-    }
-//        if (mode_online)
-//        {
-//            if (filter_superq)
-//                go_on=showSuperq(x_filtered);
-//            else
-//                go_on=showSuperq(x);
-//        }
+        Vector sol=superqCom->getSolution(name, filtered_or_not);
 
+        for (size_t i=0; i<sol.size(); i++)
+        {
+                parameters.push_back(sol[i]);
+        }
+    }
+    else
+    {
+        superqCom->threadInit();
+        superqCom->step();
+        Vector sol=superqCom->getSolution(name, filtered_or_not);
+
+        for (size_t i=0; i<sol.size(); i++)
+        {
+                parameters.push_back(sol[i]);
+        }
+    }
 
     return parameters;
 }
@@ -452,6 +458,24 @@ bool SuperqModule::get_fixed_window()
     return fixed_window;
 }
 
+/**********************************************************************/
+bool SuperqModule::set_one_shot_mode(const string &entry)
+{
+    if (entry=="on" || entry=="off")
+    {
+        one_shot_mode=(entry=="on");
+        return true;
+    }
+    else
+        return false;
+}
+
+/**********************************************************************/
+bool SuperqModule::get_one_shot_mode()
+{
+    return one_shot_mode;
+}
+
 /***********************************************************************/
 double SuperqModule::getPeriod()
 {
@@ -464,28 +488,32 @@ bool SuperqModule::updateModule()
     t0=Time::now();
     LockGuard lg(mutex);
 
-    ImageOf<PixelRgb> *imgIn=portImgIn.read();
-
-    superqCom->sendImg(imgIn);
-
-    x=superqCom->getSolution(objname,false);
-
-    x_filtered=superqCom->getSolution(objname,true);
-
-    if (visualization_on)
+    if (!one_shot_mode)
     {
-        superqVis->sendImg(imgIn);
-        if (what_to_plot=="superq")
+
+        ImageOf<PixelRgb> *imgIn=portImgIn.read();
+
+        superqCom->sendImg(imgIn);
+
+        x=superqCom->getSolution(objname,false);
+
+        x_filtered=superqCom->getSolution(objname,true);
+
+        if (visualization_on)
         {
-            if (filter_superq)
-                superqVis->sendSuperq(x_filtered);
-            else
-                superqVis->sendSuperq(x);
-        }
-        else if (what_to_plot=="points")
-        {
-            superqCom->getPoints(points);
-            superqVis->sendPoints(points);
+            superqVis->sendImg(imgIn);
+            if (what_to_plot=="superq")
+            {
+                if (filter_superq)
+                    superqVis->sendSuperq(x_filtered);
+                else
+                    superqVis->sendSuperq(x);
+            }
+            else if (what_to_plot=="points")
+            {
+                superqCom->getPoints(points);
+                superqVis->sendPoints(points);
+            }
         }
     }
 
@@ -519,20 +547,23 @@ bool SuperqModule::configure(ResourceFinder &rf)
     superqCom= new SuperqComputation(rate, filter_points, filter_superq,fixed_window, objname,
                                      method,filter_points_par, filter_superq_par, ipopt_par, homeContextPath, save_points);
 
-    bool thread_started=superqCom->start();
+    if (!one_shot_mode)
+    {
+        bool thread_started=superqCom->start();
 
-    cout<<endl;
-    if (thread_started)
-        cout<<"[SuperqComputation] thread started!"<<endl;
-    else
-        yError()<<"[SuperqComputation] problems in starting the thread!";
-    cout<<endl;
+        cout<<endl;
+        if (thread_started)
+            cout<<"[SuperqComputation] thread started!"<<endl;
+        else
+            yError()<<"[SuperqComputation] problems in starting the thread!";
+        cout<<endl;
+    }
 
     if (visualization_on)
     {
         superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot, Color, igaze, K,vis_points, vis_step);
 
-        thread_started=superqVis->start();
+        bool thread_started=superqVis->start();
 
         cout<<endl;
         if (thread_started)
@@ -559,8 +590,11 @@ bool SuperqModule::close()
     cout<<endl<<"[SuperqModule] closing ... "<<endl<<endl;
     saveSuperq();
 
-    superqCom->stop();
+    if (!one_shot_mode)
+        superqCom->stop();
+
     delete superqCom;
+
 
     if (visualization_on)
     {
@@ -594,6 +628,7 @@ bool SuperqModule::configOnOff(ResourceFinder &rf)
     homeContextPath=rf.getHomeContextPath().c_str();
     pointCloudFileName=rf.findFile("pointCloudFile");
     visualization_on=(rf.check("visualization_on", Value("yes")).asString()=="yes");
+    one_shot_mode=(rf.check("one_shot_mode", Value("no")).asString()=="yes");
     save_points=(rf.check("save_points", Value("no")).asString()=="yes");
 
     rate=rf.check("rate", Value(100)).asInt();
@@ -601,11 +636,11 @@ bool SuperqModule::configOnOff(ResourceFinder &rf)
 
     if (rf.find("pointCloudFile").isNull())
     {
-        mode_online=true;
+        //mode_online=true;
     }
     else
     {
-        mode_online=false;
+        //mode_online=false;
         outputFileName=rf.findFile("outputFile");
 
         if (rf.find("outputFile").isNull())
@@ -688,16 +723,8 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     this->rf=&rf;
     x_filtered.resize(11,0.0);
 
-    if (mode_online)
-    {
-        optimizer_points=rf.check("optimizer_points", Value(300)).asInt();
-        max_cpu_time=rf.check("max_cpu_time", Value(5.0)).asDouble();
-    }
-    else
-    {
-        optimizer_points=rf.check("optimizer_points", Value(300)).asInt();
-        max_cpu_time=rf.check("max_cpu_time", Value(10.0)).asDouble();
-    }
+    optimizer_points=rf.check("optimizer_points", Value(300)).asInt();
+    max_cpu_time=rf.check("max_cpu_time", Value(5.0)).asDouble();
 
     tol=rf.check("tol",Value(1e-5)).asDouble();
     acceptable_iter=rf.check("acceptable_iter",Value(0)).asInt();

@@ -209,6 +209,19 @@ service superquadricModel_IDL
     */
     bool get_fixed_window();
 
+    /**
+    * Set if the one-shot mode must be enabled
+    *@param entry can be "on" or "off"
+    *@return  true/false
+    */
+    bool set_one_shot_mode(1:string entry);
+
+    /**
+    * Get if the one-shot mode is enabled
+    *@return  true/false
+    */
+    bool get_one_shot_mode();
+
 }
 
 
