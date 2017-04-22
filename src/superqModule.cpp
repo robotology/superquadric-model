@@ -488,7 +488,7 @@ bool SuperqModule::updateModule()
     t0=Time::now();
     LockGuard lg(mutex);
 
-    if (!one_shot_mode)
+    if (one_shot_mode==false && mode_online==true)
     {
 
         ImageOf<PixelRgb> *imgIn=portImgIn.read();
@@ -515,6 +515,39 @@ bool SuperqModule::updateModule()
                 superqVis->sendPoints(points);
             }
         }
+    }
+
+    if (!mode_online)
+    {
+        readPointCloud();
+        superqCom->threadInit();
+        superqCom->sendPoints(points);
+
+        if ((filter_points==true) && (points.size()>0))
+        {
+            superqCom->filter();
+        }
+
+        if (points.size()>0)
+        {
+            go_on=superqCom->computeSuperq();
+        }
+
+        if ((go_on==false) && (points.size()>0))
+        {
+            yError("Not found a suitable superquadric! ");
+        }
+        else if (go_on==true && norm(x)>0.0)
+        {
+            if (filter_superq)
+                superqCom->filterSuperq();
+        }
+
+        x=superqCom->getSolution(objname, false);
+        x_filtered=superqCom->getSolution(objname, true);
+
+        return false;
+
     }
 
     t=Time::now()-t0;
@@ -547,7 +580,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
     superqCom= new SuperqComputation(rate, filter_points, filter_superq,fixed_window, objname,
                                      method,filter_points_par, filter_superq_par, ipopt_par, homeContextPath, save_points);
 
-    if (!one_shot_mode)
+    if (one_shot_mode==false && mode_online==true)
     {
         bool thread_started=superqCom->start();
 
@@ -590,7 +623,7 @@ bool SuperqModule::close()
     cout<<endl<<"[SuperqModule] closing ... "<<endl<<endl;
     saveSuperq();
 
-    if (!one_shot_mode)
+    if (one_shot_mode==false && mode_online==true)
         superqCom->stop();
 
     delete superqCom;
@@ -617,7 +650,8 @@ bool SuperqModule::close()
     if (!portImgIn.isClosed())
         portImgIn.close();
 
-    GazeCtrl.close();  
+    if (mode_online)
+        GazeCtrl.close();
 
     return true;
 }
@@ -636,11 +670,11 @@ bool SuperqModule::configOnOff(ResourceFinder &rf)
 
     if (rf.find("pointCloudFile").isNull())
     {
-        //mode_online=true;
+        mode_online=true;
     }
     else
     {
-        //mode_online=false;
+        mode_online=false;
         outputFileName=rf.findFile("outputFile");
 
         if (rf.find("outputFile").isNull())
@@ -785,48 +819,51 @@ bool SuperqModule::configViewer(ResourceFinder &rf)
         r=255; g=255; b=0;
     }
 
-    Property optionG;
-    optionG.put("device","gazecontrollerclient");
-    optionG.put("remote","/iKinGazeCtrl");
-    optionG.put("local","/superquadric-model/gaze");
+    if (mode_online)
+    {
+        Property optionG;
+        optionG.put("device","gazecontrollerclient");
+        optionG.put("remote","/iKinGazeCtrl");
+        optionG.put("local","/superquadric-model/gaze");
 
-    GazeCtrl.open(optionG);
-    igaze=NULL;
-
-
-    if (GazeCtrl.isValid())
-        GazeCtrl.view(igaze);
-    else
-        return false;
-
-    Bottle info;
-    igaze->getInfo(info);
-    K.resize(3,4);
-    K.zero();
+        GazeCtrl.open(optionG);
+        igaze=NULL;
 
 
-    Bottle *intr_par;
+        if (GazeCtrl.isValid())
+            GazeCtrl.view(igaze);
+        else
+            return false;
 
-    if (eye=="left")
-        intr_par=info.find("camera_intrinsics_left").asList();
-    else
-        intr_par=info.find("camera_intrinsics_right").asList();
+        Bottle info;
+        igaze->getInfo(info);
+        K.resize(3,4);
+        K.zero();
 
-    K(0,0)=intr_par->get(0).asDouble();
-    K(0,1)=intr_par->get(1).asDouble();
-    K(0,2)=intr_par->get(2).asDouble();
-    K(1,1)=intr_par->get(5).asDouble();
-    K(1,2)=intr_par->get(6).asDouble();
-    K(2,2)=1;
 
-    R.resize(4,4);
-    H.resize(4,4);
-    point2D.resize(2,0.0);
-    point.resize(3,0.0);
-    point1.resize(3,0.0);
+        Bottle *intr_par;
 
-    vis_points=50;
-    vis_step=10;
+        if (eye=="left")
+            intr_par=info.find("camera_intrinsics_left").asList();
+        else
+            intr_par=info.find("camera_intrinsics_right").asList();
+
+        K(0,0)=intr_par->get(0).asDouble();
+        K(0,1)=intr_par->get(1).asDouble();
+        K(0,2)=intr_par->get(2).asDouble();
+        K(1,1)=intr_par->get(5).asDouble();
+        K(1,2)=intr_par->get(6).asDouble();
+        K(2,2)=1;
+
+        R.resize(4,4);
+        H.resize(4,4);
+        point2D.resize(2,0.0);
+        point.resize(3,0.0);
+        point1.resize(3,0.0);
+
+        vis_points=50;
+        vis_step=10;
+    }
 
     return true;
 }
@@ -860,61 +897,61 @@ void SuperqModule::saveSuperq()
     fout.close();
 }
 
-///***********************************************************************/
-//bool SuperqModule::readPointCloud()
-//{
-//    ifstream pointsFile(pointCloudFileName.c_str());
-//    points.clear();
-//    int nPoints;
-//    int state=0;
-//    char line[255];
+/***********************************************************************/
+bool SuperqModule::readPointCloud()
+{
+    ifstream pointsFile(pointCloudFileName.c_str());
+    points.clear();
+    int nPoints;
+    int state=0;
+    char line[255];
 
-//    if (!pointsFile.is_open())
-//    {
-//        yError()<<"problem opening point cloud file!";
-//        return false;
-//    }
+    if (!pointsFile.is_open())
+    {
+        yError()<<"problem opening point cloud file!";
+        return false;
+    }
 
-//    while (!pointsFile.eof())
-//    {
-//        pointsFile.getline(line,sizeof(line),'\n');
-//        Bottle b(line);
-//        Value firstItem=b.get(0);
-//        bool isNumber=firstItem.isInt() || firstItem.isDouble();
+    while (!pointsFile.eof())
+    {
+        pointsFile.getline(line,sizeof(line),'\n');
+        Bottle b(line);
+        Value firstItem=b.get(0);
+        bool isNumber=firstItem.isInt() || firstItem.isDouble();
 
-//        if (state==0)
-//        {
-//            string tmp=firstItem.asString().c_str();
-//            std::transform(tmp.begin(),tmp.end(),tmp.begin(),::toupper);
-//            if (tmp=="OFF" || tmp=="COFF")
-//                state++;
-//        }
-//        else if (state==1)
-//        {
-//            if (isNumber)
-//            {
-//                nPoints=firstItem.asInt();
-//                state++;
-//            }
-//        }
-//        else if (state==2)
-//        {
-//            if (isNumber && (b.size()>=3))
-//            {
-//                Vector point(3,0.0);
-//                point[0]=b.get(0).asDouble();
-//                point[1]=b.get(1).asDouble();
-//                point[2]=b.get(2).asDouble();
-//                points.push_back(point);
+        if (state==0)
+        {
+            string tmp=firstItem.asString().c_str();
+            std::transform(tmp.begin(),tmp.end(),tmp.begin(),::toupper);
+            if (tmp=="OFF" || tmp=="COFF")
+                state++;
+        }
+        else if (state==1)
+        {
+            if (isNumber)
+            {
+                nPoints=firstItem.asInt();
+                state++;
+            }
+        }
+        else if (state==2)
+        {
+            if (isNumber && (b.size()>=3))
+            {
+                Vector point(3,0.0);
+                point[0]=b.get(0).asDouble();
+                point[1]=b.get(1).asDouble();
+                point[2]=b.get(2).asDouble();
+                points.push_back(point);
 
-//                if (--nPoints<=0)
-//                    return true;
-//            }
-//        }
-//    }
+                if (--nPoints<=0)
+                    return true;
+            }
+        }
+    }
 
-//    return false;
-//}
+    return false;
+}
 
 
 

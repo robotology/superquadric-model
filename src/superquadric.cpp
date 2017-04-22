@@ -38,7 +38,7 @@ void SuperQuadric_NLP::init()
 }
 
 /****************************************************************/
-void SuperQuadric_NLP::setPoints(const deque<Vector> &point_cloud, const unsigned int &optimizer_points)
+void SuperQuadric_NLP::setPoints(const deque<Vector> &point_cloud, const int &optimizer_points)
 {
     if (point_cloud.size()<optimizer_points)
     {
@@ -253,9 +253,11 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
  }
 
 /****************************************************************/
-void SuperQuadric_NLP::configure(bool bounds_automatic)
+void SuperQuadric_NLP::configure(bool b_automatic)
 {
     bounds.resize(11,2);
+
+    bounds_automatic=b_automatic;
 
     //bounds_automatic=(rf->check("bounds_automatic",Value("yes")).asString()=="yes");
 

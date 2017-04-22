@@ -768,6 +768,7 @@ bool SuperqComputation::computeSuperq()
 
     superQ_nlp->init();
     superQ_nlp->configure(bounds_automatic);
+
     superQ_nlp->setPoints(points, optimizer_points);
 
     double t0_superq=Time::now();
@@ -894,6 +895,18 @@ void SuperqComputation::getPoints(deque<Vector> &p)
         p.push_back(points[i]);
     }
 
+}
+
+/***********************************************************************/
+void SuperqComputation::sendPoints(deque<Vector> &p)
+{
+    LockGuard lg(mutex);
+
+    points.clear();
+    for (size_t i=0; i<p.size(); i++)
+    {
+        points.push_back(p[i]);
+    }
 }
 
 

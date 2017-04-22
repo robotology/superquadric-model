@@ -71,6 +71,7 @@ protected:
     double threshold_median;
     double min_norm_vel;
 
+    bool mode_online;
     bool one_shot_mode;
     bool visualization_on;
     bool go_on;
@@ -239,6 +240,9 @@ public:
 
     /***********************************************************************/
     string get_save_points();
+
+    /***********************************************************************/
+    bool readPointCloud();
 };
 
 #endif

@@ -119,7 +119,7 @@ public:
     void init();
 
     /****************************************************************/
-    void setPoints(const deque<Vector> &point_cloud, const unsigned int &optimizer_points);
+    void setPoints(const deque<Vector> &point_cloud, const int &optimizer_points);
 
     /****************************************************************/
     void configure(bool bounds_aut);
