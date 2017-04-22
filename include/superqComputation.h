@@ -27,7 +27,7 @@
 
 #include "superquadric.h"
 
-#include "src/superquadricModel_IDL.h"
+//#include "src/superquadricModel_IDL.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -49,7 +49,6 @@ class SuperqComputation : public RateThread
 {
 protected:
 
-    int r,g,b;
     int count;
     bool save_points;
     string objname;
@@ -77,7 +76,6 @@ protected:
     double threshold_median;
     double min_norm_vel;
 
-    // bool mode_online;
     bool go_on;
     double tol, sum;
     double max_cpu_time;
@@ -132,8 +130,10 @@ public:
 
     /***********************************************************************/
     virtual bool threadInit();
+
     /***********************************************************************/
     virtual void run();
+
     /***********************************************************************/
     virtual void threadRelease();
 
@@ -141,7 +141,7 @@ public:
     void acquirePointsFromBlob(ImageOf<PixelRgb> *imgIn);
 
     /***********************************************************************/
-    void getBlob( const PixelRgb &color);
+    void getBlob();
 
     /***********************************************************************/
     void get3Dpoints(ImageOf<PixelRgb> *imgIn);
@@ -181,6 +181,9 @@ public:
 
     /***********************************************************************/
     void setContour(cv::Point p);
+
+    /***********************************************************************/
+    void getPoints(deque<Vector> &p);
 };
 
 #endif

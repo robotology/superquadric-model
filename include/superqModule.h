@@ -25,6 +25,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "superqComputation.h"
+#include "superqVisualization.h"
 
 #include "src/superquadricModel_IDL.h"
 
@@ -41,7 +42,7 @@ protected:
 
     int r,g,b;
     int count;
-    int rate;
+    int rate, rate_vis;
     string objname;
     string method;
     string homeContextPath;
@@ -71,6 +72,7 @@ protected:
     double min_norm_vel;
 
     bool mode_online;
+    bool visualization_on;
     bool go_on;
     bool save_points;
     double tol, sum;
@@ -107,6 +109,7 @@ protected:
     Mutex mutex;
 
     SuperqComputation *superqCom;
+    SuperqVisualization *superqVis;
 
     Property filter_points_par;
     Property filter_superq_par;
@@ -131,6 +134,12 @@ protected:
 
     /**********************************************************************/
     bool set_color(const int red, const int green, const int blue);
+
+    /**********************************************************************/
+    string get_visualization_on();
+
+    /**********************************************************************/
+    bool set_visualization_on(const string &e);
 
     /**********************************************************************/
     string get_eye();
@@ -216,21 +225,8 @@ public:
     /***********************************************************************/
     bool configViewer(ResourceFinder &rf);
 
-
     /***********************************************************************/
     void saveSuperq();
-
-    /***********************************************************************/
-    bool readPointCloud();
-
-    /***********************************************************************/
-    bool showPoints();
-
-    /***********************************************************************/
-    bool showSuperq(Vector &x_toshow);
-
-    /***********************************************************************/
-    Vector from3Dto2D(const Vector &point3D);
 
     /***********************************************************************/
     bool set_save_points(const string &entry);

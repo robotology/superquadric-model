@@ -396,13 +396,11 @@ bool SuperqComputation::config3Dpoints()
 /***********************************************************************/
 void SuperqComputation::acquirePointsFromBlob(ImageOf<PixelRgb>  *ImgIn)
 {
-    PixelRgb color(r,g,b);
-
     if (method=="point")
     {
         if (contour.size()>0)
         {
-            getBlob(color);
+            getBlob();
 
             if (blob_points.size()>0)
             {
@@ -416,7 +414,7 @@ void SuperqComputation::acquirePointsFromBlob(ImageOf<PixelRgb>  *ImgIn)
 
         if ((contour.size()>0) )
         {
-            getBlob(color);
+            getBlob();
 
             if (blob_points.size()>0)
             {
@@ -427,7 +425,7 @@ void SuperqComputation::acquirePointsFromBlob(ImageOf<PixelRgb>  *ImgIn)
 }
 
 /***********************************************************************/
-void SuperqComputation::getBlob( const PixelRgb &color)
+void SuperqComputation::getBlob()
 {
     Bottle cmd,reply;
     blob_points.clear();
@@ -883,6 +881,19 @@ void SuperqComputation::setContour(cv::Point p)
 {
     LockGuard lg(mutex);
     contour.push_back(p);
+}
+
+/***********************************************************************/
+void SuperqComputation::getPoints(deque<Vector> &p)
+{
+    LockGuard lg(mutex);
+
+    p.clear();
+    for (size_t i=0; i<points.size(); i++)
+    {
+        p.push_back(points[i]);
+    }
+
 }
 
 
