@@ -213,16 +213,12 @@ vector<double> SuperqModule::get_superq(const string &name, bool filtered_or_not
     Vector sol(11,0.0);
     sol=superqCom->getSolution(name, filtered_or_not);
 
-
-
     for (size_t i=0; i<sol.size(); i++)
     {
             parameters.push_back(sol[i]);
     }
 
-
     superqCom->resume();
-
 
     return parameters;
 }
