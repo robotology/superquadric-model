@@ -32,28 +32,11 @@ service superquadricModel_IDL
     bool set_object_name(1:string entry);
 
     /**
-    * Get the seed point of the object
-    * without using the name object.
-    * @param x_pixel is the x pixel value of the object seed point.
-    * @param y_pixel is the x pixel value of the object seed point.
-    * return true/false on success/failure.
-    */
-    bool set_seed_point(1:i32 x_pixel, 2:i32 y_pixel);
-
-    /**
     * Return the name of the object that is
     * being detected and modeled.
     * @return the name of the object.
     */
     string get_object_name();
-
-    /**
-    * Say which method is set for getting
-    * blob.
-    * @return "name" if you have to type the name
-    * "point" if you have to click on the camera.
-    */
-    string get_method();
 
     /**
     * Get RGB values

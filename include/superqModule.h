@@ -44,7 +44,6 @@ protected:
     int count;
     int rate, rate_vis;
     string objname;
-    string method;
     string homeContextPath;
     ConstString pointCloudFileName;
     string outputFileName;
@@ -123,13 +122,7 @@ protected:
     bool set_object_name(const string &object_name);
 
     /************************************************************************/
-    bool set_seed_point(const int x, const int y);
-
-    /************************************************************************/
     string get_object_name();
-
-    /************************************************************************/
-    string get_method();
 
     /************************************************************************/
     vector<int> get_color();

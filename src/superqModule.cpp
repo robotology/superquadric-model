@@ -41,30 +41,12 @@ bool SuperqModule::set_object_name(const string &object_name)
 {
     LockGuard lg(mutex);
     objname=object_name;
-    method="name";
     outputFileName=homeContextPath+"/"+objname+".txt";
     yDebug()<<"file output "<<outputFileName;
     x.resize(11,0.0);
     x_filtered.resize(11,0.0);
 
     superqCom->setPar("object_name", objname);
-    superqCom->setPar("method", method);
-
-    return true;
-}
-
-/************************************************************************/
-bool SuperqModule::set_seed_point(const int x, const int y)
-{
-    if ((x>0) && (y>0))
-    {
-        LockGuard lg(mutex);
-        cv::Point p;
-        p.x=x;
-        p.y=y;
-        superqCom->setContour(p);
-        method="point";
-    }
 
     return true;
 }
@@ -73,12 +55,6 @@ bool SuperqModule::set_seed_point(const int x, const int y)
 string SuperqModule::get_object_name()
 {
     return objname;
-}
-
-/************************************************************************/
-string SuperqModule::get_method()
-{
-    return method;
 }
 
 /************************************************************************/
@@ -580,7 +556,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
         config_ok=configViewer(rf);
 
     superqCom= new SuperqComputation(rate, filter_points, filter_superq,fixed_window, objname,
-                                     method, threshold_median,filter_points_par, filter_superq_par, ipopt_par, homeContextPath, save_points);
+                                     threshold_median,filter_points_par, filter_superq_par, ipopt_par, homeContextPath, save_points);
 
     if (mode_online==true)
     {

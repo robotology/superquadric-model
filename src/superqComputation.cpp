@@ -60,9 +60,9 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 }
 
 /***********************************************************************/
-SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, string _objname, string _method, double _threshold_median,
+SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, string _objname, double _threshold_median,
                                 const Property &_filter_points_par, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points):
-                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window(_fixed_window),objname(_objname), method(_method), threshold_median(_threshold_median), save_points(_save_points),
+                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window(_fixed_window),objname(_objname),  threshold_median(_threshold_median), save_points(_save_points),
                                 filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate), homeContextPath(_homeContextPath)
 {
 }
@@ -281,8 +281,6 @@ void SuperqComputation::setPar(const string &par_name, const string &value)
     LockGuard lg(mutex);
     if (par_name=="object_name")
         objname=value;
-    else if (par_name=="method")
-        method=value;
     else if (par_name=="filter_points")
         filter_points=(value=="on");
     else if (par_name=="filter_superq")
@@ -389,7 +387,7 @@ bool SuperqComputation::config3Dpoints()
 {
     portBlobRpc.open("/superquadric-model/blob:rpc");
     portSFMrpc.open("/superquadric-model/SFM:rpc");
-    portOPCrpc.open("/superquadric-model/OPC:rpc");
+    //portOPCrpc.open("/superquadric-model/OPC:rpc");
 
     return true;
 }
@@ -397,31 +395,11 @@ bool SuperqComputation::config3Dpoints()
 /***********************************************************************/
 void SuperqComputation::acquirePointsFromBlob(ImageOf<PixelRgb>  *ImgIn)
 {
-    if (method=="point")
+    getBlob();
+
+    if (blob_points.size()>0)
     {
-        if (contour.size()>0)
-        {
-            getBlob();
-
-            if (blob_points.size()>0)
-            {
-                get3Dpoints(ImgIn);
-            }
-        }
-    }
-    else if (method=="name")
-    {
-        pointFromName();
-
-        if ((contour.size()>0) )
-        {
-            getBlob();
-
-            if (blob_points.size()>0)
-            {
-                get3Dpoints(ImgIn);
-            }
-        }
+        get3Dpoints(ImgIn);
     }
 }
 
@@ -431,8 +409,7 @@ void SuperqComputation::getBlob()
     Bottle cmd,reply;
     blob_points.clear();
     points.clear();
-    cmd.addString("get_component_around");
-    cmd.addInt(contour[0].x); cmd.addInt(contour[0].y);
+    cmd.addString("get_blob");
 
     if (portBlobRpc.write(cmd,reply))
     {
@@ -458,7 +435,7 @@ void SuperqComputation::getBlob()
     else
     {
         points.clear();
-        yError("lbpExtract query is fail!");
+        yError("2D blob query is fail!");
     }
 }
 
@@ -525,120 +502,120 @@ void SuperqComputation::get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
     }
 }
 
-/***********************************************************************/
-void SuperqComputation::pointFromName()
-{
-    Bottle cmd,reply;
-    blob_points.clear();
-    points.clear();
-    contour.clear();
-    cmd.addVocab(Vocab::encode("ask"));
-    Bottle &content=cmd.addList();
-    Bottle &cond_1=content.addList();
-    cond_1.addString("entity");
-    cond_1.addString("==");
-    cond_1.addString("object");
-    content.addString("&&");
-    Bottle &cond_2=content.addList();
-    cond_2.addString("name");
-    cond_2.addString("==");
-    cond_2.addString(objname);
+///***********************************************************************/
+//void SuperqComputation::pointFromName()
+//{
+//    Bottle cmd,reply;
+//    blob_points.clear();
+//    points.clear();
+//    contour.clear();
+//    cmd.addVocab(Vocab::encode("ask"));
+//    Bottle &content=cmd.addList();
+//    Bottle &cond_1=content.addList();
+//    cond_1.addString("entity");
+//    cond_1.addString("==");
+//    cond_1.addString("object");
+//    content.addString("&&");
+//    Bottle &cond_2=content.addList();
+//    cond_2.addString("name");
+//    cond_2.addString("==");
+//    cond_2.addString(objname);
 
-    portOPCrpc.write(cmd,reply);
-    if(reply.size()>1)
-    {
-        if(reply.get(0).asVocab()==Vocab::encode("ack"))
-        {
-            if (Bottle *b=reply.get(1).asList())
-            {
-                if (Bottle *b1=b->get(1).asList())
-                {
-                    cmd.clear();
-                    int id=b1->get(0).asInt();
-                    cmd.addVocab(Vocab::encode("get"));
-                    Bottle &info=cmd.addList();
-                    Bottle &info2=info.addList();
-                    info2.addString("id");
-                    info2.addInt(id);
-                    Bottle &info3=info.addList();
-                    info3.addString("propSet");
-                    Bottle &info4=info3.addList();
-                    info4.addString("position_2d_left");
-                }
-                else
-                {
-                    yError("no object id provided by OPC!");
-                    contour.clear();
-                }
-            }
-            else
-            {
-                yError("uncorrect reply from OPC!");
-                contour.clear();
-            }
+//    portOPCrpc.write(cmd,reply);
+//    if(reply.size()>1)
+//    {
+//        if(reply.get(0).asVocab()==Vocab::encode("ack"))
+//        {
+//            if (Bottle *b=reply.get(1).asList())
+//            {
+//                if (Bottle *b1=b->get(1).asList())
+//                {
+//                    cmd.clear();
+//                    int id=b1->get(0).asInt();
+//                    cmd.addVocab(Vocab::encode("get"));
+//                    Bottle &info=cmd.addList();
+//                    Bottle &info2=info.addList();
+//                    info2.addString("id");
+//                    info2.addInt(id);
+//                    Bottle &info3=info.addList();
+//                    info3.addString("propSet");
+//                    Bottle &info4=info3.addList();
+//                    info4.addString("position_2d_left");
+//                }
+//                else
+//                {
+//                    yError("no object id provided by OPC!");
+//                    contour.clear();
+//                }
+//            }
+//            else
+//            {
+//                yError("uncorrect reply from OPC!");
+//                contour.clear();
+//            }
 
-            Bottle reply;
-            if (portOPCrpc.write(cmd,reply))
-            {
+//            Bottle reply;
+//            if (portOPCrpc.write(cmd,reply))
+//            {
 
-                if (reply.size()>1)
-                {
-                    if (reply.get(0).asVocab()==Vocab::encode("ack"))
-                    {
-                        if (Bottle *b=reply.get(1).asList())
-                        {
-                            if (Bottle *b1=b->find("position_2d_left").asList())
-                            {
-                                cv::Point p1,p2,p;
-                                p1.x=b1->get(0).asInt();
-                                p1.y=b1->get(1).asInt();
-                                p2.x=b1->get(2).asInt();
-                                p2.y=b1->get(3).asInt();
-                                p.x=p1.x+(p2.x-p1.x)/2;
-                                p.y=p1.y+(p2.y-p1.y)/2;
-                                contour.push_back(p);
-                            }
-                            else
-                            {
-                                yError("position_2d_left field not found in the OPC reply!");
-                                x.resize(11,0.0);
-                                x_filtered.resize(11,0.0);
-                                contour.clear();
-                            }
-                        }
-                        else
-                        {
-                            yError("uncorrect reply structure received!");
-                            contour.clear();
-                        }
-                    }
-                    else
-                    {
-                        yError("Failure in reply for object 2D point!");
-                        contour.clear();
-                    }
-                }
-                else
-                {
-                    yError("reply size for 2D point less than 1!");
-                    contour.clear();
-                }
-            }
-            else
-                yError("no reply from second OPC query!");
-        }
-        else
-        {
-            yError("Failure in reply for object id!");
-            contour.clear();
-        }
-    }
-    else
-    {
-        yError("reply size for object id less than 1!");
-        contour.clear();
-    }
-}
+//                if (reply.size()>1)
+//                {
+//                    if (reply.get(0).asVocab()==Vocab::encode("ack"))
+//                    {
+//                        if (Bottle *b=reply.get(1).asList())
+//                        {
+//                            if (Bottle *b1=b->find("position_2d_left").asList())
+//                            {
+//                                cv::Point p1,p2,p;
+//                                p1.x=b1->get(0).asInt();
+//                                p1.y=b1->get(1).asInt();
+//                                p2.x=b1->get(2).asInt();
+//                                p2.y=b1->get(3).asInt();
+//                                p.x=p1.x+(p2.x-p1.x)/2;
+//                                p.y=p1.y+(p2.y-p1.y)/2;
+//                                contour.push_back(p);
+//                            }
+//                            else
+//                            {
+//                                yError("position_2d_left field not found in the OPC reply!");
+//                                x.resize(11,0.0);
+//                                x_filtered.resize(11,0.0);
+//                                contour.clear();
+//                            }
+//                        }
+//                        else
+//                        {
+//                            yError("uncorrect reply structure received!");
+//                            contour.clear();
+//                        }
+//                    }
+//                    else
+//                    {
+//                        yError("Failure in reply for object 2D point!");
+//                        contour.clear();
+//                    }
+//                }
+//                else
+//                {
+//                    yError("reply size for 2D point less than 1!");
+//                    contour.clear();
+//                }
+//            }
+//            else
+//                yError("no reply from second OPC query!");
+//        }
+//        else
+//        {
+//            yError("Failure in reply for object id!");
+//            contour.clear();
+//        }
+//    }
+//    else
+//    {
+//        yError("reply size for object id less than 1!");
+//        contour.clear();
+//    }
+//}
 
 
 /***********************************************************************/

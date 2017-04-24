@@ -52,7 +52,6 @@ protected:
     int count;
     bool save_points;
     string objname;
-    string method;
     string homeContextPath;
     ConstString pointCloudFileName;
     vector<cv::Point> contour;
@@ -106,7 +105,7 @@ public:
 
     ImageOf<PixelRgb> *imgIn;
     /***********************************************************************/
-    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,string _objname, string _method, double _threshold_median,
+    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,string _objname, double _threshold_median,
                       const Property &filters_points_par, const Property &filters_superq_par, const Property &optimizer_par, const string &_homeContextPath, bool _save_points);
     /***********************************************************************/
     void setPointsFilterPar(const Property &newOptions);
