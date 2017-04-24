@@ -15,6 +15,13 @@ struct Property
    yarp.includefile="yarp/os/Property.h"
   )
 
+struct Vector
+{
+} (
+   yarp.name = "yarp::sig::Vector"
+   yarp.includefile="yarp/sig/Vector.h"
+  )
+
 /**
 * superquadricModel_IDL
 *
@@ -97,7 +104,19 @@ service superquadricModel_IDL
     * x5, x6, x7 are the coordinate of the superquadric center and
     * x8, x9, 10 are the Euler angles, representing the superquadric orientation.
     */
-    Property get_superq(1:string name, 2:bool filtered_or_not);
+    Property get_superq_old(1:string name, 2:bool filtered_or_not);
+
+    /**
+    * Get the parameters of the reconstructed
+    * superquadric 
+    * @param name of the object of which we want the superquadric
+    * @return the 11 parameters (x0, .. x10) of the current superquadric. 
+    * In particular, x0, x1, x2 are the three semi-axes lenghts,
+    * x3 and x4 are the exponents, responsible for the superquadric shape.
+    * x5, x6, x7 are the coordinate of the superquadric center and
+    * x8, x9, 10 are the Euler angles, representing the superquadric orientation.
+    */
+    Property get_superq(1:list<Vector> blob, 2:bool filtered_or_not);
 
     /**
     * On/off point cloud filtering

@@ -58,9 +58,9 @@ protected:
     deque<Vector> points;
     deque<cv::Point> blob_points;
 
-    RpcClient portBlobRpc;
     RpcClient portSFMrpc;
-    RpcClient portOPCrpc;
+
+    BufferedPort<Bottle> blobPort;
 
     double radius;
     int nnThreshold;
@@ -77,6 +77,7 @@ protected:
     double min_norm_vel;
 
     bool go_on;
+    bool one_shot;
     double tol, sum;
     double max_cpu_time;
     int acceptable_iter,max_iter;
@@ -177,7 +178,10 @@ public:
     void sendImg(ImageOf<PixelRgb> *Img);
 
     /***********************************************************************/
-    Vector getSolution(const string &name, bool filtered_or_not);
+    Vector getSolution( const string &name, bool filtered_or_not);
+
+    /***********************************************************************/
+    Vector getSolution( bool filtered_or_not);
 
     /***********************************************************************/
     void setContour(cv::Point p);
@@ -187,6 +191,9 @@ public:
 
     /***********************************************************************/
     void sendPoints(deque<Vector> &p);
+
+    /***********************************************************************/
+    void sendBlobPoints(const vector<Vector> &p);
 };
 
 #endif

@@ -289,6 +289,8 @@ void SuperqComputation::setPar(const string &par_name, const string &value)
         fixed_window=(value=="on");
     else if (par_name=="save_points")
         save_points=(value=="on");
+    else if (par_name=="one_shot")
+        one_shot=(value=="true");
 }
 
 /***********************************************************************/
@@ -310,6 +312,7 @@ bool SuperqComputation::threadInit()
     config3Dpoints();
 
     bounds_automatic=true;
+    one_shot=false;
     
     x.resize(11,0.00);
     x_filtered.resize(11,0.0);
@@ -353,14 +356,11 @@ void SuperqComputation::threadRelease()
 {
     cout<<endl<<"[SuperComputation] thread releasing ... "<<endl<<endl;
 
-    if (portBlobRpc.asPort().isOpen())
-        portBlobRpc.close();
-
     if (portSFMrpc.asPort().isOpen())
         portSFMrpc.close();
 
-    if (portOPCrpc.asPort().isOpen())
-        portOPCrpc.close();
+    if (!blobPort.isClosed())
+        blobPort.close();
 
     if (mFilter!=NULL)
         delete mFilter;
@@ -385,9 +385,8 @@ bool SuperqComputation::configFilterSuperq()
 /***********************************************************************/
 bool SuperqComputation::config3Dpoints()
 {
-    portBlobRpc.open("/superquadric-model/blob:rpc");
+    blobPort.open("/superquadric-model/blob:i");
     portSFMrpc.open("/superquadric-model/SFM:rpc");
-    //portOPCrpc.open("/superquadric-model/OPC:rpc");
 
     return true;
 }
@@ -395,7 +394,8 @@ bool SuperqComputation::config3Dpoints()
 /***********************************************************************/
 void SuperqComputation::acquirePointsFromBlob(ImageOf<PixelRgb>  *ImgIn)
 {
-    getBlob();
+    if (!one_shot)
+        getBlob();
 
     if (blob_points.size()>0)
     {
@@ -406,15 +406,18 @@ void SuperqComputation::acquirePointsFromBlob(ImageOf<PixelRgb>  *ImgIn)
 /***********************************************************************/
 void SuperqComputation::getBlob()
 {
-    Bottle cmd,reply;
-    blob_points.clear();
+    Bottle *reply;   
     points.clear();
-    cmd.addString("get_blob");
+    
+    
+    reply=blobPort.read(false);   
 
-    if (portBlobRpc.write(cmd,reply))
-    {
-        if (Bottle *blob_list=reply.get(0).asList())
+    if (reply!=NULL)
+    {  
+        blob_points.clear();   
+        if (Bottle *blob_list=reply->get(0).asList())
         {
+            cout<<"blob size "<<blob_list->size()<<endl;
             for (int i=0; i<blob_list->size();i++)
             {
                 if (Bottle *blob_pair=blob_list->get(i).asList())
@@ -434,8 +437,8 @@ void SuperqComputation::getBlob()
     }
     else
     {
-        points.clear();
-        yError("2D blob query is fail!");
+       
+        yError("2D blob not received!");
     }
 }
 
@@ -454,9 +457,11 @@ void SuperqComputation::get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
         cmd.addInt(single_point.y);
     }
 
+
     if (portSFMrpc.write(cmd,reply))
     {
         count_blob=0;
+
         for (int idx=0;idx<reply.size();idx+=3)
         {
             Vector point(6,0.0);
@@ -465,11 +470,10 @@ void SuperqComputation::get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
             point[2]=reply.get(idx+2).asDouble();
             count++;
 
-
-            PixelRgb px=imgIn->pixel(cmd.get(count_blob+1).asInt(),cmd.get(count_blob).asInt());
+            /*PixelRgb px=imgIn->pixel(cmd.get(count_blob+1).asInt(),cmd.get(count_blob).asInt());
             point[3]=px.r;
             point[4]=px.g;
-            point[5]=px.b;
+            point[5]=px.b;*/
 
             count_blob+=2;
 
@@ -494,6 +498,7 @@ void SuperqComputation::get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
                 savePoints("/SFM-"+objname, colors);
             }
         }
+
     }
     else
     {
@@ -854,6 +859,17 @@ Vector SuperqComputation::getSolution(const string &name, bool filtered_or_not)
 }
 
 /***********************************************************************/
+Vector SuperqComputation::getSolution(bool filtered_or_not)
+{
+    LockGuard lg(mutex);
+
+    if (filtered_or_not==false)
+        return x;
+    else
+        return x_filtered;
+}
+
+/***********************************************************************/
 void SuperqComputation::sendImg(ImageOf<PixelRgb> *Img)
 {
     LockGuard lg(mutex);
@@ -892,6 +908,20 @@ void SuperqComputation::sendPoints(deque<Vector> &p)
     }
 }
 
+/***********************************************************************/
+void SuperqComputation::sendBlobPoints(const vector<Vector> &p)
+{
+    LockGuard lg(mutex);
+
+    blob_points.clear();
+    //for (std::list<Vector>::iterator i=p.begin(); i != p.end(); ++i)
+    for (size_t i=0; i<p.size(); i++)
+    {
+        //Vector tmp=*i;    
+        Vector tmp=p[i];
+        blob_points.push_back(cv::Point(tmp[0],tmp[1]));
+    }
+}
 
 
 

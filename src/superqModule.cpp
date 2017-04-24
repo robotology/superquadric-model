@@ -176,7 +176,7 @@ bool SuperqModule::set_visualized_points(const int v)
 }
 
 /**********************************************************************/
-Property SuperqModule::get_superq(const string &name, bool filtered_or_not)
+Property SuperqModule::get_superq_old(const string &name, bool filtered_or_not)
 {
     Property superq;
 
@@ -208,6 +208,50 @@ Property SuperqModule::get_superq(const string &name, bool filtered_or_not)
 
 
     superqCom->resume();
+
+    return superq;
+}
+
+/**********************************************************************/
+Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_or_not)
+{
+    Property superq;
+
+    //superqCom->suspend();
+
+    superqCom->sendBlobPoints(blob);
+
+    superqCom->setPar("one_shot", "true");
+
+    superqCom->step();
+
+    Vector sol(11,0.0);
+    sol=superqCom->getSolution(filtered_or_not);
+
+    superqCom->setPar("one_shot", "false");
+    vector<Vector> blob_empty;
+
+    superqCom->sendBlobPoints(blob_empty);
+
+    Bottle bottle;
+    Bottle &b1=bottle.addList();
+    b1.addDouble(sol[0]); b1.addDouble(sol[1]); b1.addDouble(sol[2]);
+    superq.put("dimensions", bottle.get(0));
+
+    Bottle &b2=bottle.addList();
+    b2.addDouble(sol[3]); b2.addDouble(sol[4]);
+    superq.put("exponents", bottle.get(1));
+
+    Bottle &b3=bottle.addList();
+    b3.addDouble(sol[5]); b3.addDouble(sol[6]); b3.addDouble(sol[7]);
+    superq.put("center", bottle.get(2));
+
+    Bottle &b4=bottle.addList();
+    Vector orient=dcm2axis(euler2dcm(sol.subVector(8,10)));
+    b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
+    superq.put("orientation", bottle.get(3));
+
+    //superqCom->resume();
 
     return superq;
 }
