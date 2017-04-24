@@ -200,10 +200,9 @@ bool SuperqModule::set_visualized_points(const int v)
 }
 
 /**********************************************************************/
-vector<double> SuperqModule::get_superq(const string &name, bool filtered_or_not)
+Property SuperqModule::get_superq(const string &name, bool filtered_or_not)
 {
-    vector<double> parameters;
-    parameters.clear();
+    Property superq;
 
     superqCom->setPar("object_name", name);
     superqCom->suspend();
@@ -213,14 +212,28 @@ vector<double> SuperqModule::get_superq(const string &name, bool filtered_or_not
     Vector sol(11,0.0);
     sol=superqCom->getSolution(name, filtered_or_not);
 
-    for (size_t i=0; i<sol.size(); i++)
-    {
-            parameters.push_back(sol[i]);
-    }
+    Bottle bottle;
+    Bottle &b1=bottle.addList();
+    b1.addDouble(sol[0]); b1.addDouble(sol[1]); b1.addDouble(sol[2]);
+    superq.put("dimensions", bottle.get(0));
+
+    Bottle &b2=bottle.addList();
+    b2.addDouble(sol[3]); b2.addDouble(sol[4]);
+    superq.put("exponents", bottle.get(1));
+
+    Bottle &b3=bottle.addList();
+    b3.addDouble(sol[5]); b3.addDouble(sol[6]); b3.addDouble(sol[7]);
+    superq.put("center", b3.get(2));
+
+    Bottle &b4=bottle.addList();
+    Vector orient=dcm2axis(euler2dcm(sol.subVector(8,10)));
+    b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
+    superq.put("orientation", b1.get(0));
+
 
     superqCom->resume();
 
-    return parameters;
+    return superq;
 }
 
 /**********************************************************************/

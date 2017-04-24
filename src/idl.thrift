@@ -114,7 +114,7 @@ service superquadricModel_IDL
     * x5, x6, x7 are the coordinate of the superquadric center and
     * x8, x9, 10 are the Euler angles, representing the superquadric orientation.
     */
-    list<double> get_superq(1:string name, 2:bool filtered_or_not);
+    Property get_superq(1:string name, 2:bool filtered_or_not);
 
     /**
     * On/off point cloud filtering

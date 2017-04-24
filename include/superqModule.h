@@ -156,7 +156,7 @@ protected:
     bool set_visualized_points(const int v);
 
     /**********************************************************************/
-    vector<double> get_superq(const string &name, bool filtered_or_not);
+    Property get_superq(const string &name, bool filtered_or_not);
 
     /**********************************************************************/
     bool set_filtering(const string &entry);
