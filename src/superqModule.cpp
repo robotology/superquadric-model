@@ -223,12 +223,12 @@ Property SuperqModule::get_superq(const string &name, bool filtered_or_not)
 
     Bottle &b3=bottle.addList();
     b3.addDouble(sol[5]); b3.addDouble(sol[6]); b3.addDouble(sol[7]);
-    superq.put("center", b3.get(2));
+    superq.put("center", bottle.get(2));
 
     Bottle &b4=bottle.addList();
     Vector orient=dcm2axis(euler2dcm(sol.subVector(8,10)));
     b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
-    superq.put("orientation", b1.get(0));
+    superq.put("orientation", bottle.get(3));
 
 
     superqCom->resume();
