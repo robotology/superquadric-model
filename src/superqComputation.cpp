@@ -348,9 +348,6 @@ void SuperqComputation::run()
         if (filter_superq)
             filterSuperq();
     }
-
-
-    t=Time::now()-t0;
 }
 
 /***********************************************************************/

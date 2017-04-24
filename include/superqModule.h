@@ -72,7 +72,6 @@ protected:
     double min_norm_vel;
 
     bool mode_online;
-    bool one_shot_mode;
     bool visualization_on;
     bool go_on;
     bool save_points;
@@ -91,7 +90,7 @@ protected:
 
     BufferedPort<ImageOf<PixelRgb> > portImgIn;
     BufferedPort<ImageOf<PixelRgb> > portImgOut;
-    BufferedPort<Bottle> portSuperqIn;
+    BufferedPort<Vector> portSuperq;
 
     PolyDriver GazeCtrl;
     IGazeControl *igaze;
@@ -115,6 +114,8 @@ protected:
     Property filter_points_par;
     Property filter_superq_par;
     Property ipopt_par;
+
+    ImageOf<PixelRgb> *imgIn;
 
     /************************************************************************/
     bool attach(RpcServer &source);
@@ -193,11 +194,6 @@ protected:
     /**********************************************************************/
     bool get_fixed_window();
 
-    /**********************************************************************/
-    bool set_one_shot_mode(const string &entry);
-
-    /**********************************************************************/
-    bool get_one_shot_mode();
 public:
     /***********************************************************************/
     double getPeriod();

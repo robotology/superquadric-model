@@ -205,26 +205,24 @@ vector<double> SuperqModule::get_superq(const string &name, bool filtered_or_not
     vector<double> parameters;
     parameters.clear();
 
-    if (!one_shot_mode)
-    {
-        Vector sol=superqCom->getSolution(name, filtered_or_not);
+    superqCom->setPar("object_name", name);
+    superqCom->suspend();
 
-        for (size_t i=0; i<sol.size(); i++)
-        {
-                parameters.push_back(sol[i]);
-        }
-    }
-    else
-    {
-        superqCom->threadInit();
-        superqCom->step();
-        Vector sol=superqCom->getSolution(name, filtered_or_not);
+    superqCom->step();
 
-        for (size_t i=0; i<sol.size(); i++)
-        {
-                parameters.push_back(sol[i]);
-        }
+    Vector sol(11,0.0);
+    sol=superqCom->getSolution(name, filtered_or_not);
+
+
+
+    for (size_t i=0; i<sol.size(); i++)
+    {
+            parameters.push_back(sol[i]);
     }
+
+
+    superqCom->resume();
+
 
     return parameters;
 }
@@ -464,24 +462,6 @@ bool SuperqModule::get_fixed_window()
     return fixed_window;
 }
 
-/**********************************************************************/
-bool SuperqModule::set_one_shot_mode(const string &entry)
-{
-    if (entry=="on" || entry=="off")
-    {
-        one_shot_mode=(entry=="on");
-        return true;
-    }
-    else
-        return false;
-}
-
-/**********************************************************************/
-bool SuperqModule::get_one_shot_mode()
-{
-    return one_shot_mode;
-}
-
 /***********************************************************************/
 double SuperqModule::getPeriod()
 {
@@ -494,15 +474,24 @@ bool SuperqModule::updateModule()
     t0=Time::now();
     LockGuard lg(mutex);
 
-    if (one_shot_mode==false && mode_online==true)
+    if (mode_online==true)
     {
-        ImageOf<PixelRgb> *imgIn=portImgIn.read();
+        Vector &x_to_send=portSuperq.prepare();
+
+        imgIn=portImgIn.read();
 
         superqCom->sendImg(imgIn);
 
         x=superqCom->getSolution(objname,false);
 
         x_filtered=superqCom->getSolution(objname,true);
+        
+        if (!filter_superq)
+            x_to_send=x;
+        else
+            x_to_send=x_filtered;
+
+        portSuperq.write();
 
         if (visualization_on)
         {
@@ -521,8 +510,7 @@ bool SuperqModule::updateModule()
             }
         }
     }
-
-    if (!mode_online)
+    else
     {
         readPointCloud();
         superqCom->threadInit();
@@ -585,7 +573,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
     superqCom= new SuperqComputation(rate, filter_points, filter_superq,fixed_window, objname,
                                      method, threshold_median,filter_points_par, filter_superq_par, ipopt_par, homeContextPath, save_points);
 
-    if (one_shot_mode==false && mode_online==true)
+    if (mode_online==true)
     {
         bool thread_started=superqCom->start();
 
@@ -618,7 +606,10 @@ bool SuperqModule::configure(ResourceFinder &rf)
 bool SuperqModule::interruptModule()
 {
     cout<<endl<<"[SuperqModule] interruping ... "<<endl<<endl;
+
     portImgIn.interrupt();
+    portSuperq.interrupt();
+
     return true;
 }
 
@@ -628,7 +619,7 @@ bool SuperqModule::close()
     cout<<endl<<"[SuperqModule] closing ... "<<endl<<endl;
     saveSuperq();
 
-    if (one_shot_mode==false && mode_online==true)
+    //if (mode_online==true)
         superqCom->stop();
 
     delete superqCom;
@@ -640,20 +631,14 @@ bool SuperqModule::close()
         delete superqVis;
     }
 
-    if (portBlobRpc.asPort().isOpen())
-        portBlobRpc.close();
-
-    if (portSFMrpc.asPort().isOpen())
-        portSFMrpc.close();
-
-    if (portOPCrpc.asPort().isOpen())
-        portOPCrpc.close();
-
     if (portRpc.asPort().isOpen())
         portRpc.close();
 
     if (!portImgIn.isClosed())
         portImgIn.close();
+
+     if (!portSuperq.isClosed())
+        portSuperq.close();
 
     if (mode_online)
         GazeCtrl.close();
@@ -667,7 +652,7 @@ bool SuperqModule::configOnOff(ResourceFinder &rf)
     homeContextPath=rf.getHomeContextPath().c_str();
     pointCloudFileName=rf.findFile("pointCloudFile");
     visualization_on=(rf.check("visualization_on", Value("yes")).asString()=="yes");
-    one_shot_mode=(rf.check("one_shot_mode", Value("no")).asString()=="yes");
+    //one_shot_mode=(rf.check("one_shot_mode", Value("no")).asString()=="yes");
     save_points=(rf.check("save_points", Value("no")).asString()=="yes");
 
     rate=rf.check("rate", Value(100)).asInt();
@@ -750,6 +735,7 @@ bool SuperqModule::configFilterSuperq(ResourceFinder &rf)
 bool SuperqModule::configServices(ResourceFinder &rf)
 {
     portRpc.open("/superquadric-model/rpc");
+    portSuperq.open("/superquadric-model/superq:o");
 
     attach(portRpc);
 
