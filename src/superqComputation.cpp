@@ -60,9 +60,9 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 }
 
 /***********************************************************************/
-SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, string _objname, string _method,
+SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, string _objname, string _method, double _threshold_median,
                                 const Property &_filter_points_par, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points):
-                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window(_fixed_window),objname(_objname), method(_method), save_points(_save_points),
+                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window(_fixed_window),objname(_objname), method(_method), threshold_median(_threshold_median), save_points(_save_points),
                                 filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate), homeContextPath(_homeContextPath)
 {
 }
@@ -118,9 +118,9 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
     {
         int mOrderValue=groupBottle.get(1).asInt();
         if ((mOrderValue)>=1 && (mOrderValue<=50))
-                median_order=mOrderValue;
+                std_median_order=mOrderValue;
         else
-            median_order=3;
+            std_median_order=3;
     }
 
     Bottle &groupBottle2=newOptions.findGroup("min_median_order_advanced");
@@ -130,7 +130,7 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
         if ((mOrderValue)>=1 && (mOrderValue<=50))
                 min_median_order=mOrderValue;
         else
-            median_order=1;
+            min_median_order=1;
     }
 
     Bottle &groupBottle3=newOptions.findGroup("max_median_order_advanced");
@@ -170,9 +170,9 @@ Property SuperqComputation::getSuperqFilterPar()
     LockGuard lg(mutex);
 
     Property advOptions;
-    advOptions.put("median_order_advanced",median_order);
+    advOptions.put("median_order_advanced",std_median_order);
     advOptions.put("min_median_order_advanced",min_median_order);
-    advOptions.put("median_order_advanced",max_median_order);
+    advOptions.put("max_median_order_advanced",max_median_order);
     advOptions.put("threshold_median_advanced",threshold_median);
     advOptions.put("min_norm_vel_advanced",min_norm_vel);
     return advOptions;
@@ -287,6 +287,8 @@ void SuperqComputation::setPar(const string &par_name, const string &value)
         filter_points=(value=="on");
     else if (par_name=="filter_superq")
         filter_superq=(value=="on");
+     else if (par_name=="fixed_window")
+        fixed_window=(value=="on");
     else if (par_name=="save_points")
         save_points=(value=="on");
 }
@@ -378,6 +380,8 @@ bool SuperqComputation::configFilterSuperq()
     x.resize(11,0.0);
     new_median_order=1;
     elem_x.resize(max_median_order, 0.0);
+    std_median_order=5;
+    max_median_order=30;
     mFilter = new MedianFilter(median_order, x);
     PolyEst =new AWLinEstimator(max_median_order, threshold_median);
     return true;
@@ -780,7 +784,7 @@ bool SuperqComputation::computeSuperq()
     yDebug()<<"finish IPOPT ";
     t_superq=Time::now()-t0_superq;
 
-    points.clear();
+    //points.clear();
 
     if (status==Ipopt::Solve_Succeeded)
     {
@@ -807,7 +811,12 @@ void SuperqComputation::filterSuperq()
     cout<<"x "<<x.toString()<<endl;
 
     if (fixed_window)
-    {
+    { 
+        if (median_order != std_median_order)
+        {
+            median_order=std_median_order; 
+            mFilter->setOrder(median_order);  
+        }   
         x_filtered=mFilter->filt(x);
     }
     else
@@ -890,11 +899,11 @@ void SuperqComputation::getPoints(deque<Vector> &p)
     LockGuard lg(mutex);
 
     p.clear();
+
     for (size_t i=0; i<points.size(); i++)
-    {
+    {   
         p.push_back(points[i]);
     }
-
 }
 
 /***********************************************************************/

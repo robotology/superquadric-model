@@ -150,7 +150,7 @@ bool SuperqVisualization::showPoints()
 
      for (size_t i=0; i<points.size(); i+=vis_step)
      {
-         point=points[i];
+         point=points[i].subVector(0,2);
          point2D=from3Dto2D(point);
 
          cv::Point target_point((int)point2D[0],(int)point2D[1]);
@@ -182,6 +182,8 @@ Vector SuperqVisualization::from3Dto2D(const Vector &point3D)
 bool SuperqVisualization::threadInit()
 {
     cout<<endl<<"[SuperqVisualization] thread initing ... "<<endl<<endl;
+    
+    portImgOut.open("/superquadric-model/img:o");
 
     R.resize(4,4);
     H.resize(4,4);

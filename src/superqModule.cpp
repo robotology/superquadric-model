@@ -293,6 +293,7 @@ bool SuperqModule::set_filtering_superq(const string &entry)
             options.put("median_order_advanced", median_order);
             superqCom->setSuperqFilterPar(options);
             superqCom->setPar("filter_superq", "on");
+            superqCom->setPar("fixed_window", "on");
         }
         else
             superqCom->setPar("filter_superq", "off");
@@ -344,7 +345,10 @@ bool SuperqModule::set_save_points(const string &entry)
     if ((entry=="on") || (entry=="off"))
     {
         save_points=(entry=="on");
-        superqCom->setPar("save_points", "on");
+        if (save_points)
+            superqCom->setPar("save_points", "on");
+        else
+            superqCom->setPar("save_points", "off");
     } 
     
     
@@ -388,6 +392,7 @@ bool SuperqModule::set_plot(const string &plot)
     {
         LockGuard lg(mutex);
         what_to_plot=plot;
+        superqVis->setPar("what_to_plot", what_to_plot);
         return true;
     }
     else
@@ -425,6 +430,7 @@ int SuperqModule::get_visualized_points_step()
 bool SuperqModule::set_fixed_window(const string &entry)
 {
     fixed_window=(entry=="yes");
+    superqCom->setPar("fixed_window", entry);
 
     if (!fixed_window)
     {
@@ -490,7 +496,6 @@ bool SuperqModule::updateModule()
 
     if (one_shot_mode==false && mode_online==true)
     {
-
         ImageOf<PixelRgb> *imgIn=portImgIn.read();
 
         superqCom->sendImg(imgIn);
@@ -578,7 +583,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
         config_ok=configViewer(rf);
 
     superqCom= new SuperqComputation(rate, filter_points, filter_superq,fixed_window, objname,
-                                     method,filter_points_par, filter_superq_par, ipopt_par, homeContextPath, save_points);
+                                     method, threshold_median,filter_points_par, filter_superq_par, ipopt_par, homeContextPath, save_points);
 
     if (one_shot_mode==false && mode_online==true)
     {
@@ -667,6 +672,7 @@ bool SuperqModule::configOnOff(ResourceFinder &rf)
 
     rate=rf.check("rate", Value(100)).asInt();
     rate_vis=rf.check("rate_vis", Value(100)).asInt();
+    threshold_median=rf.check("threshold_median", Value(0.1)).asDouble();
 
     if (rf.find("pointCloudFile").isNull())
     {
@@ -719,7 +725,6 @@ bool SuperqModule::configFilterSuperq(ResourceFinder &rf)
     median_order=rf.check("median_order", Value(1)).asInt();
     min_median_order=rf.check("min_median_order", Value(1)).asInt();
     max_median_order=rf.check("max_median_order", Value(30)).asInt();
-    threshold_median=rf.check("threshold_median", Value(0.1)).asDouble();
     min_norm_vel=rf.check("min_norm_vel", Value(0.01)).asDouble();
     x.resize(11,0.0);
 
@@ -797,7 +802,6 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
 bool SuperqModule::configViewer(ResourceFinder &rf)
 {
     portImgIn.open("/superquadric-model/img:i");
-    portImgOut.open("/superquadric-model/img:o");
 
     eye=rf.check("eye", Value("left")).asString();
     what_to_plot=rf.find("plot").asString().c_str();

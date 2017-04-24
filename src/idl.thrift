@@ -222,6 +222,20 @@ service superquadricModel_IDL
     */
     bool get_one_shot_mode();
 
+    /**
+    * Set if visualization is enabled
+    *@return  true/false
+    */
+    bool set_visualization_on(1:string e)
+
+    /**
+    * Get if visualization is enabled
+    *@return  true/false
+    */
+    string get_visualization_on()
+
+
+
 }
 
 

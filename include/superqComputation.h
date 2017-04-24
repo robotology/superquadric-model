@@ -67,6 +67,7 @@ protected:
     int nnThreshold;
     int numVertices;
     int median_order;
+    int std_median_order;
     int min_median_order;
     int max_median_order;
     int new_median_order;
@@ -105,7 +106,7 @@ public:
 
     ImageOf<PixelRgb> *imgIn;
     /***********************************************************************/
-    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,string _objname, string _method,
+    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,string _objname, string _method, double _threshold_median,
                       const Property &filters_points_par, const Property &filters_superq_par, const Property &optimizer_par, const string &_homeContextPath, bool _save_points);
     /***********************************************************************/
     void setPointsFilterPar(const Property &newOptions);
