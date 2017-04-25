@@ -31,29 +31,28 @@ struct Vector
 service superquadricModel_IDL
 {
     /**
-    * Set the name of the object
-    * to be detected and modeled.
-    * @param entry is the name of the object.
-    * @return true/false is the object is known/unknown.
+    * Set the tag for storing files
+    * @param entry is the tag that will be used in file names.
+    * @return true.
     */
-    bool set_object_name(1:string entry);
+    bool set_tag_file(1:string entry);
 
     /**
-    * Return the name of the object that is
-    * being detected and modeled.
-    * @return the name of the object.
+    * Return the tag used for storing files
+    * @return the tag name.
     */
-    string get_object_name();
+    string get_tag_file();
 
     /**
-    * Get RGB values
+    * Get RGB values of the visualized points
+    * (for superquadric or points visualization)
     * @return a list with the RGB values of the
     * superquadric and blob visualization.
     */
     list<i32> get_color();
 
     /**
-    * Set the RGB values of the superquadric
+    * Set the RGB values used for the superquadric
     * and blob visualization.
     * @param r is red value in [0,255]. 
     * @param g is green value in [0,255].
@@ -95,26 +94,16 @@ service superquadricModel_IDL
     bool set_visualized_points(1:i32 vis);
 
     /**
-    * Get the parameters of the reconstructed
-    * superquadric 
-    * @param name of the object of which we want the superquadric
-    * @return the 11 parameters (x0, .. x10) of the current superquadric. 
-    * In particular, x0, x1, x2 are the three semi-axes lenghts,
-    * x3 and x4 are the exponents, responsible for the superquadric shape.
-    * x5, x6, x7 are the coordinate of the superquadric center and
-    * x8, x9, 10 are the Euler angles, representing the superquadric orientation.
-    */
-    Property get_superq_old(1:string name, 2:bool filtered_or_not);
-
-    /**
-    * Get the parameters of the reconstructed
-    * superquadric 
-    * @param name of the object of which we want the superquadric
-    * @return the 11 parameters (x0, .. x10) of the current superquadric. 
-    * In particular, x0, x1, x2 are the three semi-axes lenghts,
-    * x3 and x4 are the exponents, responsible for the superquadric shape.
-    * x5, x6, x7 are the coordinate of the superquadric center and
-    * x8, x9, 10 are the Euler angles, representing the superquadric orientation.
+    * Get the parameters of the reconstructed superquadric .
+    * @param blob is the 2D blob of the object we want to model with the superquadric.
+    * @param filtered_or_not is a bool variable specifing if we want the superquadric
+    * to be filtered (true) or not (false).
+    * @return the 12 parameters (x0, .. x11) of the current superquadric. 
+    * In particular, the parameters are grouped in a Property as follows: "dimensions" (x0, x1, x2) 
+    * are the three semi-axes lenghts; "exponents" (x3 and x4) are the exponents,
+    * responsible for the superquadric shape; "center"(x5, x6, x7) contains the coordinate of
+    * the superquadric center; and "orientation" (x8, x9, 10, x11) is the axis-angle representatin
+    * obtained from the Euler angles.
     */
     Property get_superq(1:list<Vector> blob, 2:bool filtered_or_not);
 
@@ -123,43 +112,45 @@ service superquadricModel_IDL
     * @param entry is "on/off" if you want/do not want to filter points.
     * @return true/false on success/failure.
     */
-    bool set_filtering(1:string entry);
+    bool set_points_filtering(1:string entry);
 
     /**
-    * Say if filtering is on or not.
-    * @return on/off string if filtering is on/off.
+    * Say if points filtering is on or not.
+    * @return on/off string if points filtering is on/off.
     */
-    string get_filtering();
+    string get_points_filtering();
 
     /**
     * On/off superquadric filtering
-    * @param entry is "on/off" if you want/do not want to filter points.
+    * @param entry is "on/off" if you want/do not want to filter the estimated superquadric.
     * @return true/false on success/failure.
     */
-    bool set_filtering_superq(1:string entry);
+    bool set_superq_filtering(1:string entry);
 
     /**
     * Say if superquadric filtering is on or not.
-    * @return on/off string if filtering is on/off.
+    * @return on/off string if superquadeic filtering is on/off.
     */
-    string get_filtering_superq();
+    string get_superq_filtering();
 
     /**
-    * Set if you want to save the acquired point cloud
-    *@param entry can be: "on" or "off"
-    *@return true/false on success/failure
+    * Set if you want to save the acquired point cloud.
+    *@param entry can be: "on" or "off".
+    *@return true/false on success/failure.
     */
     bool set_save_points(1:string entry);
 
     /**
-    * Set if you are saving the acquired point cloud
-    *@return  "on" or "off"
+    * Set if you are saving the acquired point cloud.
+    *@return  "on" or "off".
     */
     string get_save_points();
 
     /**
     * Get the advanced parameters of the module. The user must pay attention
     * in changing them.
+    * @param field can be "points_filter", "superq_filter", "optimization",
+    * depending on which parameters we are interested in.
     * @return the Property including all the advanced parameter values.
     */
     Property get_advanced_options(1: string field);
@@ -167,74 +158,66 @@ service superquadricModel_IDL
     /**
     * Set the advanced parameters of the module. The user must pay attention
     * in changing them.
+    * @param options is a Property containing the parameters the user want to change.
+    * @param field is a string specifying which can of parameter we are going to change.
+    * Field can be: "points_filter", "superq_filter" or "optimization".
     * You can set the advanced parameters typing: 
-    * command: ((filter_radius_advanced <radius-value>) (filter_nnThreshold_advanced <nnThreshold-value>))
-    * @return true/false on success/failure
+    * command:  set_advanced_options ((filter_radius_advanced <radius-value>) (filter_nnThreshold_advanced <nnThreshold-value>)) points_filter.
+    * @return true/false on success/failure.
     */
     bool set_advanced_options(1:Property options, 2: string field);
 
     /**
-    * Set what you want to show on the yarpview
-    *@param plot can be: "superq", "points", "filtered-points"
-    *@return true/false on success/failure
+    * Set what you want to show on the yarpview.
+    *@param plot can be: "superq"or "points".
+    *@return true/false on success/failure.
     */
     bool set_plot(1:string plot);
 
     /**
-    * Get what is shown on the yarpview
-    *@return  "superq", "points" or "filtered-points"
+    * Get what is shown on the yarpview.
+    *@return  "superq" or "points" .
     */
     string get_plot();
 
     /**
-    * Set the step used to downsample the points to be show
-    * @param step must be a positive value
-    * @return true/false on success/failure
+    * Set the step used to downsample the points to be show.
+    * @param step must be a positive value.
+    * @return true/false on success/failure.
     */
     bool set_visualized_points_step(1:i32 step);
 
-    /** Get the step used to downsample the points to be show
-    * @return the step value
+    /** Get the step used to downsample the points to be show.
+    * @return the step value.
     */
     i32 get_visualized_points_step();
 
     /**
-    * Set fixed_window value on or off
-    *@param entry can be: "yes", "no"
-    *@return true
+    * Set fixed_window variable on or off for the superquadric filtering. If fixed_window is on, 
+    * the superquadric is filtered using a fixed window, otherwise the window adapts with the
+    * estimated superquadric velocity.
+    *@param entry can be: "yes", "no".
+    *@return true/false on success/failure.
     */
     bool set_fixed_window(1:string entry);
 
     /**
-    * Get if the window value is fixed or not
-    *@return  true/false
+    * Get if the window value for superquadric filtering is fixed or not.
+    *@return  "on " or "off".
     */
-    bool get_fixed_window();
+    string get_fixed_window();
 
     /**
-    * Set if the one-shot mode must be enabled
-    *@param entry can be "on" or "off"
-    *@return  true/false
+    * Set if the visualization has to be enabled.
+    *@return  true/false on success/failure.
     */
-    bool set_one_shot_mode(1:string entry);
+    bool set_visualization(1:string e)
 
     /**
-    * Get if the one-shot mode is enabled
-    *@return  true/false
+    * Get if visualization is enabled.
+    *@return "on" or "off".
     */
-    bool get_one_shot_mode();
-
-    /**
-    * Set if visualization is enabled
-    *@return  true/false
-    */
-    bool set_visualization_on(1:string e)
-
-    /**
-    * Get if visualization is enabled
-    *@return  true/false
-    */
-    string get_visualization_on()
+    string get_visualization()
 
 
 

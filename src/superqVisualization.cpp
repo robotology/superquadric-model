@@ -41,10 +41,6 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
     double co,so,ce,se;
     Stamp *stamp=NULL;
 
-   /* ImageOf<PixelRgb> *imgIn=portImgIn.read();
-    if (imgIn==NULL)
-        return false;*/
-
     ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
     imgOut=*imgIn;
 
@@ -99,7 +95,7 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
 
                  if ((target_point.x<0) || (target_point.y<0) || (target_point.x>=320) || (target_point.y>=240))
                  {
-                     yError("Not acceptable pixels!");
+                     yError("[SuperqVisualization]: Not acceptable pixels!");
                  }
                  else
                     imgOut.pixel(target_point.x, target_point.y)=color;
@@ -119,10 +115,6 @@ bool SuperqVisualization::showPoints()
     PixelRgb color(Color[0],Color[1],Color[2]);
     Stamp *stamp=NULL;
     Vector pos, orient;
-
-//    ImageOf<PixelRgb> *imgIn=portImgIn.read();
-//    if (imgIn==NULL)
-//        return false;
 
     ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
     imgOut=*imgIn;
@@ -157,7 +149,7 @@ bool SuperqVisualization::showPoints()
 
          if ((target_point.x<0) || (target_point.y<0) || (target_point.x>=320) || (target_point.y>=240))
          {
-             yError("Not acceptable pixels!");
+             yError("[SuperqVisualization]:  Not acceptable pixels!");
          }
          else
             imgOut.pixel(target_point.x, target_point.y)=color;
@@ -181,7 +173,7 @@ Vector SuperqVisualization::from3Dto2D(const Vector &point3D)
 /***********************************************************************/
 bool SuperqVisualization::threadInit()
 {
-    cout<<endl<<"[SuperqVisualization] thread initing ... "<<endl<<endl;
+    cout<<endl<<"[SuperqVisualization]: Thread initing ... "<<endl<<endl;
     
     portImgOut.open("/superquadric-model/img:o");
 
@@ -233,7 +225,7 @@ void SuperqVisualization::sendPoints(deque<Vector> &p)
 /**********************************************************************/
 void SuperqVisualization:: threadRelease()
 {
-    cout<<endl<<"[SuperVisualization] thread releasing ... "<<endl<<endl;
+    cout<<endl<<"[SuperVisualization]: Thread releasing ... "<<endl<<endl;
 
     if (!portImgOut.isClosed())
         portImgOut.close();

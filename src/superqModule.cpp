@@ -37,24 +37,26 @@ bool SuperqModule::attach(RpcServer &source)
 }
 
 /************************************************************************/
-bool SuperqModule::set_object_name(const string &object_name)
+bool SuperqModule::set_tag_file(const string &tag)
 {
     LockGuard lg(mutex);
-    objname=object_name;
-    outputFileName=homeContextPath+"/"+objname+".txt";
-    yDebug()<<"file output "<<outputFileName;
+
+    tag_file=tag;
+    outputFileName=homeContextPath+"/"+tag_file+".txt";
+    yDebug()<<" [SuperqModule]: File output "<<outputFileName;
+
     x.resize(11,0.0);
     x_filtered.resize(11,0.0);
 
-    superqCom->setPar("object_name", objname);
+    superqCom->setPar("tag_file", tag_file);
 
     return true;
 }
 
 /************************************************************************/
-string SuperqModule::get_object_name()
+string SuperqModule::get_tag_file()
 {
-    return objname;
+    return tag_file;
 }
 
 /************************************************************************/
@@ -109,7 +111,7 @@ bool SuperqModule::set_eye(const string &e)
 }
 
 /**********************************************************************/
-string SuperqModule::get_visualization_on()
+string SuperqModule::get_visualization()
 {
     if (visualization_on)
         return "on";
@@ -118,14 +120,15 @@ string SuperqModule::get_visualization_on()
 }
 
 /**********************************************************************/
-bool SuperqModule::set_visualization_on(const string &e)
+bool SuperqModule::set_visualization(const string &e)
 {
     if ((e=="on") || (e=="off"))
     {
         LockGuard lg(mutex);
+
         if (visualization_on==false && e=="on")
         {
-            superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot, Color, igaze, K,vis_points, vis_step);
+            superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot, Color, igaze, K, vis_points, vis_step);
 
             bool thread_started=superqVis->start();
 
@@ -176,43 +179,6 @@ bool SuperqModule::set_visualized_points(const int v)
 }
 
 /**********************************************************************/
-Property SuperqModule::get_superq_old(const string &name, bool filtered_or_not)
-{
-    Property superq;
-
-    superqCom->setPar("object_name", name);
-    superqCom->suspend();
-
-    superqCom->step();
-
-    Vector sol(11,0.0);
-    sol=superqCom->getSolution(name, filtered_or_not);
-
-    Bottle bottle;
-    Bottle &b1=bottle.addList();
-    b1.addDouble(sol[0]); b1.addDouble(sol[1]); b1.addDouble(sol[2]);
-    superq.put("dimensions", bottle.get(0));
-
-    Bottle &b2=bottle.addList();
-    b2.addDouble(sol[3]); b2.addDouble(sol[4]);
-    superq.put("exponents", bottle.get(1));
-
-    Bottle &b3=bottle.addList();
-    b3.addDouble(sol[5]); b3.addDouble(sol[6]); b3.addDouble(sol[7]);
-    superq.put("center", bottle.get(2));
-
-    Bottle &b4=bottle.addList();
-    Vector orient=dcm2axis(euler2dcm(sol.subVector(8,10)));
-    b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
-    superq.put("orientation", bottle.get(3));
-
-
-    superqCom->resume();
-
-    return superq;
-}
-
-/**********************************************************************/
 Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_or_not)
 {
     Property superq;
@@ -257,7 +223,7 @@ Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_or_n
 }
 
 /**********************************************************************/
-bool SuperqModule::set_filtering(const string &entry)
+bool SuperqModule::set_points_filtering(const string &entry)
 {
     if ((entry=="on") || (entry=="off"))
     {
@@ -282,20 +248,18 @@ bool SuperqModule::set_filtering(const string &entry)
         cout<<"[SuperqModule]: nn-thrshold   "<<nnThreshold<<endl;
         cout<<endl;
 
-        return true;
-    
+        return true;    
     }
     else
-    {
-        
+    {        
         return false;
     }
 }
 
 /**********************************************************************/
-string SuperqModule::get_filtering()
+string SuperqModule::get_points_filtering()
 {
-    if (filter_points==1)
+    if (filter_points)
     {
         return "on";
     }
@@ -306,7 +270,7 @@ string SuperqModule::get_filtering()
 }
 
 /**********************************************************************/
-bool SuperqModule::set_filtering_superq(const string &entry)
+bool SuperqModule::set_superq_filtering(const string &entry)
 {
     if ((entry=="on") || (entry=="off"))
     {
@@ -331,8 +295,7 @@ bool SuperqModule::set_filtering_superq(const string &entry)
         cout<<"[SuperqModule]: median_order          "<<median_order<<endl;        
         cout<<endl;
 
-        return true;
-        
+        return true;        
     }
     else
     {
@@ -341,7 +304,7 @@ bool SuperqModule::set_filtering_superq(const string &entry)
 }
 
 /**********************************************************************/
-string SuperqModule::get_filtering_superq()
+string SuperqModule::get_superq_filtering()
 {
     if (filter_superq==true)
     {
@@ -376,9 +339,7 @@ bool SuperqModule::set_save_points(const string &entry)
             superqCom->setPar("save_points", "on");
         else
             superqCom->setPar("save_points", "off");
-    } 
-    
-    
+    }    
 }
 
 /**********************************************************************/
@@ -391,7 +352,6 @@ Property SuperqModule::get_advanced_options(const string &field)
         advOptions=superqCom->getSuperqFilterPar();
     else if (field=="optimization")
         advOptions=superqCom->getIpoptPar();
-
 
     return advOptions;
 }
@@ -414,8 +374,7 @@ bool SuperqModule::set_advanced_options(const Property &newOptions, const string
 /**********************************************************************/
 bool SuperqModule::set_plot(const string &plot)
 {
-    yDebug() <<"PLOT "<<plot;
-    if ((plot=="superq") || (plot=="points") || (plot=="filtered-points"))
+    if ((plot=="superq") || (plot=="points"))
     {
         LockGuard lg(mutex);
         what_to_plot=plot;
@@ -442,7 +401,7 @@ bool SuperqModule::set_visualized_points_step(const int step)
     }
     else
     {
-        yError()<<"Negativa step for visualized point downsampling!";
+        yError()<<"[SuperqModule]: Negative step for visualized point downsampling!";
         return false;
     }
 }
@@ -486,9 +445,12 @@ bool SuperqModule::set_fixed_window(const string &entry)
 }
 
 /**********************************************************************/
-bool SuperqModule::get_fixed_window()
+string SuperqModule::get_fixed_window()
 {
-    return fixed_window;
+    if (fixed_window)
+        return "on";
+    else
+        return "off";
 }
 
 /***********************************************************************/
@@ -511,9 +473,9 @@ bool SuperqModule::updateModule()
 
         superqCom->sendImg(imgIn);
 
-        x=superqCom->getSolution(objname,false);
+        x=superqCom->getSolution(false);
 
-        x_filtered=superqCom->getSolution(objname,true);
+        x_filtered=superqCom->getSolution(true);
         
         if (!filter_superq)
             x_to_send=x;
@@ -557,7 +519,7 @@ bool SuperqModule::updateModule()
 
         if ((go_on==false) && (points.size()>0))
         {
-            yError("Not found a suitable superquadric! ");
+            yError("[SuperqModule]: Not found a suitable superquadric! ");
         }
         else if (go_on==true && norm(x)>0.0)
         {
@@ -565,11 +527,10 @@ bool SuperqModule::updateModule()
                 superqCom->filterSuperq();
         }
 
-        x=superqCom->getSolution(objname, false);
-        x_filtered=superqCom->getSolution(objname, true);
+        x=superqCom->getSolution(false);
+        x_filtered=superqCom->getSolution(true);
 
         return false;
-
     }
 
     t=Time::now()-t0;
@@ -581,7 +542,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
 {
     bool config_ok;
 
-    cout<<endl<<"[SuperqModule] configuring ... "<<endl<<endl;
+    cout<<endl<<"[SuperqModule]: Configuring ... "<<endl<<endl;
 
     config_ok=configOnOff(rf);
 
@@ -599,7 +560,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
     if ((config_ok==true))
         config_ok=configViewer(rf);
 
-    superqCom= new SuperqComputation(rate, filter_points, filter_superq,fixed_window, objname,
+    superqCom= new SuperqComputation(rate, filter_points, filter_superq,fixed_window, tag_file,
                                      threshold_median,filter_points_par, filter_superq_par, ipopt_par, homeContextPath, save_points);
 
     if (mode_online==true)
@@ -608,9 +569,9 @@ bool SuperqModule::configure(ResourceFinder &rf)
 
         cout<<endl;
         if (thread_started)
-            cout<<"[SuperqComputation] thread started!"<<endl;
+            cout<<"[SuperqComputation]: Thread started!"<<endl;
         else
-            yError()<<"[SuperqComputation] problems in starting the thread!";
+            yError()<<"[SuperqComputation]: Problems in starting the thread!";
         cout<<endl;
     }
 
@@ -622,9 +583,9 @@ bool SuperqModule::configure(ResourceFinder &rf)
 
         cout<<endl;
         if (thread_started)
-            cout<<"[SuperqVisualization] thread started!"<<endl;
+            cout<<"[SuperqVisualization]: Thread started!"<<endl;
         else
-            yError()<<"[SuperqVisualization] problems in starting the thread!";
+            yError()<<"[SuperqVisualization]: Problems in starting the thread!";
         cout<<endl;
     }
 
@@ -634,7 +595,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
 /***********************************************************************/
 bool SuperqModule::interruptModule()
 {
-    cout<<endl<<"[SuperqModule] interruping ... "<<endl<<endl;
+    cout<<endl<<"[SuperqModule]: Interruping ... "<<endl<<endl;
 
     portImgIn.interrupt();
     portSuperq.interrupt();
@@ -645,14 +606,13 @@ bool SuperqModule::interruptModule()
 /***********************************************************************/
 bool SuperqModule::close()
 {
-    cout<<endl<<"[SuperqModule] closing ... "<<endl<<endl;
+    cout<<endl<<"[SuperqModule]: Closing ... "<<endl<<endl;
     saveSuperq();
 
     //if (mode_online==true)
-        superqCom->stop();
+    superqCom->stop();
 
     delete superqCom;
-
 
     if (visualization_on)
     {
@@ -680,12 +640,13 @@ bool SuperqModule::configOnOff(ResourceFinder &rf)
 {
     homeContextPath=rf.getHomeContextPath().c_str();
     pointCloudFileName=rf.findFile("pointCloudFile");
-    visualization_on=(rf.check("visualization_on", Value("yes")).asString()=="yes");
-    //one_shot_mode=(rf.check("one_shot_mode", Value("no")).asString()=="yes");
     save_points=(rf.check("save_points", Value("no")).asString()=="yes");
+
+    visualization_on=(rf.check("visualization_on", Value("yes")).asString()=="yes");
 
     rate=rf.check("rate", Value(100)).asInt();
     rate_vis=rf.check("rate_vis", Value(100)).asInt();
+
     threshold_median=rf.check("threshold_median", Value(0.1)).asDouble();
 
     if (rf.find("pointCloudFile").isNull())
@@ -903,8 +864,6 @@ void SuperqModule::saveSuperq()
         fout<<endl;
         fout<<"Execution time: "<<endl;
         fout<<" "<<t_superq <<endl;
-        fout<<"Visualization time: "<<endl;
-        fout<<" "<<t_shows2 <<endl;
         fout<<"Update module time"<<endl;
         fout<<" "<<t<<endl<<endl;
         fout<<"*****Optimizer parameters*****"<<endl;

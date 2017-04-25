@@ -43,18 +43,13 @@ protected:
     int r,g,b;
     int count;
     int rate, rate_vis;
-    string objname;
+    string tag_file;
     string homeContextPath;
     ConstString pointCloudFileName;
     string outputFileName;
     vector<cv::Point> contour;
     deque<Vector> points;
     deque<cv::Point> blob_points;
-
-    RpcClient portBlobRpc;
-    RpcClient portSFMrpc;
-    RpcClient portOPCrpc;
-    RpcServer portRpc;
 
     double radius;
     int nnThreshold;
@@ -80,16 +75,13 @@ protected:
     int optimizer_points;
     string mu_strategy,nlp_scaling_method;
     Vector x;
-    Vector elem_x;
     Vector x_filtered;
-    deque<Vector> x_window;
 
     double t_superq;
-    double t_shows1, t_shows2;
 
     BufferedPort<ImageOf<PixelRgb> > portImgIn;
-    BufferedPort<ImageOf<PixelRgb> > portImgOut;
     BufferedPort<Vector> portSuperq;
+    RpcServer portRpc;
 
     PolyDriver GazeCtrl;
     IGazeControl *igaze;
@@ -119,10 +111,10 @@ protected:
     /************************************************************************/
     bool attach(RpcServer &source);
     /************************************************************************/
-    bool set_object_name(const string &object_name);
+    bool set_tag_file(const string &tag_file);
 
     /************************************************************************/
-    string get_object_name();
+    string get_tag_file();
 
     /************************************************************************/
     vector<int> get_color();
@@ -131,10 +123,10 @@ protected:
     bool set_color(const int red, const int green, const int blue);
 
     /**********************************************************************/
-    string get_visualization_on();
+    string get_visualization();
 
     /**********************************************************************/
-    bool set_visualization_on(const string &e);
+    bool set_visualization(const string &e);
 
     /**********************************************************************/
     string get_eye();
@@ -149,22 +141,19 @@ protected:
     bool set_visualized_points(const int v);
 
     /**********************************************************************/
-    Property get_superq_old(const string &name, bool filtered_or_not);
-
-    /**********************************************************************/
     Property get_superq(const vector<Vector> &blob, bool filtered_or_not);
 
     /**********************************************************************/
-    bool set_filtering(const string &entry);
+    bool set_points_filtering(const string &entry);
 
     /**********************************************************************/
-    string get_filtering();
+    string get_points_filtering();
 
     /**********************************************************************/
-    bool set_filtering_superq(const string &entry);
+    bool set_superq_filtering(const string &entry);
 
     /**********************************************************************/
-    string get_filtering_superq();
+    string get_superq_filtering();
 
     /**********************************************************************/
     Property get_advanced_options(const string &field);
@@ -188,7 +177,7 @@ protected:
     bool set_fixed_window(const string &entry);
 
     /**********************************************************************/
-    bool get_fixed_window();
+    string get_fixed_window();
 
 public:
     /***********************************************************************/

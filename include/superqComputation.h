@@ -51,7 +51,7 @@ protected:
 
     int count;
     bool save_points;
-    string objname;
+    string tag_file;
     string homeContextPath;
     ConstString pointCloudFileName;
     vector<cv::Point> contour;
@@ -87,13 +87,11 @@ protected:
     Vector x;
     Vector elem_x;
     Vector x_filtered;
-    deque<Vector> x_window;
 
     double t_superq;
     
     ResourceFinder *rf;
     double t,t0;
-    deque<string> advanced_params;
     Mutex mutex;
 
     MedianFilter *mFilter;
@@ -105,9 +103,11 @@ protected:
 public:
 
     ImageOf<PixelRgb> *imgIn;
+
     /***********************************************************************/
-    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,string _objname, double _threshold_median,
+    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,string _tag_file, double _threshold_median,
                       const Property &filters_points_par, const Property &filters_superq_par, const Property &optimizer_par, const string &_homeContextPath, bool _save_points);
+
     /***********************************************************************/
     void setPointsFilterPar(const Property &newOptions);
 
@@ -176,9 +176,6 @@ public:
 
     /***********************************************************************/
     void sendImg(ImageOf<PixelRgb> *Img);
-
-    /***********************************************************************/
-    Vector getSolution( const string &name, bool filtered_or_not);
 
     /***********************************************************************/
     Vector getSolution( bool filtered_or_not);

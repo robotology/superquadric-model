@@ -60,9 +60,9 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 }
 
 /***********************************************************************/
-SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, string _objname, double _threshold_median,
+SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, string _tag_file, double _threshold_median,
                                 const Property &_filter_points_par, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points):
-                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window(_fixed_window),objname(_objname),  threshold_median(_threshold_median), save_points(_save_points),
+                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window(_fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points),
                                 filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate), homeContextPath(_homeContextPath)
 {
 }
@@ -279,8 +279,8 @@ Property SuperqComputation::getIpoptPar()
 void SuperqComputation::setPar(const string &par_name, const string &value)
 {
     LockGuard lg(mutex);
-    if (par_name=="object_name")
-        objname=value;
+    if (par_name=="tag_file")
+        tag_file=value;
     else if (par_name=="filter_points")
         filter_points=(value=="on");
     else if (par_name=="filter_superq")
@@ -296,7 +296,7 @@ void SuperqComputation::setPar(const string &par_name, const string &value)
 /***********************************************************************/
 bool SuperqComputation::threadInit()
 {
-    cout<<endl<<"[SuperqComputation] thread initing ... "<<endl<<endl;
+    cout<<endl<<"[SuperqComputation]: Thread initing ... "<<endl<<endl;
 
     if (filter_points==true)
         setPointsFilterPar(filter_points_par);
@@ -304,9 +304,7 @@ bool SuperqComputation::threadInit()
     if (filter_superq==true)
         setSuperqFilterPar(filter_superq_par);
     
-
     setIpoptPar(ipopt_par);
-
 
     configFilterSuperq();
     config3Dpoints();
@@ -319,7 +317,6 @@ bool SuperqComputation::threadInit()
 
     return true;
 }
-
 
 /***********************************************************************/
 void SuperqComputation::run()
@@ -336,13 +333,13 @@ void SuperqComputation::run()
 
     if (points.size()>0)
     {
-        yInfo()<<"number of points acquired:"<< points.size();
+        yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
         go_on=computeSuperq();
     }
 
     if ((go_on==false) && (points.size()>0))
     {
-        yError("Not found a suitable superquadric! ");
+        yError("[SuperqComputation]: Not found a suitable superquadric! ");
     }
     else if (go_on==true && norm(x)>0.0)
     {
@@ -354,7 +351,7 @@ void SuperqComputation::run()
 /***********************************************************************/
 void SuperqComputation::threadRelease()
 {
-    cout<<endl<<"[SuperComputation] thread releasing ... "<<endl<<endl;
+    cout<<endl<<"[SuperComputation]: Thread releasing ... "<<endl<<endl;
 
     if (portSFMrpc.asPort().isOpen())
         portSFMrpc.close();
@@ -414,10 +411,12 @@ void SuperqComputation::getBlob()
 
     if (reply!=NULL)
     {  
-        blob_points.clear();   
+        blob_points.clear();
+
         if (Bottle *blob_list=reply->get(0).asList())
         {
             cout<<"blob size "<<blob_list->size()<<endl;
+
             for (int i=0; i<blob_list->size();i++)
             {
                 if (Bottle *blob_pair=blob_list->get(i).asList())
@@ -426,19 +425,19 @@ void SuperqComputation::getBlob()
                 }
                 else
                 {
-                    yError()<<"Some problems in blob pixels!";
+                    yError()<<"[SuperqComputation]: Some problems in blob pixels!";
                 }
             }
         }
         else
         {
-            yError()<<"Some problem  in object blob!";
+            yError()<<"[SuperqComputation]: Some problem  in object blob!";
         }
     }
     else
     {
        
-        yError("2D blob not received!");
+        yError("[SuperqComputation]: 2D blob not received!");
     }
 }
 
@@ -486,7 +485,7 @@ void SuperqComputation::get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
 
         if (points.size()<=0)
         {
-            yError("Some problems in point acquisition!");
+            yError("[SuperqComputation]: Some problems in point acquisition!");
         }
         else
         {
@@ -494,134 +493,18 @@ void SuperqComputation::get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
             colors[0]=255;
             if (save_points)
             {
-                cout<<endl<<"[SuperqComputation] Saving point cloud ... "<<endl<<endl;
-                savePoints("/SFM-"+objname, colors);
+                cout<<endl<<"[SuperqComputation]: Saving point cloud ... "<<endl<<endl;
+                savePoints("/SFM-"+tag_file, colors);
             }
         }
 
     }
     else
     {
-        yError("SFM reply is fail!");
+        yError("[SuperqComputation]: SFM reply is fail!");
         points.clear();
     }
 }
-
-///***********************************************************************/
-//void SuperqComputation::pointFromName()
-//{
-//    Bottle cmd,reply;
-//    blob_points.clear();
-//    points.clear();
-//    contour.clear();
-//    cmd.addVocab(Vocab::encode("ask"));
-//    Bottle &content=cmd.addList();
-//    Bottle &cond_1=content.addList();
-//    cond_1.addString("entity");
-//    cond_1.addString("==");
-//    cond_1.addString("object");
-//    content.addString("&&");
-//    Bottle &cond_2=content.addList();
-//    cond_2.addString("name");
-//    cond_2.addString("==");
-//    cond_2.addString(objname);
-
-//    portOPCrpc.write(cmd,reply);
-//    if(reply.size()>1)
-//    {
-//        if(reply.get(0).asVocab()==Vocab::encode("ack"))
-//        {
-//            if (Bottle *b=reply.get(1).asList())
-//            {
-//                if (Bottle *b1=b->get(1).asList())
-//                {
-//                    cmd.clear();
-//                    int id=b1->get(0).asInt();
-//                    cmd.addVocab(Vocab::encode("get"));
-//                    Bottle &info=cmd.addList();
-//                    Bottle &info2=info.addList();
-//                    info2.addString("id");
-//                    info2.addInt(id);
-//                    Bottle &info3=info.addList();
-//                    info3.addString("propSet");
-//                    Bottle &info4=info3.addList();
-//                    info4.addString("position_2d_left");
-//                }
-//                else
-//                {
-//                    yError("no object id provided by OPC!");
-//                    contour.clear();
-//                }
-//            }
-//            else
-//            {
-//                yError("uncorrect reply from OPC!");
-//                contour.clear();
-//            }
-
-//            Bottle reply;
-//            if (portOPCrpc.write(cmd,reply))
-//            {
-
-//                if (reply.size()>1)
-//                {
-//                    if (reply.get(0).asVocab()==Vocab::encode("ack"))
-//                    {
-//                        if (Bottle *b=reply.get(1).asList())
-//                        {
-//                            if (Bottle *b1=b->find("position_2d_left").asList())
-//                            {
-//                                cv::Point p1,p2,p;
-//                                p1.x=b1->get(0).asInt();
-//                                p1.y=b1->get(1).asInt();
-//                                p2.x=b1->get(2).asInt();
-//                                p2.y=b1->get(3).asInt();
-//                                p.x=p1.x+(p2.x-p1.x)/2;
-//                                p.y=p1.y+(p2.y-p1.y)/2;
-//                                contour.push_back(p);
-//                            }
-//                            else
-//                            {
-//                                yError("position_2d_left field not found in the OPC reply!");
-//                                x.resize(11,0.0);
-//                                x_filtered.resize(11,0.0);
-//                                contour.clear();
-//                            }
-//                        }
-//                        else
-//                        {
-//                            yError("uncorrect reply structure received!");
-//                            contour.clear();
-//                        }
-//                    }
-//                    else
-//                    {
-//                        yError("Failure in reply for object 2D point!");
-//                        contour.clear();
-//                    }
-//                }
-//                else
-//                {
-//                    yError("reply size for 2D point less than 1!");
-//                    contour.clear();
-//                }
-//            }
-//            else
-//                yError("no reply from second OPC query!");
-//        }
-//        else
-//        {
-//            yError("Failure in reply for object id!");
-//            contour.clear();
-//        }
-//    }
-//    else
-//    {
-//        yError("reply size for object id less than 1!");
-//        contour.clear();
-//    }
-//}
-
 
 /***********************************************************************/
 void SuperqComputation::savePoints(const string &namefile, const Vector &colors)
@@ -643,7 +526,7 @@ void SuperqComputation::savePoints(const string &namefile, const Vector &colors)
         fout<<endl;
     }
     else
-        yError()<<"Some problems in opening output file!";
+        yError()<<"[SuperqComputation]: Some problems in opening output file!";
 
     fout.close();
 }
@@ -659,7 +542,7 @@ bool SuperqComputation::readPointCloud()
 
     if (!pointsFile.is_open())
     {
-        yError()<<"problem opening point cloud file!";
+        yError()<<"[SuperqComputation]: problem opening point cloud file!";
         return false;
     }
 
@@ -721,16 +604,16 @@ void SuperqComputation::filter()
 
     points.clear();
 
-    yInfo()<<"Processing points...";
+    yInfo()<<"[SuperqComputation]: Processing points...";
     double t0=yarp::os::Time::now();
     SpatialDensityFilter::filter(data,radius,nnThreshold+1, points);
     double t1=yarp::os::Time::now();
-    yInfo()<<"Processed in "<<1e3*(t1-t0)<<" [ms]";
+    yInfo()<<"[SuperqComputation]: Processed in "<<1e3*(t1-t0)<<" [ms]";
 
     Vector colors(3,0.0);
     colors[1]=255;
 
-    savePoints("/filtered-"+objname, colors);
+    savePoints("/filtered-"+tag_file, colors);
 }
 
 /***********************************************************************/
@@ -756,11 +639,11 @@ bool SuperqComputation::computeSuperq()
 
     double t0_superq=Time::now();
 
-    yDebug()<<"start IPOPT ";
+    yDebug()<<"[SuperqComputation]: Start IPOPT ";
 
     Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
 
-    yDebug()<<"finish IPOPT ";
+    yDebug()<<"[SuperqComputation]: Finish IPOPT ";
     t_superq=Time::now()-t0_superq;
 
     //points.clear();
@@ -768,14 +651,14 @@ bool SuperqComputation::computeSuperq()
     if (status==Ipopt::Solve_Succeeded)
     {
         x=superQ_nlp->get_result();
-        yInfo("Solution of the optimization problem: %s", x.toString(3,3).c_str());
-        yInfo("Execution time : %f", t_superq);
+        yInfo("[SuperqComputation]: Solution of the optimization problem: %s", x.toString(3,3).c_str());
+        yInfo("[SuperqComputation]: Execution time : %f", t_superq);
         return true;
     }
     else if(status==Ipopt::Maximum_CpuTime_Exceeded)
     {
         x=superQ_nlp->get_result();
-        yWarning("Solution after maximum time exceeded: %s", x.toString(3,3).c_str());
+        yWarning("[SuperqComputation]: Solution after maximum time exceeded: %s", x.toString(3,3).c_str());
         return true;
     }
     else
@@ -785,9 +668,9 @@ bool SuperqComputation::computeSuperq()
 /***********************************************************************/
 void SuperqComputation::filterSuperq()
 {
-    cout<< "Filtering the last "<< median_order << " superquadrics..."<<endl;
+    cout<< "[SuperqComputation]: Filtering the last "<< median_order << " superquadrics..."<<endl;
 
-    cout<<"x "<<x.toString()<<endl;
+    cout<<"[SuperqComputation]: x "<<x.toString()<<endl;
 
     if (fixed_window)
     { 
@@ -812,7 +695,7 @@ void SuperqComputation::filterSuperq()
         x_filtered=mFilter->filt(x);
     }
 
-    cout<< "Filtered superq "<< x_filtered.toString(3,3)<<endl;
+    cout<< "[SuperqComputation]: Filtered superq "<< x_filtered.toString(3,3)<<endl;
 }
 
 /***********************************************************************/
@@ -820,12 +703,11 @@ int SuperqComputation::adaptWindComputation()
 {
     elem_x.resize(3,0.0);
     elem_x=x.subVector(5,7);
-    cout<<"elem x "<<elem_x.toString()<<endl;
-    cout<<"old median order "<<median_order<<endl;
+    cout<<"[SuperqComputation]: Old median order "<<median_order<<endl;
 
     AWPolyElement el(elem_x,Time::now());
     Vector vel=PolyEst->estimate(el);
-    cout<<"velocity estimate "<<PolyEst->estimate(el).toString()<<endl;
+    cout<<"[SuperqComputation]: Velocity estimate "<<PolyEst->estimate(el).toString()<<endl;
 
 
     if (norm(vel)>=min_norm_vel)
@@ -836,26 +718,8 @@ int SuperqComputation::adaptWindComputation()
             new_median_order++;
     }
 
-    cout<<"new median order "<<new_median_order<<endl;
+    cout<<"[SuperqComputation]: New median order "<<new_median_order<<endl;
     return new_median_order;
-}
-
-/***********************************************************************/
-Vector SuperqComputation::getSolution(const string &name, bool filtered_or_not)
-{
-    LockGuard lg(mutex);
-    if (name==objname)
-    {
-        if (filtered_or_not==false)
-            return x;
-        else
-            return x_filtered;
-    }
-    else
-    {
-        Vector zeroVect(11,0.0);
-        return zeroVect;
-    }
 }
 
 /***********************************************************************/
@@ -914,10 +778,8 @@ void SuperqComputation::sendBlobPoints(const vector<Vector> &p)
     LockGuard lg(mutex);
 
     blob_points.clear();
-    //for (std::list<Vector>::iterator i=p.begin(); i != p.end(); ++i)
     for (size_t i=0; i<p.size(); i++)
     {
-        //Vector tmp=*i;    
         Vector tmp=p[i];
         blob_points.push_back(cv::Point(tmp[0],tmp[1]));
     }
