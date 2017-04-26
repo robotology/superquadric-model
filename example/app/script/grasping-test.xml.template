@@ -1,0 +1,32 @@
+<application>
+    <name>grasping-test</name>
+
+    <dependencies>
+        <port>/lbpExtract/rpc:i</port>
+        <port>/memory/rpc</port>
+    </dependencies>
+    
+    <module>
+       <name>grasping-test</name>
+       <node>icub21</node>
+    </module>
+   
+    <connection>
+        <from>/grasping-test/blob:rpc</from>
+        <to>/lbpExtract/rpc:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/grasping-test/OPC:rpc</from>
+        <to>/memory/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/grasping-test/superq:rpc</from>
+        <to>/superquadric-model/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+</application>
+
