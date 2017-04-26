@@ -76,7 +76,7 @@ The latter is a **median filter with an adaptive moving window**. Each filtered 
 
 ## Use case
 The superquadric-model module requires the 2D blob of the object we want to model with a superquadric function.
-An example code for retriving this information, together with a tutorial, is provided in the folder [`example`](https://github.com/robotology/superquadric-model/tree/master/example) in this repository.
+An example code for retriving this information, together with a tutorial, is provided in the folder [`tutorial`](https://github.com/robotology/superquadric-model/tree/master/tutorial) in this repository.
 
 
 
