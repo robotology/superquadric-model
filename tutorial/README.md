@@ -8,7 +8,6 @@ for  the blob extraction process.
 
 ## How to compile
 ```
-cd superquadric-model/example
 mkdir build; cd build
 ccmake ..
 make install
