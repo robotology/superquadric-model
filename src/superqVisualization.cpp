@@ -190,7 +190,7 @@ bool SuperqVisualization::threadInit()
 /***********************************************************************/
 void SuperqVisualization::run()
 {
-    if (what_to_plot=="superq" && norm(superq)>0.0)
+    if (what_to_plot=="superq" && imgIn!=NULL)
         showSuperq(superq);
     else if (what_to_plot=="points" && points.size()>0)
         showPoints();

@@ -662,7 +662,10 @@ bool SuperqComputation::computeSuperq()
         return true;
     }
     else
+    {
+        x.resize(11,0.0);
         return false;
+    }
 }
 
 /***********************************************************************/

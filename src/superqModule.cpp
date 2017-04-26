@@ -465,11 +465,17 @@ bool SuperqModule::updateModule()
     t0=Time::now();
     LockGuard lg(mutex);
 
+    x.resize(11,0.0);
+    x_filtered.resize(11,0.0);
+
     if (mode_online==true)
     {
         Vector &x_to_send=portSuperq.prepare();
 
         imgIn=portImgIn.read();
+
+       // if (imgIn==NULL)
+       //     return true;
 
         superqCom->sendImg(imgIn);
 
@@ -491,7 +497,7 @@ bool SuperqModule::updateModule()
             {
                 if (filter_superq)
                     superqVis->sendSuperq(x_filtered);
-                else
+                else 
                     superqVis->sendSuperq(x);
             }
             else if (what_to_plot=="points")
