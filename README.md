@@ -156,6 +156,8 @@ superqRpc.write(cmd, reply);
 ### Some results
 Here is an example of a reconstructed superquadric:
 
+<img src="https://github.com/robotology/superquadric-model/blob/master/misc/superq-ex.png" width=900>
+
 The execution times are respectively:
 - for **superquadric computation** nearly 0.1 s (including the median filter on the estimated superquadrics)
 - for **point cloud filtereing** nearly 0.1 s (optional)
