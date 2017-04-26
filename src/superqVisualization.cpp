@@ -190,11 +190,12 @@ bool SuperqVisualization::threadInit()
 /***********************************************************************/
 void SuperqVisualization::run()
 {
+    double t0=Time::now();
     if (what_to_plot=="superq" && imgIn!=NULL)
         showSuperq(superq);
     else if (what_to_plot=="points" && points.size()>0)
         showPoints();
-
+    t_vis=Time::now()-t0;
 }
 
 /***********************************************************************/
@@ -232,27 +233,97 @@ void SuperqVisualization:: threadRelease()
 }
 
 /***********************************************************************/
-void SuperqVisualization::setPar(const string &par_name, const string &value)
+void SuperqVisualization::setPar(const Property &newOptions)
 {
+    Bottle &groupBottle=newOptions.findGroup("visualized_points");
     LockGuard lg(mutex);
-    if (par_name=="eye")
-        eye=value;
-    else if (par_name=="what_to_plot")
-        what_to_plot=value;
+
+    if (!groupBottle.isNull())
+    {
+        int v_points=groupBottle.get(1).asInt();
+        if ((v_points)>=1 && (v_points<=300))
+                vis_points=v_points;
+        else
+            vis_points=3;
+    }
+
+    Bottle &groupBottle2=newOptions.findGroup("what_to_plot");
+    if (!groupBottle2.isNull())
+    {
+        string plot=groupBottle2.get(1).asString();
+        if ((plot=="superq") || (plot=="points"))
+                what_to_plot=plot;
+        else
+            what_to_plot="superq";
+    }
+
+    Bottle &groupBottle3=newOptions.findGroup("visualized_points_step");
+    if (!groupBottle3.isNull())
+    {
+        int vpoint=groupBottle3.get(1).asInt();
+        if ((vpoint>=1) && (vpoint<=100))
+                vis_step=vpoint;
+        else
+            vis_step=10;
+    }
+
+    Bottle &groupBottle5=newOptions.findGroup("camera");
+    if (!groupBottle5.isNull())
+    {
+        string cam=groupBottle5.get(1).asString();
+        if ((cam=="left") || (cam=="right"))
+                eye=cam;
+        else
+            eye="left";
+    }
+
+    Bottle &groupBottle6=newOptions.findGroup("color");
+    if (!groupBottle6.isNull())
+    {
+        string col=groupBottle6.get(1).asString();
+        if (col=="red")
+        {
+            Color[0]=255; Color[1]=0; Color[2]=0;
+        }
+        else if (col=="green")
+        {
+            Color[0]=0; Color[1]=255; Color[2]=0;
+        }
+        else if (col=="blue")
+        {
+            Color[0]=0; Color[1]=0; Color[2]=255;
+        }                
+        else
+        {
+            Color[0]=255; Color[1]=0; Color[2]=0;
+        }
+    }
 }
 
 /***********************************************************************/
-void SuperqVisualization::setPar(const string &par_name, const int &value)
+Property SuperqVisualization::getPar()
 {
     LockGuard lg(mutex);
-    if (par_name=="vis_points")
-        vis_points=value;
+
+    Property advOptions;
+    advOptions.put("visualized_points",vis_points);
+    if (Color[0]==255 && Color[1]==0 && Color[2]==0)
+        advOptions.put("color","red");
+    else if  (Color[0]==0 && Color[1]==255 && Color[2]==0)
+        advOptions.put("color","green");
+    else if  (Color[0]==0 && Color[1]==0 &&Color[2]==255)
+        advOptions.put("color","blue");
+    advOptions.put("camera",eye);
+    advOptions.put("visualized_points_step",vis_step);
+    advOptions.put("what_to_plot",what_to_plot);
+    return advOptions;
 }
 
+
 /***********************************************************************/
-void SuperqVisualization::setColor (const int &r, const int &g, const int &b)
-{
+double SuperqVisualization::getTime()
+{   
     LockGuard lg(mutex);
-    Color.clear();
-    Color.push_back(r); Color.push_back(g); Color.push_back(b);
+    return t_vis;
 }
+

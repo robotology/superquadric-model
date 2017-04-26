@@ -78,6 +78,9 @@ protected:
     Vector x_filtered;
 
     double t_superq;
+    deque<double> times_superq;
+    double t_vis;
+    deque<double> times_vis;
 
     BufferedPort<ImageOf<PixelRgb> > portImgIn;
     BufferedPort<Vector> portSuperq;
@@ -117,10 +120,10 @@ protected:
     string get_tag_file();
 
     /************************************************************************/
-    vector<int> get_color();
+  //  vector<int> get_color();
 
     /**********************************************************************/
-    bool set_color(const int red, const int green, const int blue);
+   // bool set_color(const int red, const int green, const int blue);
 
     /**********************************************************************/
     string get_visualization();
@@ -129,16 +132,16 @@ protected:
     bool set_visualization(const string &e);
 
     /**********************************************************************/
-    string get_eye();
+   // string get_eye();
 
     /**********************************************************************/
-    bool set_eye(const string &e);
+   // bool set_eye(const string &e);
 
     /**********************************************************************/
-    int get_visualized_points();
-
+   // int get_visualized_points();
+//
     /**********************************************************************/
-    bool set_visualized_points(const int v);
+   // bool set_visualized_points(const int v);
 
     /**********************************************************************/
     Property get_superq(const vector<Vector> &blob, bool filtered_or_not);
@@ -156,28 +159,10 @@ protected:
     string get_superq_filtering();
 
     /**********************************************************************/
-    Property get_advanced_options(const string &field);
+    Property get_options(const string &field);
 
     /**********************************************************************/
-    bool set_advanced_options(const Property &newOptions, const string &field);
-
-    /**********************************************************************/
-    bool set_plot(const string &plot);
-
-    /**********************************************************************/
-    string get_plot();
-
-    /**********************************************************************/
-    bool set_visualized_points_step(const int step);
-
-    /**********************************************************************/
-    int get_visualized_points_step();
-
-    /**********************************************************************/
-    bool set_fixed_window(const string &entry);
-
-    /**********************************************************************/
-    string get_fixed_window();
+    bool set_options(const Property &newOptions, const string &field);
 
 public:
     /***********************************************************************/

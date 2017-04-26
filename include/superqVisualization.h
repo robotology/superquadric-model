@@ -39,6 +39,7 @@ class SuperqVisualization : public RateThread
 {
 protected:
     int r,g,b;
+    double t_vis;
     string what_to_plot;
     BufferedPort<ImageOf<PixelRgb> > portImgOut;
 
@@ -104,6 +105,15 @@ public:
 
     /***********************************************************************/
     void setColor (const int &r, const int &g, const int &b);
+
+    /***********************************************************************/    
+    void setPar(const Property &newOptions);
+
+    /***********************************************************************/
+    Property getPar();
+
+    /***********************************************************************/
+    double getTime();
 
 };
 

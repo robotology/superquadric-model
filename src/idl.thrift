@@ -44,56 +44,6 @@ service superquadricModel_IDL
     string get_tag_file();
 
     /**
-    * Get RGB values of the visualized points
-    * (for superquadric or points visualization)
-    * @return a list with the RGB values of the
-    * superquadric and blob visualization.
-    */
-    list<i32> get_color();
-
-    /**
-    * Set the RGB values used for the superquadric
-    * and blob visualization.
-    * @param r is red value in [0,255]. 
-    * @param g is green value in [0,255].
-    * @param b is blue value in [0,255].  
-    * @return true/false on success/failure.
-    */
-    bool set_color(1: i32 r, 2: i32 g, 3: i32 b);
-
-    /**
-    * Get the eye used for projection of the
-    * 3D points on the superquadric surface
-    * to the 2D pixels.
-    * @return the name of the eye used.
-    */
-    string get_eye();
-
-    /**
-    * Set the eye used for projection of the
-    * 3D points on the superquadric surface
-    * to the 2D pixels.
-    * @param eye is a string "left" or "right" for selecting the left or right eye.
-    * @return true/false on success/failure.
-    */
-    bool set_eye(1:string eye);
-
-    /**
-    * Get max number of visualized points
-    * on superquadric surface.
-    * @return the number of the visualized points.
-    */
-    i32 get_visualized_points();
-
-    /**
-    * Set max number of visualized points
-    * on superquadric surface.
-    * @param vis is the number of points to be visualized.
-    * @return true/false on success/failure.
-    */
-    bool set_visualized_points(1:i32 vis);
-
-    /**
     * Get the parameters of the reconstructed superquadric .
     * @param blob is the 2D blob of the object we want to model with the superquadric.
     * @param filtered_or_not is a bool variable specifing if we want the superquadric
@@ -147,65 +97,25 @@ service superquadricModel_IDL
     string get_save_points();
 
     /**
-    * Get the advanced parameters of the module. The user must pay attention
+    * Get the  parameters of the module. The user must pay attention
     * in changing them.
-    * @param field can be "points_filter", "superq_filter", "optimization",
+    * @param field can be "points_filter", "superq_filter", "optimization", "visualization" or "statistics".
     * depending on which parameters we are interested in.
-    * @return the Property including all the advanced parameter values.
+    * @return the Property including all the  parameter values.
     */
-    Property get_advanced_options(1: string field);
+    Property get_options(1: string field);
 
     /**
-    * Set the advanced parameters of the module. The user must pay attention
+    * Set the  parameters of the module. The user must pay attention
     * in changing them.
     * @param options is a Property containing the parameters the user want to change.
     * @param field is a string specifying which can of parameter we are going to change.
-    * Field can be: "points_filter", "superq_filter" or "optimization".
-    * You can set the advanced parameters typing: 
-    * command:  set_advanced_options ((filter_radius_advanced <radius-value>) (filter_nnThreshold_advanced <nnThreshold-value>)) points_filter.
+    * Field can be: "points_filter", "superq_filter", "optimization" or "visualization".
+    * You can set the  parameters typing: 
+    * command:  set_options ((filter_radius <radius-value>) (filter_nnThreshold <nnThreshold-value>)) points_filter.
     * @return true/false on success/failure.
     */
-    bool set_advanced_options(1:Property options, 2: string field);
-
-    /**
-    * Set what you want to show on the yarpview.
-    *@param plot can be: "superq"or "points".
-    *@return true/false on success/failure.
-    */
-    bool set_plot(1:string plot);
-
-    /**
-    * Get what is shown on the yarpview.
-    *@return  "superq" or "points" .
-    */
-    string get_plot();
-
-    /**
-    * Set the step used to downsample the points to be show.
-    * @param step must be a positive value.
-    * @return true/false on success/failure.
-    */
-    bool set_visualized_points_step(1:i32 step);
-
-    /** Get the step used to downsample the points to be show.
-    * @return the step value.
-    */
-    i32 get_visualized_points_step();
-
-    /**
-    * Set fixed_window variable on or off for the superquadric filtering. If fixed_window is on, 
-    * the superquadric is filtered using a fixed window, otherwise the window adapts with the
-    * estimated superquadric velocity.
-    *@param entry can be: "yes", "no".
-    *@return true/false on success/failure.
-    */
-    bool set_fixed_window(1:string entry);
-
-    /**
-    * Get if the window value for superquadric filtering is fixed or not.
-    *@return  "on " or "off".
-    */
-    string get_fixed_window();
+    bool set_options(1:Property options, 2: string field);
 
     /**
     * Set if the visualization has to be enabled.

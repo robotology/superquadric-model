@@ -59,57 +59,6 @@ string SuperqModule::get_tag_file()
     return tag_file;
 }
 
-/************************************************************************/
-vector<int> SuperqModule::get_color()
-{
-    vector<int> rgb;
-    rgb.clear();
-    rgb.push_back(r);
-    rgb.push_back(g);
-    rgb.push_back(b);
-    return rgb;
-}
-
-/**********************************************************************/
-bool SuperqModule::set_color(const int red, const int green, const int blue)
-{
-    if ((red<=255) && (green<=255) && (blue<=255) && (red>=0) && (green>=0) && (blue>=0))
-    {
-        LockGuard lg(mutex);
-        r=red;
-        g=green;
-        b=blue;
-        superqVis->setColor(r,g,b);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-/**********************************************************************/
-string SuperqModule::get_eye()
-{
-    return eye;
-}
-
-/**********************************************************************/
-bool SuperqModule::set_eye(const string &e)
-{
-    if ((e=="left") || (e=="right"))
-    {
-        LockGuard lg(mutex);
-        eye=e;
-        superqVis->setPar("eye", eye);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
 /**********************************************************************/
 string SuperqModule::get_visualization()
 {
@@ -148,28 +97,6 @@ bool SuperqModule::set_visualization(const string &e)
             delete superqVis;
             visualization_on=false;
         }
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-/**********************************************************************/
-int SuperqModule::get_visualized_points()
-{
-    return vis_points;
-}
-
-/**********************************************************************/
-bool SuperqModule::set_visualized_points(const int v)
-{
-    if ((v>=10) && (v<=1000))
-    {
-        LockGuard lg(mutex);
-        vis_points=v;
-        superqVis->setPar("vis_points", vis_points);
         return true;
     }
     else
@@ -234,8 +161,8 @@ bool SuperqModule::set_points_filtering(const string &entry)
             radius=0.005;
             nnThreshold=100;
             Property options;
-            options.put("filter_radius_advanced", radius);
-            options.put("filter_nnThreshold_advanced", nnThreshold);
+            options.put("filter_radius", radius);
+            options.put("filter_nnThreshold", nnThreshold);
             superqCom->setPointsFilterPar(options);
             superqCom->setPar("filter_points", "on");
         }
@@ -281,10 +208,10 @@ bool SuperqModule::set_superq_filtering(const string &entry)
             median_order=5; 
             fixed_window=false;
             Property options;
-            options.put("median_order_advanced", median_order);
+            options.put("median_order", median_order);
+            options.put("fixed_window", "on");
             superqCom->setSuperqFilterPar(options);
             superqCom->setPar("filter_superq", "on");
-            superqCom->setPar("fixed_window", "on");
         }
         else
             superqCom->setPar("filter_superq", "off");
@@ -343,7 +270,7 @@ bool SuperqModule::set_save_points(const string &entry)
 }
 
 /**********************************************************************/
-Property SuperqModule::get_advanced_options(const string &field)
+Property SuperqModule::get_options(const string &field)
 {
     Property advOptions;
     if (field=="points_filter")
@@ -352,12 +279,19 @@ Property SuperqModule::get_advanced_options(const string &field)
         advOptions=superqCom->getSuperqFilterPar();
     else if (field=="optimization")
         advOptions=superqCom->getIpoptPar();
+    else if (field=="visualization")
+        advOptions=superqVis->getPar();
+    else if (field=="statistics")
+    {
+        advOptions.put("average_computation_time", t_superq);
+        advOptions.put("average_visualization_time", t_vis);
+    }       
 
     return advOptions;
 }
 
 /**********************************************************************/
-bool SuperqModule::set_advanced_options(const Property &newOptions, const string &field)
+bool SuperqModule::set_options(const Property &newOptions, const string &field)
 {
     if (field=="points_filter")
         superqCom->setPointsFilterPar(newOptions);
@@ -365,92 +299,12 @@ bool SuperqModule::set_advanced_options(const Property &newOptions, const string
         superqCom->setSuperqFilterPar(newOptions);
     else if (field=="optimization")
         superqCom->setIpoptPar(newOptions);
+    else if (field=="visualization")
+        superqVis->setPar(newOptions);
     else
         return false;
 
     return true;
-}
-
-/**********************************************************************/
-bool SuperqModule::set_plot(const string &plot)
-{
-    if ((plot=="superq") || (plot=="points"))
-    {
-        LockGuard lg(mutex);
-        what_to_plot=plot;
-        superqVis->setPar("what_to_plot", what_to_plot);
-        return true;
-    }
-    else
-        return false;
-}
-
-/**********************************************************************/
-string SuperqModule::get_plot()
-{
-    return what_to_plot;
-}
-
-/**********************************************************************/
-bool SuperqModule::set_visualized_points_step(const int step)
-{
-    if (step>0)
-    {
-        vis_step=step;
-        return true;
-    }
-    else
-    {
-        yError()<<"[SuperqModule]: Negative step for visualized point downsampling!";
-        return false;
-    }
-}
-
-/**********************************************************************/
-int SuperqModule::get_visualized_points_step()
-{
-    return vis_step;
-}
-
-/**********************************************************************/
-bool SuperqModule::set_fixed_window(const string &entry)
-{
-    fixed_window=(entry=="yes");
-    superqCom->setPar("fixed_window", entry);
-
-    if (!fixed_window)
-    {
-        median_order=5;
-        min_median_order=1;
-        max_median_order=30;
-        threshold_median=0.1;
-        min_norm_vel=0.01;
-        Property options;
-        options.put("median_order_advanced", median_order);
-        options.put("min_median_order_advanced", min_median_order);
-        options.put("max_median_order_advanced", max_median_order);
-        options.put("threshold_median_advanced", threshold_median);
-        options.put("min_norm_vel_advanced", min_norm_vel);
-        superqCom->setSuperqFilterPar(options);
-    }
-
-    cout<<endl;
-    cout<<"[SuperqModule]: min_median_order      "<<min_median_order<<endl;
-    cout<<"[SuperqModule]: max_median_order      "<<max_median_order<<endl;
-    cout<<"[SuperqModule]: threshold_median      "<<threshold_median<<endl;
-    cout<<"[SuperqModule]: min_norm_vel          "<<min_norm_vel<<endl;
-    cout<<endl;
-
-    return true;
-}
-
-/**********************************************************************/
-string SuperqModule::get_fixed_window()
-{
-    if (fixed_window)
-        return "on";
-    else
-        return "off";
 }
 
 /***********************************************************************/
@@ -474,14 +328,25 @@ bool SuperqModule::updateModule()
 
         imgIn=portImgIn.read();
 
-       // if (imgIn==NULL)
-       //     return true;
-
         superqCom->sendImg(imgIn);
 
         x=superqCom->getSolution(false);
 
         x_filtered=superqCom->getSolution(true);
+
+        if (times_superq.size()<10)
+            times_superq.push_back(superqCom->getTime());
+        else if (times_superq.size()==10)
+        {
+            for (size_t i=0; i<times_superq.size(); i++)
+            {
+                t_superq+=times_superq[i];
+            }
+            t_superq=t_superq/times_superq.size();
+            times_superq.push_back(0.0);
+        }
+        else
+            times_superq.clear();
         
         if (!filter_superq)
             x_to_send=x;
@@ -505,6 +370,20 @@ bool SuperqModule::updateModule()
                 superqCom->getPoints(points);
                 superqVis->sendPoints(points);
             }
+
+            if (times_vis.size()<10)
+            times_vis.push_back(superqVis->getTime());
+            else if (times_vis.size()==10)
+            {
+                for (size_t i=0; i<times_vis.size(); i++)
+                {
+                    t_vis+=times_vis[i];
+                }
+            t_vis=t_vis/times_vis.size();
+            times_vis.push_back(0.0);
+        }
+        else
+            times_vis.clear();
         }
     }
     else
@@ -688,8 +567,8 @@ bool SuperqModule::configFilter(ResourceFinder &rf)
     radius=rf.check("radius", Value(0.005)).asDouble();
     nnThreshold=rf.check("nn-threshold", Value(100)).asInt();
 
-    filter_points_par.put("filter_radius_advanced",radius);
-    filter_points_par.put("filter_nnThreshold_advanced",nnThreshold);
+    filter_points_par.put("filter_radius",radius);
+    filter_points_par.put("filter_nnThreshold",nnThreshold);
 
     cout<<endl;
     cout<<"[SuperqModule]: radius         "<<radius<<endl;
@@ -709,11 +588,11 @@ bool SuperqModule::configFilterSuperq(ResourceFinder &rf)
     min_norm_vel=rf.check("min_norm_vel", Value(0.01)).asDouble();
     x.resize(11,0.0);
 
-    filter_superq_par.put("median_order_advanced",median_order);
-    filter_superq_par.put("min_median_order_advanced",min_median_order);
-    filter_superq_par.put("max_median_order_advanced",max_median_order);
-    filter_superq_par.put("threshold_median_advanced",threshold_median);
-    filter_superq_par.put("min_norm_vel_advanced",min_norm_vel);
+    filter_superq_par.put("median_order",median_order);
+    filter_superq_par.put("min_median_order",min_median_order);
+    filter_superq_par.put("max_median_order",max_median_order);
+    filter_superq_par.put("threshold_median",threshold_median);
+    filter_superq_par.put("min_norm_vel",min_norm_vel);
 
     cout<<endl;
     cout<<"[SuperqModule]: fixed_window          "<<fixed_window<<endl;
@@ -759,13 +638,13 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     if (rf.find("nlp_scaling_method").isNull())
         nlp_scaling_method="none";
 
-    ipopt_par.put("optimizer_points_advanced",optimizer_points);
-    ipopt_par.put("max_cpu_time_advanced", max_cpu_time);
-    ipopt_par.put("tol_advanced",tol);
-    ipopt_par.put("acceptable_iter_advanced",acceptable_iter);
-    ipopt_par.put("max_iter_advanced",max_iter);
-    ipopt_par.put("mu_strategy_advanced",mu_strategy);
-    ipopt_par.put("nlp_scaling_method_advanced",nlp_scaling_method);
+    ipopt_par.put("optimizer_points",optimizer_points);
+    ipopt_par.put("max_cpu_time", max_cpu_time);
+    ipopt_par.put("tol",tol);
+    ipopt_par.put("acceptable_iter",acceptable_iter);
+    ipopt_par.put("max_iter",max_iter);
+    ipopt_par.put("mu_strategy",mu_strategy);
+    ipopt_par.put("nlp_scaling_method",nlp_scaling_method);
 
     cout<<endl;
     cout<<"[Superqcomputation]: optimizer_points      "<<optimizer_points<<endl;

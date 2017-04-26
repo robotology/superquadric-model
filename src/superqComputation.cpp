@@ -70,7 +70,7 @@ SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filte
 /***********************************************************************/
 void SuperqComputation::setPointsFilterPar(const Property &newOptions)
 {
-    Bottle &groupBottle=newOptions.findGroup("filter_radius_advanced");
+    Bottle &groupBottle=newOptions.findGroup("filter_radius");
     LockGuard lg(mutex);
 
     if (!groupBottle.isNull())
@@ -84,7 +84,7 @@ void SuperqComputation::setPointsFilterPar(const Property &newOptions)
         }
     }
 
-    Bottle &groupBottle2=newOptions.findGroup("filter_nnThreshold_advanced");
+    Bottle &groupBottle2=newOptions.findGroup("filter_nnThreshold");
     if (!groupBottle2.isNull())
     {
         int nnThreValue=groupBottle2.get(1).asInt();
@@ -103,15 +103,15 @@ Property SuperqComputation::getPointsFilterPar()
     LockGuard lg(mutex);
 
     Property advOptions;
-    advOptions.put("filter_radius_advanced",radius);
-    advOptions.put("filter_nnThreshold_advanced",nnThreshold);
+    advOptions.put("filter_radius",radius);
+    advOptions.put("filter_nnThreshold",nnThreshold);
     return advOptions;
 }
 
 /***********************************************************************/
 void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
 {
-    Bottle &groupBottle=newOptions.findGroup("median_order_advanced");
+    Bottle &groupBottle=newOptions.findGroup("median_order");
     LockGuard lg(mutex);
 
     if (!groupBottle.isNull())
@@ -123,7 +123,7 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
             std_median_order=3;
     }
 
-    Bottle &groupBottle2=newOptions.findGroup("min_median_order_advanced");
+    Bottle &groupBottle2=newOptions.findGroup("min_median_order");
     if (!groupBottle2.isNull())
     {
         int mOrderValue=groupBottle2.get(1).asInt();
@@ -133,7 +133,7 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
             min_median_order=1;
     }
 
-    Bottle &groupBottle3=newOptions.findGroup("max_median_order_advanced");
+    Bottle &groupBottle3=newOptions.findGroup("max_median_order");
     if (!groupBottle3.isNull())
     {
         int mOrderValue=groupBottle3.get(1).asInt();
@@ -143,7 +143,7 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
             max_median_order=30;
     }
 
-    Bottle &groupBottle4=newOptions.findGroup("threshold_median_advanced");
+    Bottle &groupBottle4=newOptions.findGroup("threshold_median");
     if (!groupBottle4.isNull())
     {
         double threValue=groupBottle4.get(1).asDouble();
@@ -153,7 +153,7 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
             threshold_median=0.1;
     }
 
-    Bottle &groupBottle5=newOptions.findGroup("min_norm_vel_advanced");
+    Bottle &groupBottle5=newOptions.findGroup("min_norm_vel");
     if (!groupBottle5.isNull())
     {
         double minNormVel=groupBottle5.get(1).asDouble();
@@ -161,6 +161,16 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
                 min_norm_vel=minNormVel;
         else
             min_norm_vel=0.01;
+    }
+
+    Bottle &groupBottle6=newOptions.findGroup("fixed_window");
+    if (!groupBottle6.isNull())
+    {
+        string par=groupBottle6.get(1).asString();
+        if ((par=="on") || (par=="off"))
+                fixed_window=(par=="on");
+        else
+            fixed_window=false;
     }
 }
 
@@ -170,18 +180,22 @@ Property SuperqComputation::getSuperqFilterPar()
     LockGuard lg(mutex);
 
     Property advOptions;
-    advOptions.put("median_order_advanced",std_median_order);
-    advOptions.put("min_median_order_advanced",min_median_order);
-    advOptions.put("max_median_order_advanced",max_median_order);
-    advOptions.put("threshold_median_advanced",threshold_median);
-    advOptions.put("min_norm_vel_advanced",min_norm_vel);
+    if (fixed_window)
+        advOptions.put("fixed_window","on");
+    else
+        advOptions.put("fixed_window","off");
+    advOptions.put("median_order",std_median_order);
+    advOptions.put("min_median_order",min_median_order);
+    advOptions.put("max_median_order",max_median_order);
+    advOptions.put("threshold_median",threshold_median);
+    advOptions.put("min_norm_vel",min_norm_vel);
     return advOptions;
 }
 
 /***********************************************************************/
 void SuperqComputation::setIpoptPar(const Property &newOptions)
 {
-    Bottle &groupBottle=newOptions.findGroup("optimizer_points_advanced");
+    Bottle &groupBottle=newOptions.findGroup("optimizer_points");
     LockGuard lg(mutex);
 
     if (!groupBottle.isNull())
@@ -193,7 +207,7 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
             optimizer_points=50;
     }
 
-    Bottle &groupBottle2=newOptions.findGroup("max_cpu_time_advanced");
+    Bottle &groupBottle2=newOptions.findGroup("max_cpu_time");
     if (!groupBottle2.isNull())
     {
         double maxCpuTime=groupBottle2.get(1).asDouble();
@@ -203,7 +217,7 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
             max_cpu_time=5.0;
     }
 
-    Bottle &groupBottle3=newOptions.findGroup("tol_advanced");
+    Bottle &groupBottle3=newOptions.findGroup("tol");
     if (!groupBottle3.isNull())
     {
         double tolValue=groupBottle3.get(1).asDouble();
@@ -213,7 +227,7 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
             tol=1e-5;
     }
 
-    Bottle &groupBottle4=newOptions.findGroup("acceptable_iter_advanced");
+    Bottle &groupBottle4=newOptions.findGroup("acceptable_iter");
     if (!groupBottle4.isNull())
     {
         int accIter=groupBottle4.get(1).asInt();
@@ -223,7 +237,7 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
             acceptable_iter=0;
     }
 
-    Bottle &groupBottle5=newOptions.findGroup("max_iter_advanced");
+    Bottle &groupBottle5=newOptions.findGroup("max_iter");
     if (!groupBottle5.isNull())
     {
         int maxIter=groupBottle5.get(1).asInt();
@@ -233,7 +247,7 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
             max_iter=100;
     }
 
-    Bottle &groupBottle6=newOptions.findGroup("mu_strategy_advanced");
+    Bottle &groupBottle6=newOptions.findGroup("mu_strategy");
     if (!groupBottle6.isNull())
     {
         string mu_str=groupBottle6.get(1).asString().c_str();
@@ -245,7 +259,7 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
         }
     }
 
-    Bottle &groupBottle7=newOptions.findGroup("nlp_scaling_method_advanced");
+    Bottle &groupBottle7=newOptions.findGroup("nlp_scaling_method");
     if (!groupBottle7.isNull())
     {
         string nlp=groupBottle7.get(1).asString().c_str();
@@ -265,13 +279,13 @@ Property SuperqComputation::getIpoptPar()
     LockGuard lg(mutex);
 
     Property advOptions;
-    advOptions.put("optimizer_points_advanced",optimizer_points);
-    advOptions.put("max_cpu_time_advanced",max_cpu_time);
-    advOptions.put("tol_advanced",tol);
-    advOptions.put("max_iter_advanced",max_iter);
-    advOptions.put("acceptable_iter_advanced",acceptable_iter);
-    advOptions.put("IPOPT_mu_strategy_advanced",mu_strategy);
-    advOptions.put("IPOPT_nlp_scaling_method_advanced",nlp_scaling_method);
+    advOptions.put("optimizer_points",optimizer_points);
+    advOptions.put("max_cpu_time",max_cpu_time);
+    advOptions.put("tol",tol);
+    advOptions.put("max_iter",max_iter);
+    advOptions.put("acceptable_iter",acceptable_iter);
+    advOptions.put("IPOPT_mu_strategy",mu_strategy);
+    advOptions.put("IPOPT_nlp_scaling_method",nlp_scaling_method);
     return advOptions;
 }
 
@@ -285,12 +299,17 @@ void SuperqComputation::setPar(const string &par_name, const string &value)
         filter_points=(value=="on");
     else if (par_name=="filter_superq")
         filter_superq=(value=="on");
-     else if (par_name=="fixed_window")
-        fixed_window=(value=="on");
     else if (par_name=="save_points")
         save_points=(value=="on");
     else if (par_name=="one_shot")
         one_shot=(value=="true");
+}
+
+/***********************************************************************/
+double SuperqComputation::getTime()
+{   
+    LockGuard lg(mutex);
+    return t_superq;
 }
 
 /***********************************************************************/
@@ -324,6 +343,8 @@ void SuperqComputation::run()
     t0=Time::now();
     LockGuard lg(mutex);
 
+    double t0=Time::now();
+
     acquirePointsFromBlob(imgIn);
 
     if ((filter_points==true) && (points.size()>0))
@@ -346,6 +367,8 @@ void SuperqComputation::run()
         if (filter_superq)
             filterSuperq();
     }
+
+    t_superq=Time::now() - t0;
 }
 
 /***********************************************************************/
@@ -644,15 +667,14 @@ bool SuperqComputation::computeSuperq()
     Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
 
     yDebug()<<"[SuperqComputation]: Finish IPOPT ";
-    t_superq=Time::now()-t0_superq;
 
-    //points.clear();
+    double t_s=Time::now()-t0_superq;
 
     if (status==Ipopt::Solve_Succeeded)
     {
         x=superQ_nlp->get_result();
         yInfo("[SuperqComputation]: Solution of the optimization problem: %s", x.toString(3,3).c_str());
-        yInfo("[SuperqComputation]: Execution time : %f", t_superq);
+        yInfo("[SuperqComputation]: Execution time : %f", t_s);
         return true;
     }
     else if(status==Ipopt::Maximum_CpuTime_Exceeded)
