@@ -38,14 +38,9 @@
 
     <connection>
         <from>/superquadric-model/blob:rpc</from>
-        <to>/lbpExtract/rpc:i</to>
+        <to>/grasping-test/rpc</to>
         <protocol>tcp</protocol>
     </connection>
 
-    <connection>
-        <from>/superquadric-model/OPC:rpc</from>
-        <to>/memory/rpc</to>
-        <protocol>tcp</protocol>
-    </connection>
 </application>
 
