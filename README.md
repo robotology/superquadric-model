@@ -161,7 +161,7 @@ The execution times are respectively:
 - for **point cloud filtereing** nearly 0.1 s (optional)
 - for **visualization** nearly 0.01 s (optional)
 
-This [video]() shows the superquadric modeling of several objects.
+This [video](https://www.youtube.com/watch?v=MViX4Ppo4WQ&feature=youtu.be) shows the superquadric modeling of several objects.
 
 
 ### More information
