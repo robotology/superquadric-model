@@ -40,7 +40,6 @@ compensated by the multiplication with the term _&lambda;1, &lambda;2, &lambda;3
 - [icub-contrib-common](https://github.com/robotology/icub-contrib-common)
 - [IPOPT](https://projects.coin-or.org/Ipopt)
 - [OpenCV](http://opencv.org/)
-- [IOL](https://github.com/robotology/iol)
 
 ## How to compile
 
@@ -54,11 +53,119 @@ make install
 ```
   
 
-## Module pipeline
+## Module structure
+The module structure is outlined in the following picture:
+
+<p align="center" > <img src="https://github.com/robotology/superquadric-model/blob/master/misc/superquadric-model.png" width=600 > </p>
+
+The superquadric-model module launches two separate threads:
+- `SuperqComputation`, computing the superquadric given the 2D blob of the object;
+- `SuperqVisualization`, showing the estimated superquadric or the points used for the computation (optional).
+
+The superquadric-model also provides some `thrift services` through a `rpc port`. The user can communicate with the module through these services in order to ask the state of the two threads or to modify some parameters on the fly.
+The module also receive the camera image and, if the `SuperqVisualization` is enabled, the output is shown on a yarpview.
+The `SuperqComputation` provides two buffered ports, respectively for receiving continuosly the 2D blob of the object and for sending the estimated superquadric.
+
+In order to improve the superquadric modeling, the `SuperqComputation` thread provides **two filtering process**:
+
+- on the 3D point cloud;
+- on the estimated superquadric.
+
+The former is a **density filter**, discarding noisy queues of the point cloud, that can arise from the noise of the disparity map.
+The latter is a **median filter with an adaptive moving window**. Each filtered superquadric is obtained by applying a median filter on the last _m_ estimated superquadrics. The value of _m_ depends on the estimated velocity of the object. If the object is moving the window width is low in order to correctly track the object (e.g.` _m_=1`), otherwise _m_ is incrementally increased up to a maximum value.
+
+## Example of Usage
+The superquadric-model module requires the 2D blob of the object we want to model with a superquadric function.
+An example code for retriving this information is provided in the folder [`example`](https://github.com/robotology/superquadric-model/tree/master/example) in this repository.
+
+### Dependency
+This example module relies on
+
+- [IOL](https://github.com/robotology/iol)
+
+for  the blob extraction process.
+
+### How to compile
+```
+cd superquadric-model/example
+mkdir build; cd build
+ccmake ..
+make install
+```
+### How to communicate with the superquadric-model
+The user can provide the 2D blob and ask the estimated superquadric in two modes:
+
+1. **streaming**
+2. **one-shot**
+
+**Streaming**: In this case,  the user should send the 2D blob to the module, for example:
+```
+  blobPort.open("/testing-module/blob:o");
+  
+  Bottle &blob=blobPort.prepare();
+  Bottle &b1=blob.addList();
+  
+  for (size_t i=0; i<blob_points.size(); i++)
+  {
+      Bottle &b=b1.addList();
+      b.addDouble(blob_points[i].x); b.addDouble(blob_points[i].y);
+  }
+
+blobPort.write();
+```
+connecting to the  corresponding buffered port of the superquadric-model:
+```
+yarp connect /testing-module/blob:o /superquadric-model/blob:i
+```
+The estimated superquadric can be read from another buffered port 
+```
+yarp connect /superquadric-model/superq:o /testing-module/superq:i
+```
+in the format:
+```
+((dimensions x0 x1 x2) (exponents x3 x4) (center x5 x6 x7) (orientation x8 x9 x10 x11))
+```
+where:
+ - **dimensions** are the semi-axes lenghts of the superquadric;
+ - **exponents** are the responsible for the superquadric shape;
+ - **center** are the coordinates of center of the superquadric;
+ - **orientation** is the axis-angle orientation (derived from the Euler angles: x8, x9, x10 mentioned before).
+ 
+**One-shot**: In this mode, the user can ask a simple query to the superquadric-model just sending a specific 2D blob and asking for the corresponding estimated superquadric. In this case, the port to use in the `rpc` port:
+```
+yarp connect /testing-module/superq:rpc /superquadric-model/rpc
+```
+An example of code is the following:
+```
+Bottle cmd, reply;
+cmd.addString("get_superq");
+
+Bottle &in1=cmd.addList();
+
+for (size_t i=0; i<blob_points.size(); i++)
+{
+    Bottle &in=in1.addList();
+    in.addDouble(blob_points[i].x);                        
+    in.addDouble(blob_points[i].y);
+}
+//0 is for getting the estimated superquadric, 1 is for getting the filtered estimated superquadric
+cmd.addInt(0);
+
+superqRpc.write(cmd, reply);
+```
+### Some results
+Here is an example of a reconstructed superquadric:
+
+The execution times are respectively:
+- for **superquadric computation** nearly 0.1 s (including the median filter on the estimated superquadrics)
+- for **point cloud filtereing** nearly 0.1 s (optional)
+- for **visualization** nearly 0.01 s (optional)
+
+This [video]() shows the superquadric modeling of several objects.
 
 
-## Example
-You can find an overview on superquadric-model module in the following pdf: [superquadric-model.pdf](https://github.com/robotology/superquadric-model/blob/master/misc/superquadric-model.pdf). 
+### More information
+You can find an overview of the entire pipeline `superquadric-model module + example code` in the following pdf: [superquadric-model.pdf](https://github.com/robotology/superquadric-model/blob/master/misc/superquadric-model.pdf). 
 If you want to _browse_ the prezi version of the presentation, you can have a look at the link: [superquadric-model-prezi](https://prezi.com/zlx2l4ekonuc/superquadric-model/).
 
 ## Documentation
