@@ -25,7 +25,12 @@
 
 #include "superqComputation.h"
 
+using namespace std;
+using namespace yarp::os;
+using namespace yarp::dev;
+using namespace yarp::sig;
 using namespace yarp::math;
+using namespace iCub::ctrl;
 
 /*******************************************************************************/
 vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radius, const int maxResults, deque<Vector> &points)

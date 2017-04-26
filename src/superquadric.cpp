@@ -26,6 +26,9 @@
 #include <yarp/math/Math.h>
 #include <yarp/math/SVD.h>
 
+using namespace std;
+using namespace yarp::os;
+using namespace yarp::sig;
 using namespace yarp::math;
 
 #include "superquadric.h"

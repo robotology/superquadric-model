@@ -29,19 +29,14 @@
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
 
-using namespace std;
-using namespace yarp::os;
-using namespace yarp::sig;
-
-
 class  SuperQuadric_NLP : public Ipopt::TNLP
 {
 
 protected:
     bool bounds_automatic;
-    Vector x_v;
-    Vector x0;
-    Matrix bounds;
+    yarp::sig::Vector x_v;
+    yarp::sig::Vector x0;
+    yarp::sig::Matrix bounds;
     double aux_objvalue;
 
     /****************************************************************/
@@ -66,16 +61,16 @@ protected:
                     Ipopt::Number &obj_value);
 
      /****************************************************************/
-     void F(const Ipopt::Number *x, deque<Vector> &points, bool &new_x);
+     void F(const Ipopt::Number *x, std::deque<yarp::sig::Vector> &points, bool &new_x);
 
       /****************************************************************/
-     double f(const Ipopt::Number *x, Vector &point_cloud);
+     double f(const Ipopt::Number *x, yarp::sig::Vector &point_cloud);
 
      /****************************************************************/
-     double F_v(const Vector &x, const deque<Vector> &points);
+     double F_v(const yarp::sig::Vector &x, const std::deque<yarp::sig::Vector> &points);
 
      /****************************************************************/
-     double f_v(const Vector &x, const Vector &point_cloud);
+     double f_v(const yarp::sig::Vector &x, const yarp::sig::Vector &point_cloud);
 
      /****************************************************************/
      bool eval_grad_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
@@ -90,17 +85,14 @@ protected:
                      Ipopt::Index m, Ipopt::Index nele_jac, Ipopt::Index *iRow,
                      Ipopt::Index *jCol, Ipopt::Number *values);
 
-     /****************************************************************/
-     //bool readMatrix(const string &tag, Matrix &matrix, const int &dimension, ResourceFinder *rf);
+    /****************************************************************/
+    void computeX0(yarp::sig::Vector &x0, std::deque<yarp::sig::Vector> &point_cloud);
 
     /****************************************************************/
-    void computeX0(Vector &x0, deque<Vector> &point_cloud);
+    void computeInitialOrientation(yarp::sig::Vector &x0, std::deque<yarp::sig::Vector> &point_cloud);
 
     /****************************************************************/
-    void computeInitialOrientation(Vector &x0,deque<Vector> &point_cloud);
-
-    /****************************************************************/
-    Matrix computeBoundingBox(deque<Vector> &points, const Vector &x0);
+    yarp::sig::Matrix computeBoundingBox(std::deque<yarp::sig::Vector> &points, const yarp::sig::Vector &x0);
 
    /****************************************************************/
    void finalize_solution(Ipopt::SolverReturn status, Ipopt::Index n,
@@ -112,20 +104,20 @@ protected:
 
 
 public:
-    Vector solution;
-    deque<Vector> points_downsampled;
+    yarp::sig::Vector solution;
+    std::deque<yarp::sig::Vector> points_downsampled;
 
     /****************************************************************/
     void init();
 
     /****************************************************************/
-    void setPoints(const deque<Vector> &point_cloud, const int &optimizer_points);
+    void setPoints(const std::deque<yarp::sig::Vector> &point_cloud, const int &optimizer_points);
 
     /****************************************************************/
     void configure(bool bounds_aut);
 
     /****************************************************************/
-    Vector get_result() const;
+    yarp::sig::Vector get_result() const;
 
 };
 

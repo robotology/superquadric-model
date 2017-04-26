@@ -27,40 +27,32 @@
 
 #include "superquadric.h"
 
-//#include "src/superquadricModel_IDL.h"
-
-using namespace std;
-using namespace yarp::os;
-using namespace yarp::dev;
-using namespace yarp::sig;
-using namespace iCub::ctrl;
-
 /*******************************************************************************/
 class SpatialDensityFilter
 {
 public:
 
     /*******************************************************************************/
-    static vector<int>  filter(const cv::Mat &data,const double radius, const int maxResults, deque<Vector> &points);
+    static std::vector<int>  filter(const cv::Mat &data,const double radius, const int maxResults, std::deque<yarp::sig::Vector> &points);
 };
 
 /*******************************************************************************/
-class SuperqComputation : public RateThread
+class SuperqComputation : public yarp::os::RateThread
 {
 protected:
 
     int count;
     bool save_points;
-    string tag_file;
-    string homeContextPath;
-    ConstString pointCloudFileName;
-    vector<cv::Point> contour;
-    deque<Vector> points;
-    deque<cv::Point> blob_points;
+    std::string tag_file;
+    std::string homeContextPath;
+    yarp::os::ConstString pointCloudFileName;
+    std::vector<cv::Point> contour;
+    std::deque<yarp::sig::Vector> points;
+    std::deque<cv::Point> blob_points;
 
-    RpcClient portSFMrpc;
+    yarp::os::RpcClient portSFMrpc;
 
-    BufferedPort<Bottle> blobPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> blobPort;
 
     double radius;
     int nnThreshold;
@@ -83,51 +75,51 @@ protected:
     int acceptable_iter,max_iter;
     int optimizer_points;
     bool bounds_automatic;
-    string mu_strategy,nlp_scaling_method;
-    Vector x;
-    Vector elem_x;
-    Vector x_filtered;
+    std::string mu_strategy,nlp_scaling_method;
+    yarp::sig::Vector x;
+    yarp::sig::Vector elem_x;
+    yarp::sig::Vector x_filtered;
 
     double t_superq;
     
-    ResourceFinder *rf;
+    yarp::os::ResourceFinder *rf;
     double t,t0;
-    Mutex mutex;
+    yarp::os::Mutex mutex;
 
-    MedianFilter *mFilter;
-    AWPolyEstimator *PolyEst;
+    iCub::ctrl::MedianFilter *mFilter;
+    iCub::ctrl::AWPolyEstimator *PolyEst;
 
-    Property filter_points_par;
-    Property filter_superq_par;
-    Property ipopt_par;
+    yarp::os::Property filter_points_par;
+    yarp::os::Property filter_superq_par;
+    yarp::os::Property ipopt_par;
 public:
 
-    ImageOf<PixelRgb> *imgIn;
+    yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
     /***********************************************************************/
-    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,string _tag_file, double _threshold_median,
-                      const Property &filters_points_par, const Property &filters_superq_par, const Property &optimizer_par, const string &_homeContextPath, bool _save_points);
+    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,std::string _tag_file, double _threshold_median,
+                      const yarp::os::Property &filters_points_par, const yarp::os::Property &filters_superq_par, const yarp::os::Property &optimizer_par, const std::string &_homeContextPath, bool       _save_points);
 
     /***********************************************************************/
-    void setPointsFilterPar(const Property &newOptions);
+    void setPointsFilterPar(const yarp::os::Property &newOptions);
 
     /***********************************************************************/
-    void setSuperqFilterPar(const Property &newOptions);
+    void setSuperqFilterPar(const yarp::os::Property &newOptions);
 
     /***********************************************************************/
-    void setIpoptPar(const Property &newOptions);
+    void setIpoptPar(const yarp::os::Property &newOptions);
 
     /***********************************************************************/
-    Property getPointsFilterPar();
+    yarp::os::Property getPointsFilterPar();
 
     /***********************************************************************/
-    Property getSuperqFilterPar();
+    yarp::os::Property getSuperqFilterPar();
 
     /***********************************************************************/
-    Property getIpoptPar();
+    yarp::os::Property getIpoptPar();
 
     /***********************************************************************/
-    void setPar(const string &par_name, const string &value);
+    void setPar(const std::string &par_name, const std::string &value);
 
     /***********************************************************************/
     virtual bool threadInit();
@@ -139,19 +131,19 @@ public:
     virtual void threadRelease();
 
     /***********************************************************************/
-    void acquirePointsFromBlob(ImageOf<PixelRgb> *imgIn);
+    void acquirePointsFromBlob(yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn);
 
     /***********************************************************************/
     void getBlob();
 
     /***********************************************************************/
-    void get3Dpoints(ImageOf<PixelRgb> *imgIn);
+    void get3Dpoints(yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn);
 
     /***********************************************************************/
     void pointFromName();
 
     /***********************************************************************/
-    void savePoints(const string &namefile, const Vector &colors);
+    void savePoints(const std::string &namefile, const yarp::sig::Vector &colors);
 
     /***********************************************************************/
     bool readPointCloud();
@@ -175,22 +167,22 @@ public:
     bool config3Dpoints();
 
     /***********************************************************************/
-    void sendImg(ImageOf<PixelRgb> *Img);
+    void sendImg(yarp::sig::ImageOf<yarp::sig::PixelRgb> *Img);
 
     /***********************************************************************/
-    Vector getSolution( bool filtered_or_not);
+    yarp::sig::Vector getSolution(bool filtered_or_not);
 
     /***********************************************************************/
     void setContour(cv::Point p);
 
     /***********************************************************************/
-    void getPoints(deque<Vector> &p);
+    void getPoints(std::deque<yarp::sig::Vector> &p);
 
     /***********************************************************************/
-    void sendPoints(deque<Vector> &p);
+    void sendPoints(std::deque<yarp::sig::Vector> &p);
 
     /***********************************************************************/
-    void sendBlobPoints(const vector<Vector> &p);
+    void sendBlobPoints(const std::vector<yarp::sig::Vector> &p);
 
     /***********************************************************************/
     double getTime();

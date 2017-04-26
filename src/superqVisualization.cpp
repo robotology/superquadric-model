@@ -19,6 +19,10 @@
 
 #include "superqVisualization.h"
 
+using namespace std;
+using namespace yarp::os;
+using namespace yarp::sig;
+using namespace yarp::dev;
 using namespace yarp::math;
 
 /***********************************************************************/

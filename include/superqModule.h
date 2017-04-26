@@ -29,13 +29,8 @@
 
 #include "src/superquadricModel_IDL.h"
 
-using namespace std;
-using namespace yarp::os;
-using namespace yarp::dev;
-using namespace yarp::sig;
-
 /*******************************************************************************/
-class SuperqModule : public RFModule,
+class SuperqModule : public yarp::os::RFModule,
                      public superquadricModel_IDL
 {
 protected:
@@ -43,13 +38,13 @@ protected:
     int r,g,b;
     int count;
     int rate, rate_vis;
-    string tag_file;
-    string homeContextPath;
-    ConstString pointCloudFileName;
-    string outputFileName;
-    vector<cv::Point> contour;
-    deque<Vector> points;
-    deque<cv::Point> blob_points;
+    std::string tag_file;
+    std::string homeContextPath;
+    yarp::os::ConstString pointCloudFileName;
+    std::string outputFileName;
+    std::vector<cv::Point> contour;
+    std::deque<yarp::sig::Vector> points;
+    std::deque<cv::Point> blob_points;
 
     double radius;
     int nnThreshold;
@@ -61,7 +56,7 @@ protected:
     bool filter_points;
     bool fixed_window;
     bool filter_superq;
-    string what_to_plot;
+    std::string what_to_plot;
     double threshold_median;
     double min_norm_vel;
 
@@ -73,96 +68,79 @@ protected:
     double max_cpu_time;
     int acceptable_iter,max_iter;
     int optimizer_points;
-    string mu_strategy,nlp_scaling_method;
-    Vector x;
-    Vector x_filtered;
+    std::string mu_strategy,nlp_scaling_method;
+    yarp::sig::Vector x;
+    yarp::sig::Vector x_filtered;
 
     double t_superq;
-    deque<double> times_superq;
+    std::deque<double> times_superq;
     double t_vis;
-    deque<double> times_vis;
+    std::deque<double> times_vis;
 
-    BufferedPort<ImageOf<PixelRgb> > portImgIn;
-    BufferedPort<Vector> portSuperq;
-    RpcServer portRpc;
+    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > portImgIn;
+    yarp::os::BufferedPort<yarp::sig::Vector> portSuperq;
+    yarp::os::RpcServer portRpc;
 
-    PolyDriver GazeCtrl;
-    IGazeControl *igaze;
+    yarp::dev::PolyDriver GazeCtrl;
+    yarp::dev::IGazeControl *igaze;
 
     int vis_points;
     int vis_step;
-    string eye;
-    Matrix R,H,K;
-    Vector point,point1;
-    Vector point2D;
-    deque<int> Color;
+    std::string eye;
+    yarp::sig::Matrix R,H,K;
+    yarp::sig::Vector point,point1;
+    yarp::sig:: Vector point2D;
+    std::deque<int> Color;
 
-    ResourceFinder *rf;
+    yarp::os::ResourceFinder *rf;
     double t,t0;
-    deque<string> advanced_params;
-    Mutex mutex;
+    std::deque<std::string> advanced_params;
+    yarp::os::Mutex mutex;
 
     SuperqComputation *superqCom;
     SuperqVisualization *superqVis;
 
-    Property filter_points_par;
-    Property filter_superq_par;
-    Property ipopt_par;
+    yarp::os::Property filter_points_par;
+    yarp::os::Property filter_superq_par;
+    yarp::os::Property ipopt_par;
 
-    ImageOf<PixelRgb> *imgIn;
-
-    /************************************************************************/
-    bool attach(RpcServer &source);
-    /************************************************************************/
-    bool set_tag_file(const string &tag_file);
+    yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
     /************************************************************************/
-    string get_tag_file();
+    bool attach(yarp::os::RpcServer &source);
 
     /************************************************************************/
-  //  vector<int> get_color();
+    bool set_tag_file(const std::string &tag_file);
+
+    /************************************************************************/
+    std::string get_tag_file();
 
     /**********************************************************************/
-   // bool set_color(const int red, const int green, const int blue);
+    std::string get_visualization();
 
     /**********************************************************************/
-    string get_visualization();
+    bool set_visualization(const std::string &e);
 
     /**********************************************************************/
-    bool set_visualization(const string &e);
+    yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> &blob, bool filtered_or_not);
 
     /**********************************************************************/
-   // string get_eye();
+    bool set_points_filtering(const std::string &entry);
 
     /**********************************************************************/
-   // bool set_eye(const string &e);
+    std::string get_points_filtering();
 
     /**********************************************************************/
-   // int get_visualized_points();
-//
-    /**********************************************************************/
-   // bool set_visualized_points(const int v);
+    bool set_superq_filtering(const std::string &entry);
 
     /**********************************************************************/
-    Property get_superq(const vector<Vector> &blob, bool filtered_or_not);
+    std::string get_superq_filtering();
 
     /**********************************************************************/
-    bool set_points_filtering(const string &entry);
+    yarp::os::Property get_options(const std::string &field);
 
     /**********************************************************************/
-    string get_points_filtering();
-
-    /**********************************************************************/
-    bool set_superq_filtering(const string &entry);
-
-    /**********************************************************************/
-    string get_superq_filtering();
-
-    /**********************************************************************/
-    Property get_options(const string &field);
-
-    /**********************************************************************/
-    bool set_options(const Property &newOptions, const string &field);
+    bool set_options(const yarp::os::Property &newOptions, const std::string &field);
 
 public:
     /***********************************************************************/
@@ -172,7 +150,7 @@ public:
     bool updateModule();
 
     /***********************************************************************/
-    bool configure(ResourceFinder &rf);
+    bool configure(yarp::os::ResourceFinder &rf);
 
     /***********************************************************************/
     bool interruptModule();
@@ -181,31 +159,31 @@ public:
     bool close();
 
     /***********************************************************************/
-    bool configOnOff(ResourceFinder &rf);
+    bool configOnOff(yarp::os::ResourceFinder &rf);
 
     /***********************************************************************/
-    bool configFilter(ResourceFinder &rf);
+    bool configFilter(yarp::os::ResourceFinder &rf);
 
     /***********************************************************************/
-    bool configFilterSuperq(ResourceFinder &rf);
+    bool configFilterSuperq(yarp::os::ResourceFinder &rf);
 
     /***********************************************************************/
-    bool configServices(ResourceFinder &rf);
+    bool configServices(yarp::os::ResourceFinder &rf);
 
     /***********************************************************************/
-    bool configSuperq(ResourceFinder &rf);
+    bool configSuperq(yarp::os::ResourceFinder &rf);
 
     /***********************************************************************/
-    bool configViewer(ResourceFinder &rf);
+    bool configViewer(yarp::os::ResourceFinder &rf);
 
     /***********************************************************************/
     void saveSuperq();
 
     /***********************************************************************/
-    bool set_save_points(const string &entry);
+    bool set_save_points(const std::string &entry);
 
     /***********************************************************************/
-    string get_save_points();
+    std::string get_save_points();
 
     /***********************************************************************/
     bool readPointCloud();

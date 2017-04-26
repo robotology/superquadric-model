@@ -29,42 +29,37 @@
 
 #include <opencv2/opencv.hpp>
 
-using namespace std;
-using namespace yarp::os;
-using namespace yarp::sig;
-using namespace yarp::dev;
-
 /*******************************************************************************/
-class SuperqVisualization : public RateThread
+class SuperqVisualization : public yarp::os::RateThread
 {
 protected:
     int r,g,b;
     double t_vis;
-    string what_to_plot;
-    BufferedPort<ImageOf<PixelRgb> > portImgOut;
+    std::string what_to_plot;
+    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > portImgOut;
 
     int vis_points;
     int vis_step;
-    string eye;
-    Matrix R,H,K;
-    Vector point,point1;
-    Vector point2D;
-    deque<int> Color;
+    std::string eye;
+    yarp::sig::Matrix R,H,K;
+    yarp::sig::Vector point,point1;
+    yarp::sig::Vector point2D;
+    std::deque<int> Color;
 
-    deque<Vector> points;
-    Vector superq;
+    std::deque<yarp::sig::Vector> points;
+    yarp::sig::Vector superq;
 
-    IGazeControl *igaze;
+    yarp::dev::IGazeControl *igaze;
 
-    Mutex mutex;
+    yarp::os::Mutex mutex;
 
 public:
 
-    ImageOf<PixelRgb> *imgIn;
+    yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
     /***********************************************************************/
-    SuperqVisualization(int rate, const string &_eye, const string &_what_to_plot,
-                        deque<int> &_Color,IGazeControl *_igaze, const Matrix _K,
+    SuperqVisualization(int rate, const std::string &_eye, const std::string &_what_to_plot,
+                        std::deque<int> &_Color, yarp::dev::IGazeControl *_igaze, const yarp::sig::Matrix _K,
                         const int &_vis_points, const int &_vis_step);
 
     /***********************************************************************/
@@ -74,10 +69,10 @@ public:
     bool showPoints();
 
     /***********************************************************************/
-    bool showSuperq(Vector &x_to_show);
+    bool showSuperq(yarp::sig::Vector &x_to_show);
 
     /***********************************************************************/
-    Vector from3Dto2D(const Vector &point3D);
+    yarp::sig::Vector from3Dto2D(const yarp::sig::Vector &point3D);
 
     /***********************************************************************/
     virtual bool threadInit();
@@ -89,28 +84,28 @@ public:
     virtual void threadRelease();
 
     /***********************************************************************/
-    void sendImg(ImageOf<PixelRgb> *Img);
+    void sendImg(yarp::sig::ImageOf<yarp::sig::PixelRgb> *Img);
 
     /***********************************************************************/
-    void sendSuperq(Vector &x);
+    void sendSuperq(yarp::sig::Vector &x);
 
     /***********************************************************************/
-    void sendPoints(deque<Vector> &points);
+    void sendPoints(std::deque<yarp::sig::Vector> &points);
 
     /***********************************************************************/
-    void setPar(const string &par_name, const string &value);
+    void setPar(const std::string &par_name, const std::string &value);
 
     /***********************************************************************/
-    void setPar(const string &par_name, const int &value);
+    void setPar(const std::string &par_name, const int &value);
 
     /***********************************************************************/
     void setColor (const int &r, const int &g, const int &b);
 
     /***********************************************************************/    
-    void setPar(const Property &newOptions);
+    void setPar(const yarp::os::Property &newOptions);
 
     /***********************************************************************/
-    Property getPar();
+    yarp::os::Property getPar();
 
     /***********************************************************************/
     double getTime();

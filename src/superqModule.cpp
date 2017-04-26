@@ -27,8 +27,11 @@
 
 #include "src/superquadricModel_IDL.h"
 
+using namespace std;
+using namespace yarp::os;
+using namespace yarp::dev;
+using namespace yarp::sig;
 using namespace yarp::math;
-
 
 /************************************************************************/
 bool SuperqModule::attach(RpcServer &source)
