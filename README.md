@@ -32,10 +32,7 @@ The problem can be solved by minimizing the following quantity:
 The _F_ function is raised to the power of _&epsilon;1_ in order to make the error metric independent from the shape of the superquadric and provide faster convergence. This change causes a bias towards larger superquadrics. This effect is
 compensated by the multiplication with the term _&lambda;1, &lambda;2, &lambda;3_ which is proportional to the volume of the superquadric.
 
-## Module description
 
-You can find an overview on superquadric-model module in the following pdf: [superquadric-model.pdf](https://github.com/robotology/superquadric-model/blob/master/misc/superquadric-model.pdf). 
-If you want to _browse_ the prezi version of the presentation, you can have a look at the link: [superquadric-model-prezi](https://prezi.com/zlx2l4ekonuc/superquadric-model/).
 
 ## Dependencies
 - [YARP](https://github.com/robotology/yarp)
@@ -58,29 +55,15 @@ make install
   
 
 ## Module pipeline
-There are <b>two different modes</b> for running the module:
- 1.  <b>online</b> mode, if you want the object to be detected and modeled in _real-time_;
- 2.  <b>one-shot</b> mode, if you want to model the object described by a point cloud in a _.off file_.
 
 
-In <b>online</b> mode you can <b>select the object</b> to be detected and modeled by sending through the rpc service:
-- the  <b>object seed-point</b>, i.e. a 2D point ( _(x, y)_ pixel) representing the center of the object blob.
-- or the <b>object name</b> that is associated to the object and stored in the robot memory.
-
-Both in <b>online</b> and <b>one-shot</b> mode, the 3D points can be <b>filtered</b> in order to remove possible outliers. The filter can be enabled by the users with a specific parameter.
-
-The module pipeline in <b>online</b> mode is the following:
-
-
-<img src="https://github.com/robotology/superquadric-model/blob/master/misc/pipeline2.png" width=1011 height=297>
-
-
-
-The seed-point/object name is used to get the 2D object blob. Then, the 2D pixels are converted in 3D points. The 3D points can be filtered (if the filter_on option is set on). Then, the superquadric is computed and shown in the image coming from the camera, overlapped on the object.
-
+## Example
+You can find an overview on superquadric-model module in the following pdf: [superquadric-model.pdf](https://github.com/robotology/superquadric-model/blob/master/misc/superquadric-model.pdf). 
+If you want to _browse_ the prezi version of the presentation, you can have a look at the link: [superquadric-model-prezi](https://prezi.com/zlx2l4ekonuc/superquadric-model/).
 
 ## Documentation
 Online documentation is available here:  [http://robotology.github.com/superquadric-model](http://robotology.github.com/superquadric-model).
+
 
 ## License
 Material included here is Copyright of _iCub Facility - Istituto Italiano di Tecnologia_
