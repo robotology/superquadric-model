@@ -43,7 +43,7 @@ yarp connect /superquadric-model/superq:o /testing-module/superq:i
 ```
 in the format:
 ```
-((dimensions x0 x1 x2) (exponents x3 x4) (center x5 x6 x7) (orientation x8 x9 x10 x11))
+(dimensions (x0 x1 x2)) (exponents (x3 x4)) (center (x5 x6 x7)) (orientation (x8 x9 x10 x11))
 ```
 where:
  - **dimensions** are the semi-axes lenghts of the superquadric;
