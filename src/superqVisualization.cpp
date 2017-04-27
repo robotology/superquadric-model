@@ -238,52 +238,78 @@ void SuperqVisualization:: threadRelease()
 /***********************************************************************/
 void SuperqVisualization::setPar(const Property &newOptions)
 {
-    Bottle &groupBottle=newOptions.findGroup("visualized_points");
     LockGuard lg(mutex);
-
-    if (!groupBottle.isNull())
+    int v_points=newOptions.find("visualized_points").asInt();
+    if (newOptions.find("visualized_points").isNull())
     {
-        int v_points=groupBottle.get(1).asInt();
+        vis_points=3;
+    }
+    else
+    {
         if ((v_points>=1) && (v_points<=300))
+        {
             vis_points=v_points;
+        }
         else
+        {
             vis_points=3;
+        }
     }
 
-    Bottle &groupBottle2=newOptions.findGroup("what_to_plot");
-    if (!groupBottle2.isNull())
+    string plot=newOptions.find("what_to_plot").asString();
+    if (newOptions.find("what_to_plot").isNull())
     {
-        string plot=groupBottle2.get(1).asString();
+        what_to_plot="superq";
+    }
+    else
+    {
         if ((plot=="superq") || (plot=="points"))
+        {
             what_to_plot=plot;
+        }
         else
+        {
             what_to_plot="superq";
+        }
     }
 
-    Bottle &groupBottle3=newOptions.findGroup("visualized_points_step");
-    if (!groupBottle3.isNull())
+    int vpoint=newOptions.find("visualized_points_step").asInt();
+    if (!newOptions.find("visualized_points_step").isNull())
     {
-        int vpoint=groupBottle3.get(1).asInt();
+        vis_step=10;
+    }
+    else
+    {
         if ((vpoint>=1) && (vpoint<=100))
             vis_step=vpoint;
         else
             vis_step=10;
     }
 
-    Bottle &groupBottle5=newOptions.findGroup("camera");
-    if (!groupBottle5.isNull())
+    string cam=newOptions.find("camera").asString();
+    if (newOptions.find("camera").isNull())
     {
-        string cam=groupBottle5.get(1).asString();
+        eye="left";
+    }
+    else
+    {
         if ((cam=="left") || (cam=="right"))
+        {
              eye=cam;
+        }
         else
+        {
             eye="left";
+        }
     }
 
-    Bottle &groupBottle6=newOptions.findGroup("color");
-    if (!groupBottle6.isNull())
+    string col=newOptions.find("color").asString();
+    if (newOptions.find("color").isNull())
     {
-        string col=groupBottle6.get(1).asString();
+        Color[0]=255; Color[1]=0; Color[2]=0;
+    }
+    else
+    {
         if (col=="red")
         {
             Color[0]=255; Color[1]=0; Color[2]=0;

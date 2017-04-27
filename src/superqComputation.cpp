@@ -75,14 +75,19 @@ SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filte
 /***********************************************************************/
 void SuperqComputation::setPointsFilterPar(const Property &newOptions)
 {
-    Bottle &groupBottle=newOptions.findGroup("filter_radius");
     LockGuard lg(mutex);
 
-    if (!groupBottle.isNull())
+    double radiusValue=newOptions.find("filter_radius").asDouble();
+    if (newOptions.find("filter_radius").isNull())
     {
-        double radiusValue=groupBottle.get(1).asDouble();
+        radius=0.01;
+    }
+    else
+    {
         if ((radiusValue>0.0000001) && (radiusValue<0.01))
+        {
             radius=radiusValue;
+        }
         else if ((radiusValue>=0.01))
         {
             radius=0.01;
@@ -93,12 +98,17 @@ void SuperqComputation::setPointsFilterPar(const Property &newOptions)
         }
     }
 
-    Bottle &groupBottle2=newOptions.findGroup("filter_nnThreshold");
-    if (!groupBottle2.isNull())
+   int nnThreValue=newOptions.find("filter_nnThreshold").asInt();
+    if (newOptions.find("filter_nnThreshold").isNull())
     {
-        int nnThreValue=groupBottle2.get(1).asInt();
+        nnThreshold=100;
+    }
+    else
+    {
         if ((nnThreValue>0) && (nnThreValue<100))
+        {
                 nnThreshold=nnThreValue;
+        }
         else
         {
             nnThreshold=100;
@@ -120,66 +130,102 @@ Property SuperqComputation::getPointsFilterPar()
 /***********************************************************************/
 void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
 {
-    Bottle &groupBottle=newOptions.findGroup("median_order");
     LockGuard lg(mutex);
 
-    if (!groupBottle.isNull())
+    int mOrderValue=newOptions.find("median_order").asInt();
+    if (newOptions.find("median_order").isNull())
     {
-        int mOrderValue=groupBottle.get(1).asInt();
-        if ((mOrderValue>=1) && (mOrderValue<=50))
+        std_median_order=3;
+    }
+    else
+    {
+        if((mOrderValue>=1) && (mOrderValue<=50))
+        {
             std_median_order=mOrderValue;
+        }
         else
             std_median_order=3;
     }
 
-    Bottle &groupBottle2=newOptions.findGroup("min_median_order");
-    if (!groupBottle2.isNull())
+    mOrderValue=newOptions.find("min_median_order").asInt();
+    if (newOptions.find("min_median_order").isNull())
     {
-        int mOrderValue=groupBottle2.get(1).asInt();
+        min_median_order=1;
+    }
+    else
+    {
         if ((mOrderValue>=1) && (mOrderValue<=50))
+        {
             min_median_order=mOrderValue;
+        }
         else
             min_median_order=1;
     }
 
-    Bottle &groupBottle3=newOptions.findGroup("max_median_order");
-    if (!groupBottle3.isNull())
+    mOrderValue=newOptions.find("max_median_order").asInt();
+    if (newOptions.find("max_median_order").isNull())
     {
-        int mOrderValue=groupBottle3.get(1).asInt();
-        if ((mOrderValue>1) && (mOrderValue<=50))
+        max_median_order=30;
+    }
+    else
+    {
+        if ((mOrderValue>=1) && (mOrderValue<=50))
+        {
             max_median_order=mOrderValue;
+        }
         else
-            max_median_order=30;
+            max_median_order=1;
     }
 
-    Bottle &groupBottle4=newOptions.findGroup("threshold_median");
-    if (!groupBottle4.isNull())
+    double threValue=newOptions.find("threshold_median").asDouble();
+    if (newOptions.find("threhsold_median").isNull())
     {
-        double threValue=groupBottle4.get(1).asDouble();
+        threshold_median=0.1;
+    }
+    else
+    {
         if ((threValue>0.005) && (threValue<=2.0))
+        {
             threshold_median=threValue;
+        }
         else
+        {
             threshold_median=0.1;
+        }
     }
 
-    Bottle &groupBottle5=newOptions.findGroup("min_norm_vel");
-    if (!groupBottle5.isNull())
+    double minNormVel=newOptions.find("min_norm_vel").asDouble();
+    if (newOptions.find("min_norm_vel").isNull())
     {
-        double minNormVel=groupBottle5.get(1).asDouble();
+        min_norm_vel=0.01;
+    }
+    else
+    {
         if ((minNormVel>0.005) && (minNormVel<=0.1))
+        {
             min_norm_vel=minNormVel;
+        }
         else
+        {
             min_norm_vel=0.01;
+        }
     }
 
-    Bottle &groupBottle6=newOptions.findGroup("fixed_window");
-    if (!groupBottle6.isNull())
+    string par=newOptions.find("fixed_window").asString();
+    if (newOptions.find("fixed_window").isNull())
     {
-        string par=groupBottle6.get(1).asString();
+        fixed_window=false;
+    }
+    else
+    {
         if ((par=="on") || (par=="off"))
+        {
             fixed_window=(par=="on");
+        }
         else
+        {
             fixed_window=false;
+        }
     }
 }
 
@@ -204,76 +250,123 @@ Property SuperqComputation::getSuperqFilterPar()
 /***********************************************************************/
 void SuperqComputation::setIpoptPar(const Property &newOptions)
 {
-    Bottle &groupBottle=newOptions.findGroup("optimizer_points");
     LockGuard lg(mutex);
 
-    if (!groupBottle.isNull())
+    int points=newOptions.find("optimizer_points").asInt();
+
+
+    if (newOptions.find("optimizer_points").isNull())
     {
-        int points=groupBottle.get(1).asInt();
+        optimizer_points=50;
+    }
+    else
+    {
         if ((points>=1) && (points<=300))
+        {
             optimizer_points=points;
+        }
         else
+        {
             optimizer_points=50;
+        }
     }
 
-    Bottle &groupBottle2=newOptions.findGroup("max_cpu_time");
-    if (!groupBottle2.isNull())
+    double maxCpuTime=newOptions.find("max_cpu_time").asDouble();
+    if (newOptions.find("max_cpu_time").isNull())
     {
-        double maxCpuTime=groupBottle2.get(1).asDouble();
+        max_cpu_time=5.0;
+    }
+    else
+    {
         if ((maxCpuTime>=0.01) && (maxCpuTime<=10.0))
+        {
             max_cpu_time=maxCpuTime;
+        }
         else
+        {
             max_cpu_time=5.0;
+        }
     }
 
-    Bottle &groupBottle3=newOptions.findGroup("tol");
-    if (!groupBottle3.isNull())
+    double tolValue=newOptions.find("tol").asDouble();
+    if (newOptions.find("tol").isNull())
     {
-        double tolValue=groupBottle3.get(1).asDouble();
+        tol=1e-5;
+    }
+    else
+    {
         if ((tolValue>1e-8) && (tolValue<=0.01))
+        {
             tol=tolValue;
+        }
         else
+        {
             tol=1e-5;
+        }
     }
 
-    Bottle &groupBottle4=newOptions.findGroup("acceptable_iter");
-    if (!groupBottle4.isNull())
+    int accIter=newOptions.find("acceptable_iter").asInt();
+    if (newOptions.find("acceptable_iter").isNull())
     {
-        int accIter=groupBottle4.get(1).asInt();
+        acceptable_iter=0;
+    }
+    else
+    {
         if ((accIter>=0 )&& (accIter<=100))
+        {
              acceptable_iter=accIter;
+        }
         else
+        {
             acceptable_iter=0;
+        }
     }
 
-    Bottle &groupBottle5=newOptions.findGroup("max_iter");
-    if (!groupBottle5.isNull())
+    int maxIter=newOptions.find("max_iter").asInt();
+    if (newOptions.find("max_iter").isNull())
     {
-        int maxIter=groupBottle5.get(1).asInt();
+        max_iter=100;
+    }
+    else
+    {
         if ((maxIter>1))
+        {
             max_iter=maxIter;
+        }
         else
+        {
             max_iter=100;
+        }
     }
 
-    Bottle &groupBottle6=newOptions.findGroup("mu_strategy");
-    if (!groupBottle6.isNull())
+    string mu_str=newOptions.find("mu_strategy").asString();
+    if (newOptions.find("mu_strategy").isNull())
     {
-        string mu_str=groupBottle6.get(1).asString().c_str();
+        mu_strategy="monotone";
+    }
+    else
+    {
         if ((mu_str=="adaptive") || (mu_str=="monotone"))
+        {
             mu_strategy=mu_str;
+        }
         else
         {
             mu_strategy="monotone";
         }
     }
 
-    Bottle &groupBottle7=newOptions.findGroup("nlp_scaling_method");
-    if (!groupBottle7.isNull())
+    string nlp=newOptions.find("nlp_scaling_method").asString();
+    if (newOptions.find("nlp_scaling_method").isNull())
     {
-        string nlp=groupBottle7.get(1).asString().c_str();
+        nlp_scaling_method="gradient-based";
+    }
+    else
+    {
         if ((nlp=="none") || (nlp=="gradient-based"))
+        {
             nlp_scaling_method=nlp;
+        }
         else
         {
             nlp_scaling_method="gradient-based";
