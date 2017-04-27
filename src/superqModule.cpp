@@ -78,23 +78,21 @@ bool SuperqModule::set_visualization(const string &e)
     {
         LockGuard lg(mutex);
 
-        if (visualization_on==false && e=="on")
+        if ((visualization_on==false) && (e=="on"))
         {
             superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot, Color, igaze, K, vis_points, vis_step);
 
             bool thread_started=superqVis->start();
 
-            cout<<endl;
             if (thread_started)
-                cout<<"[SuperqVisualization] thread started!"<<endl;
+                yInfo()<<"[SuperqVisualization] thread started!";
             else
                 yError()<<"[SuperqVisualization] problems in starting the thread!";
-            cout<<endl;
 
             visualization_on=true;
 
         }
-        else if (visualization_on==true && e=="off")
+        else if ((visualization_on==true) && (e=="off"))
         {
             superqVis->stop();
             delete superqVis;
@@ -117,14 +115,14 @@ Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_supe
 
     superqCom->sendBlobPoints(blob);
 
-    superqCom->setPar("one_shot", "true");
+    superqCom->setPar("one_shot", "on");
 
     superqCom->step();
 
     Vector sol(11,0.0);
     sol=superqCom->getSolution(filtered_superq);
 
-    superqCom->setPar("one_shot", "false");
+    superqCom->setPar("one_shot", "off");
     vector<Vector> blob_empty;
 
     superqCom->sendBlobPoints(blob_empty);
@@ -159,7 +157,7 @@ bool SuperqModule::set_points_filtering(const string &entry)
     {
         LockGuard lg(mutex);
         filter_points= (entry=="on");
-        if (filter_points==true)
+        if (filter_points)
         {
             radius=0.005;
             nnThreshold=100;
@@ -171,12 +169,10 @@ bool SuperqModule::set_points_filtering(const string &entry)
         }
         else
             superqCom->setPar("filter_points", "off");
-        
-        cout<<endl;
-        cout<<"[SuperqModule]: filter_points "<<filter_points<<endl;
-        cout<<"[SuperqModule]: radius        "<<radius<<endl;
-        cout<<"[SuperqModule]: nn-thrshold   "<<nnThreshold<<endl;
-        cout<<endl;
+
+        yInfo()<<"[SuperqModule]: filter_points "<<filter_points;
+        yInfo()<<"[SuperqModule]: radius        "<<radius;
+        yInfo()<<"[SuperqModule]: nn-thrshold   "<<nnThreshold;
 
         return true;    
     }
@@ -206,7 +202,7 @@ bool SuperqModule::set_superq_filtering(const string &entry)
     {
         LockGuard lg(mutex);
         filter_superq= (entry=="on");
-        if (filter_superq==true)
+        if (filter_superq)
         {
             median_order=5; 
             fixed_window=false;
@@ -218,12 +214,10 @@ bool SuperqModule::set_superq_filtering(const string &entry)
         }
         else
             superqCom->setPar("filter_superq", "off");
-        
-        cout<<endl;
-        cout<<"[SuperqModule]: filter_superq         "<<filter_superq<<endl;
-        cout<<"[SuperqModule]: fixed_window          "<<fixed_window<<endl;
-        cout<<"[SuperqModule]: median_order          "<<median_order<<endl;        
-        cout<<endl;
+
+        yInfo()<<"[SuperqModule]: filter_superq         "<<filter_superq;
+        yInfo()<<"[SuperqModule]: fixed_window          "<<fixed_window;
+        yInfo()<<"[SuperqModule]: median_order          "<<median_order;
 
         return true;        
     }
@@ -236,7 +230,7 @@ bool SuperqModule::set_superq_filtering(const string &entry)
 /**********************************************************************/
 string SuperqModule::get_superq_filtering()
 {
-    if (filter_superq==true)
+    if (filter_superq)
     {
         return "on";
     }
@@ -249,7 +243,7 @@ string SuperqModule::get_superq_filtering()
 /**********************************************************************/
 string SuperqModule::get_save_points()
 {
-    if (save_points==true)
+    if (save_points)
     {
         return "on";
     }
@@ -325,7 +319,7 @@ bool SuperqModule::updateModule()
     x.resize(11,0.0);
     x_filtered.resize(11,0.0);
 
-    if (mode_online==true)
+    if (mode_online)
     {
         Vector &x_to_send=portSuperq.prepare();
 
@@ -409,7 +403,7 @@ bool SuperqModule::updateModule()
         {
             yError("[SuperqModule]: Not found a suitable superquadric! ");
         }
-        else if (go_on==true && norm(x)>0.0)
+        else if ((go_on==true) && (norm(x)>0.0))
         {
             if (filter_superq)
                 superqCom->filterSuperq();
@@ -430,37 +424,34 @@ bool SuperqModule::configure(ResourceFinder &rf)
 {
     bool config_ok;
 
-    cout<<endl<<"[SuperqModule]: Configuring ... "<<endl<<endl;
+    yInfo()<<"[SuperqModule]: Configuring ... ";
 
-    config_ok=configOnOff(rf);
+    configOnOff(rf);
 
     if (filter_points==true)
-        config_ok=configFilter(rf);
+        configFilter(rf);
     if (filter_superq==true)
-        config_ok=configFilterSuperq(rf);
+        configFilterSuperq(rf);
 
-    if (config_ok)
-        config_ok=configServices(rf);
+    configServices(rf);
+    configSuperq(rf);
 
-    if (config_ok)
-        config_ok=configSuperq(rf);
+    config_ok=configViewer(rf);
+    if (config_ok==false)
+        return false;
 
-    if ((config_ok==true))
-        config_ok=configViewer(rf);
 
     superqCom= new SuperqComputation(rate, filter_points, filter_superq,fixed_window, tag_file,
                                      threshold_median,filter_points_par, filter_superq_par, ipopt_par, homeContextPath, save_points);
 
-    if (mode_online==true)
+    if (mode_online)
     {
         bool thread_started=superqCom->start();
 
-        cout<<endl;
         if (thread_started)
-            cout<<"[SuperqComputation]: Thread started!"<<endl;
+            yInfo()<<"[SuperqComputation]: Thread started!";
         else
             yError()<<"[SuperqComputation]: Problems in starting the thread!";
-        cout<<endl;
     }
 
     if (visualization_on)
@@ -469,21 +460,19 @@ bool SuperqModule::configure(ResourceFinder &rf)
 
         bool thread_started=superqVis->start();
 
-        cout<<endl;
         if (thread_started)
-            cout<<"[SuperqVisualization]: Thread started!"<<endl;
+            yInfo()<<"[SuperqVisualization]: Thread started!";
         else
             yError()<<"[SuperqVisualization]: Problems in starting the thread!";
-        cout<<endl;
     }
 
-    return config_ok;
+    return true;
 }
 
 /***********************************************************************/
 bool SuperqModule::interruptModule()
 {
-    cout<<endl<<"[SuperqModule]: Interruping ... "<<endl<<endl;
+    yInfo()<<"[SuperqModule]: Interruping ... ";
 
     portImgIn.interrupt();
     portSuperq.interrupt();
@@ -494,7 +483,7 @@ bool SuperqModule::interruptModule()
 /***********************************************************************/
 bool SuperqModule::close()
 {
-    cout<<endl<<"[SuperqModule]: Closing ... "<<endl<<endl;
+    yInfo()<<"[SuperqModule]: Closing ... ";
     saveSuperq();
 
     //if (mode_online==true)
@@ -555,11 +544,9 @@ bool SuperqModule::configOnOff(ResourceFinder &rf)
     filter_points=(rf.check("filter_points", Value("off")).asString()=="on");
     filter_superq=(rf.check("filter_superq", Value("off")).asString()=="on");
 
-    cout<<endl;
-    cout<<"[SuperqModule]: rate          "<<rate<<endl;
-    cout<<"[SuperqModule]: filter_points "<<filter_points<<endl;
-    cout<<"[SuperqModule]: filter_superq "<<filter_superq<<endl;
-    cout<<endl;
+    yInfo()<<"[SuperqModule]: rate          "<<rate;
+    yInfo()<<"[SuperqModule]: filter_points "<<filter_points;
+    yInfo()<<"[SuperqModule]: filter_superq "<<filter_superq;
 
     return true;
 }
@@ -573,10 +560,8 @@ bool SuperqModule::configFilter(ResourceFinder &rf)
     filter_points_par.put("filter_radius",radius);
     filter_points_par.put("filter_nnThreshold",nnThreshold);
 
-    cout<<endl;
-    cout<<"[SuperqModule]: radius         "<<radius<<endl;
-    cout<<"[SuperqModule]: nn-threshold   "<<nnThreshold<<endl;
-    cout<<endl;
+    yInfo()<<"[SuperqModule]: radius         "<<radius;
+    yInfo()<<"[SuperqModule]: nn-threshold   "<<nnThreshold;
 
     return true;
 }
@@ -597,14 +582,12 @@ bool SuperqModule::configFilterSuperq(ResourceFinder &rf)
     filter_superq_par.put("threshold_median",threshold_median);
     filter_superq_par.put("min_norm_vel",min_norm_vel);
 
-    cout<<endl;
-    cout<<"[SuperqModule]: fixed_window          "<<fixed_window<<endl;
-    cout<<"[SuperqModule]: median_order          "<<median_order<<endl;
-    cout<<"[SuperqModule]: min_median_order      "<<min_median_order<<endl;
-    cout<<"[SuperqModule]: max_median_order      "<<max_median_order<<endl;
-    cout<<"[SuperqModule]: threshold_median      "<<threshold_median<<endl;
-    cout<<"[SuperqModule]: min_norm_vel          "<<min_norm_vel<<endl;
-    cout<<endl;
+    yInfo()<<"[SuperqModule]: fixed_window          "<<fixed_window;
+    yInfo()<<"[SuperqModule]: median_order          "<<median_order;
+    yInfo()<<"[SuperqModule]: min_median_order      "<<min_median_order;
+    yInfo()<<"[SuperqModule]: max_median_order      "<<max_median_order;
+    yInfo()<<"[SuperqModule]: threshold_median      "<<threshold_median;
+    yInfo()<<"[SuperqModule]: min_norm_vel          "<<min_norm_vel;
 
     return true;
 }
@@ -649,15 +632,13 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     ipopt_par.put("mu_strategy",mu_strategy);
     ipopt_par.put("nlp_scaling_method",nlp_scaling_method);
 
-    cout<<endl;
-    cout<<"[Superqcomputation]: optimizer_points      "<<optimizer_points<<endl;
-    cout<<"[Superqcomputation]: max_cpu_time          "<<max_cpu_time<<endl;
-    cout<<"[Superqcomputation]: tol                   "<<tol<<endl;
-    cout<<"[Superqcomputation]: acceptable_iter       "<<acceptable_iter<<endl;
-    cout<<"[Superqcomputation]: max_iter              "<<max_iter<<endl;
-    cout<<"[Superqcomputation]: mu_strategy           "<<mu_strategy<<endl;
-    cout<<"[Superqcomputation]: nlp_scaling_method    "<<nlp_scaling_method<<endl;
-    cout<<endl;
+    yInfo()<<"[Superqcomputation]: optimizer_points      "<<optimizer_points;
+    yInfo()<<"[Superqcomputation]: max_cpu_time          "<<max_cpu_time;
+    yInfo()<<"[Superqcomputation]: tol                   "<<tol;
+    yInfo()<<"[Superqcomputation]: acceptable_iter       "<<acceptable_iter;
+    yInfo()<<"[Superqcomputation]: max_iter              "<<max_iter;
+    yInfo()<<"[Superqcomputation]: mu_strategy           "<<mu_strategy;
+    yInfo()<<"[Superqcomputation]: nlp_scaling_method    "<<nlp_scaling_method;
 
     return true;
 }

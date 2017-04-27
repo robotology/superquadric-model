@@ -82,7 +82,7 @@ void SuperqComputation::setPointsFilterPar(const Property &newOptions)
     {
         double radiusValue=groupBottle.get(1).asDouble();
         if ((radiusValue>0.0000001) && (radiusValue<0.01))
-                radius=radiusValue;
+            radius=radiusValue;
         else if ((radiusValue>=0.01))
         {
             radius=0.01;
@@ -97,7 +97,7 @@ void SuperqComputation::setPointsFilterPar(const Property &newOptions)
     if (!groupBottle2.isNull())
     {
         int nnThreValue=groupBottle2.get(1).asInt();
-        if ((nnThreValue)>0 && (nnThreValue<100))
+        if ((nnThreValue>0) && (nnThreValue<100))
                 nnThreshold=nnThreValue;
         else
         {
@@ -126,8 +126,8 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
     if (!groupBottle.isNull())
     {
         int mOrderValue=groupBottle.get(1).asInt();
-        if ((mOrderValue)>=1 && (mOrderValue<=50))
-                std_median_order=mOrderValue;
+        if ((mOrderValue>=1) && (mOrderValue<=50))
+            std_median_order=mOrderValue;
         else
             std_median_order=3;
     }
@@ -136,8 +136,8 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
     if (!groupBottle2.isNull())
     {
         int mOrderValue=groupBottle2.get(1).asInt();
-        if ((mOrderValue)>=1 && (mOrderValue<=50))
-                min_median_order=mOrderValue;
+        if ((mOrderValue>=1) && (mOrderValue<=50))
+            min_median_order=mOrderValue;
         else
             min_median_order=1;
     }
@@ -146,8 +146,8 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
     if (!groupBottle3.isNull())
     {
         int mOrderValue=groupBottle3.get(1).asInt();
-        if ((mOrderValue)>1 && (mOrderValue<=50))
-                max_median_order=mOrderValue;
+        if ((mOrderValue>1) && (mOrderValue<=50))
+            max_median_order=mOrderValue;
         else
             max_median_order=30;
     }
@@ -156,8 +156,8 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
     if (!groupBottle4.isNull())
     {
         double threValue=groupBottle4.get(1).asDouble();
-        if ((threValue)>0.005 && (threValue<=2.0))
-                threshold_median=threValue;
+        if ((threValue>0.005) && (threValue<=2.0))
+            threshold_median=threValue;
         else
             threshold_median=0.1;
     }
@@ -166,8 +166,8 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
     if (!groupBottle5.isNull())
     {
         double minNormVel=groupBottle5.get(1).asDouble();
-        if ((minNormVel)>0.005 && (minNormVel<=0.1))
-                min_norm_vel=minNormVel;
+        if ((minNormVel>0.005) && (minNormVel<=0.1))
+            min_norm_vel=minNormVel;
         else
             min_norm_vel=0.01;
     }
@@ -177,7 +177,7 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
     {
         string par=groupBottle6.get(1).asString();
         if ((par=="on") || (par=="off"))
-                fixed_window=(par=="on");
+            fixed_window=(par=="on");
         else
             fixed_window=false;
     }
@@ -210,8 +210,8 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
     if (!groupBottle.isNull())
     {
         int points=groupBottle.get(1).asInt();
-        if ((points)>=1 && (points<=300))
-                optimizer_points=points;
+        if ((points>=1) && (points<=300))
+            optimizer_points=points;
         else
             optimizer_points=50;
     }
@@ -220,8 +220,8 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
     if (!groupBottle2.isNull())
     {
         double maxCpuTime=groupBottle2.get(1).asDouble();
-        if ((maxCpuTime)>=0.01 && (maxCpuTime<=10.0))
-                max_cpu_time=maxCpuTime;
+        if ((maxCpuTime>=0.01) && (maxCpuTime<=10.0))
+            max_cpu_time=maxCpuTime;
         else
             max_cpu_time=5.0;
     }
@@ -230,8 +230,8 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
     if (!groupBottle3.isNull())
     {
         double tolValue=groupBottle3.get(1).asDouble();
-        if ((tolValue)>1e-8 && (tolValue<=0.01))
-                tol=tolValue;
+        if ((tolValue>1e-8) && (tolValue<=0.01))
+            tol=tolValue;
         else
             tol=1e-5;
     }
@@ -240,8 +240,8 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
     if (!groupBottle4.isNull())
     {
         int accIter=groupBottle4.get(1).asInt();
-        if ((accIter)>=0 && (accIter<=100))
-                acceptable_iter=accIter;
+        if ((accIter>=0 )&& (accIter<=100))
+             acceptable_iter=accIter;
         else
             acceptable_iter=0;
     }
@@ -250,8 +250,8 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
     if (!groupBottle5.isNull())
     {
         int maxIter=groupBottle5.get(1).asInt();
-        if ((maxIter)>1)
-                max_iter=maxIter;
+        if ((maxIter>1))
+            max_iter=maxIter;
         else
             max_iter=100;
     }
@@ -261,7 +261,7 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
     {
         string mu_str=groupBottle6.get(1).asString().c_str();
         if ((mu_str=="adaptive") || (mu_str=="monotone"))
-                mu_strategy=mu_str;
+            mu_strategy=mu_str;
         else
         {
             mu_strategy="monotone";
@@ -273,7 +273,7 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
     {
         string nlp=groupBottle7.get(1).asString().c_str();
         if ((nlp=="none") || (nlp=="gradient-based"))
-               nlp_scaling_method=nlp;
+            nlp_scaling_method=nlp;
         else
         {
             nlp_scaling_method="gradient-based";
@@ -311,7 +311,7 @@ void SuperqComputation::setPar(const string &par_name, const string &value)
     else if (par_name=="save_points")
         save_points=(value=="on");
     else if (par_name=="one_shot")
-        one_shot=(value=="true");
+        one_shot=(value=="on");
 }
 
 /***********************************************************************/
@@ -324,7 +324,7 @@ double SuperqComputation::getTime()
 /***********************************************************************/
 bool SuperqComputation::threadInit()
 {
-    cout<<endl<<"[SuperqComputation]: Thread initing ... "<<endl<<endl;
+    yInfo()<<"[SuperqComputation]: Thread initing ... ";
 
     if (filter_points==true)
         setPointsFilterPar(filter_points_par);
@@ -351,8 +351,6 @@ void SuperqComputation::run()
 {
     t0=Time::now();
     LockGuard lg(mutex);
-
-    double t0=Time::now();
 
     acquirePointsFromBlob(imgIn);
 
@@ -383,7 +381,7 @@ void SuperqComputation::run()
 /***********************************************************************/
 void SuperqComputation::threadRelease()
 {
-    cout<<endl<<"[SuperComputation]: Thread releasing ... "<<endl<<endl;
+    yInfo()<<"[SuperComputation]: Thread releasing ... ";
 
     if (portSFMrpc.asPort().isOpen())
         portSFMrpc.close();
@@ -437,8 +435,7 @@ void SuperqComputation::getBlob()
 {
     Bottle *reply;   
     points.clear();
-    
-    
+        
     reply=blobPort.read(false);   
 
     if (reply!=NULL)
@@ -447,8 +444,6 @@ void SuperqComputation::getBlob()
 
         if (Bottle *blob_list=reply->get(0).asList())
         {
-            cout<<"blob size "<<blob_list->size()<<endl;
-
             for (int i=0; i<blob_list->size();i++)
             {
                 if (Bottle *blob_pair=blob_list->get(i).asList())
@@ -467,8 +462,7 @@ void SuperqComputation::getBlob()
         }
     }
     else
-    {
-       
+    {       
         yError("[SuperqComputation]: 2D blob not received!");
     }
 }
@@ -487,7 +481,6 @@ void SuperqComputation::get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
         cmd.addInt(single_point.x);
         cmd.addInt(single_point.y);
     }
-
 
     if (portSFMrpc.write(cmd,reply))
     {
@@ -525,11 +518,10 @@ void SuperqComputation::get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
             colors[0]=255;
             if (save_points)
             {
-                cout<<endl<<"[SuperqComputation]: Saving point cloud ... "<<endl<<endl;
+                yInfo()<<"[SuperqComputation]: Saving point cloud ... ";
                 savePoints("/SFM-"+tag_file, colors);
             }
         }
-
     }
     else
     {
@@ -570,7 +562,7 @@ bool SuperqComputation::readPointCloud()
     points.clear();
     int nPoints;
     int state=0;
-    char line[255];
+    string line;
 
     if (!pointsFile.is_open())
     {
@@ -580,7 +572,7 @@ bool SuperqComputation::readPointCloud()
 
     while (!pointsFile.eof())
     {
-        pointsFile.getline(line,sizeof(line),'\n');
+        getline(pointsFile,line);
         Bottle b(line);
         Value firstItem=b.get(0);
         bool isNumber=firstItem.isInt() || firstItem.isDouble();
@@ -702,9 +694,9 @@ bool SuperqComputation::computeSuperq()
 /***********************************************************************/
 void SuperqComputation::filterSuperq()
 {
-    cout<< "[SuperqComputation]: Filtering the last "<< median_order << " superquadrics..."<<endl;
+    yInfo()<< "[SuperqComputation]: Filtering the last "<< median_order << " superquadrics...";
 
-    cout<<"[SuperqComputation]: x "<<x.toString()<<endl;
+    yInfo()<<"[SuperqComputation]: x "<<x.toString();
 
     if (fixed_window)
     { 
@@ -729,7 +721,7 @@ void SuperqComputation::filterSuperq()
         x_filtered=mFilter->filt(x);
     }
 
-    cout<< "[SuperqComputation]: Filtered superq "<< x_filtered.toString(3,3)<<endl;
+    yInfo()<< "[SuperqComputation]: Filtered superq "<< x_filtered.toString(3,3);
 }
 
 /***********************************************************************/
@@ -737,11 +729,11 @@ int SuperqComputation::adaptWindComputation()
 {
     elem_x.resize(3,0.0);
     elem_x=x.subVector(5,7);
-    cout<<"[SuperqComputation]: Old median order "<<median_order<<endl;
+    yInfo()<<"[SuperqComputation]: Old median order "<<median_order;
 
     AWPolyElement el(elem_x,Time::now());
     Vector vel=PolyEst->estimate(el);
-    cout<<"[SuperqComputation]: Velocity estimate "<<PolyEst->estimate(el).toString()<<endl;
+    yInfo()<<"[SuperqComputation]: Velocity estimate "<<PolyEst->estimate(el).toString();
 
 
     if (norm(vel)>=min_norm_vel)
@@ -752,7 +744,7 @@ int SuperqComputation::adaptWindComputation()
             new_median_order++;
     }
 
-    cout<<"[SuperqComputation]: New median order "<<new_median_order<<endl;
+    yInfo()<<"[SuperqComputation]: New median order "<<new_median_order;
     return new_median_order;
 }
 

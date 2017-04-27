@@ -103,7 +103,6 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
                  }
                  else
                     imgOut.pixel(target_point.x, target_point.y)=color;
-
              }
          }
     }
@@ -177,7 +176,7 @@ Vector SuperqVisualization::from3Dto2D(const Vector &point3D)
 /***********************************************************************/
 bool SuperqVisualization::threadInit()
 {
-    cout<<endl<<"[SuperqVisualization]: Thread initing ... "<<endl<<endl;
+    yInfo()<<"[SuperqVisualization]: Thread initing ... ";
     
     portImgOut.open("/superquadric-model/img:o");
 
@@ -230,7 +229,7 @@ void SuperqVisualization::sendPoints(deque<Vector> &p)
 /**********************************************************************/
 void SuperqVisualization:: threadRelease()
 {
-    cout<<endl<<"[SuperVisualization]: Thread releasing ... "<<endl<<endl;
+    yInfo()<<"[SuperVisualization]: Thread releasing ... ";
 
     if (!portImgOut.isClosed())
         portImgOut.close();
@@ -245,8 +244,8 @@ void SuperqVisualization::setPar(const Property &newOptions)
     if (!groupBottle.isNull())
     {
         int v_points=groupBottle.get(1).asInt();
-        if ((v_points)>=1 && (v_points<=300))
-                vis_points=v_points;
+        if ((v_points>=1) && (v_points<=300))
+            vis_points=v_points;
         else
             vis_points=3;
     }
@@ -256,7 +255,7 @@ void SuperqVisualization::setPar(const Property &newOptions)
     {
         string plot=groupBottle2.get(1).asString();
         if ((plot=="superq") || (plot=="points"))
-                what_to_plot=plot;
+            what_to_plot=plot;
         else
             what_to_plot="superq";
     }
@@ -266,7 +265,7 @@ void SuperqVisualization::setPar(const Property &newOptions)
     {
         int vpoint=groupBottle3.get(1).asInt();
         if ((vpoint>=1) && (vpoint<=100))
-                vis_step=vpoint;
+            vis_step=vpoint;
         else
             vis_step=10;
     }
@@ -276,7 +275,7 @@ void SuperqVisualization::setPar(const Property &newOptions)
     {
         string cam=groupBottle5.get(1).asString();
         if ((cam=="left") || (cam=="right"))
-                eye=cam;
+             eye=cam;
         else
             eye="left";
     }
@@ -322,7 +321,6 @@ Property SuperqVisualization::getPar()
     advOptions.put("what_to_plot",what_to_plot);
     return advOptions;
 }
-
 
 /***********************************************************************/
 double SuperqVisualization::getTime()

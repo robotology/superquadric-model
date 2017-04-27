@@ -97,8 +97,9 @@ public:
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
     /***********************************************************************/
-    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,std::string _tag_file, double _threshold_median,
-                      const yarp::os::Property &filters_points_par, const yarp::os::Property &filters_superq_par, const yarp::os::Property &optimizer_par, const std::string &_homeContextPath, bool       _save_points);
+    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,
+                      std::string _tag_file, double _threshold_median, const yarp::os::Property &filters_points_par, 
+                      const yarp::os::Property &filters_superq_par, const yarp::os::Property &optimizer_par, const std::string &_homeContextPath, bool _save_points);
 
     /***********************************************************************/
     void setPointsFilterPar(const yarp::os::Property &newOptions);
@@ -185,8 +186,7 @@ public:
     void sendBlobPoints(const std::vector<yarp::sig::Vector> &p);
 
     /***********************************************************************/
-    double getTime();
-     
+    double getTime();     
 };
 
 #endif
