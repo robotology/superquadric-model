@@ -109,7 +109,7 @@ bool SuperqModule::set_visualization(const string &e)
 }
 
 /**********************************************************************/
-Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_or_not)
+Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_superq)
 {
     Property superq;
 
@@ -122,7 +122,7 @@ Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_or_n
     superqCom->step();
 
     Vector sol(11,0.0);
-    sol=superqCom->getSolution(filtered_or_not);
+    sol=superqCom->getSolution(filtered_superq);
 
     superqCom->setPar("one_shot", "false");
     vector<Vector> blob_empty;

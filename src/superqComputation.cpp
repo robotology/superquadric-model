@@ -753,11 +753,11 @@ int SuperqComputation::adaptWindComputation()
 }
 
 /***********************************************************************/
-Vector SuperqComputation::getSolution(bool filtered_or_not)
+Vector SuperqComputation::getSolution(bool filtered_superq)
 {
     LockGuard lg(mutex);
 
-    if (filtered_or_not==false)
+    if (filtered_superq==false)
         return x;
     else
         return x_filtered;

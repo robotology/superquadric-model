@@ -122,7 +122,7 @@ protected:
     bool set_visualization(const std::string &e);
 
     /**********************************************************************/
-    yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> &blob, bool filtered_or_not);
+    yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> &blob, bool filtered_superq);
 
     /**********************************************************************/
     bool set_points_filtering(const std::string &entry);
