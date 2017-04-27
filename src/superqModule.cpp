@@ -80,22 +80,24 @@ bool SuperqModule::set_visualization(const string &e)
 
         if ((visualization_on==false) && (e=="on"))
         {
-            superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot, Color, igaze, K, vis_points, vis_step);
+            //superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot, Color, igaze, K, vis_points, vis_step);
 
-            bool thread_started=superqVis->start();
+//            bool thread_started=superqVis->start();
 
-            if (thread_started)
-                yInfo()<<"[SuperqVisualization] thread started!";
-            else
-                yError()<<"[SuperqVisualization] problems in starting the thread!";
+//            if (thread_started)
+//                yInfo()<<"[SuperqVisualization] thread started!";
+//            else
+//                yError()<<"[SuperqVisualization] problems in starting the thread!";
+
+            superqVis->resume();
 
             visualization_on=true;
 
         }
         else if ((visualization_on==true) && (e=="off"))
         {
-            superqVis->stop();
-            delete superqVis;
+            superqVis->suspend();
+            //delete superqVis;
             visualization_on=false;
         }
         return true;
@@ -127,6 +129,36 @@ Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_supe
 
     superqCom->sendBlobPoints(blob_empty);
 
+    superq=fillProperty(sol);
+
+//    Bottle bottle;
+//    Bottle &b1=bottle.addList();
+//    b1.addDouble(sol[0]); b1.addDouble(sol[1]); b1.addDouble(sol[2]);
+//    superq.put("dimensions", bottle.get(0));
+
+//    Bottle &b2=bottle.addList();
+//    b2.addDouble(sol[3]); b2.addDouble(sol[4]);
+//    superq.put("exponents", bottle.get(1));
+
+//    Bottle &b3=bottle.addList();
+//    b3.addDouble(sol[5]); b3.addDouble(sol[6]); b3.addDouble(sol[7]);
+//    superq.put("center", bottle.get(2));
+
+//    Bottle &b4=bottle.addList();
+//    Vector orient=dcm2axis(euler2dcm(sol.subVector(8,10)));
+//    b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
+//    superq.put("orientation", bottle.get(3));
+
+    //superqCom->resume();
+
+    return superq;
+}
+
+/**********************************************************************/
+Property SuperqModule::fillProperty(const Vector &sol)
+{
+    Property superq;
+
     Bottle bottle;
     Bottle &b1=bottle.addList();
     b1.addDouble(sol[0]); b1.addDouble(sol[1]); b1.addDouble(sol[2]);
@@ -144,9 +176,6 @@ Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_supe
     Vector orient=dcm2axis(euler2dcm(sol.subVector(8,10)));
     b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
     superq.put("orientation", bottle.get(3));
-
-    //superqCom->resume();
-
     return superq;
 }
 
@@ -321,7 +350,7 @@ bool SuperqModule::updateModule()
 
     if (mode_online)
     {
-        Vector &x_to_send=portSuperq.prepare();
+        Property &x_to_send=portSuperq.prepare();
 
         imgIn=portImgIn.read();
 
@@ -346,9 +375,9 @@ bool SuperqModule::updateModule()
             times_superq.clear();
         
         if (!filter_superq)
-            x_to_send=x;
+            x_to_send=fillProperty(x);
         else
-            x_to_send=x_filtered;
+            x_to_send=fillProperty(x_filtered);
 
         portSuperq.write();
 
@@ -454,16 +483,21 @@ bool SuperqModule::configure(ResourceFinder &rf)
             yError()<<"[SuperqComputation]: Problems in starting the thread!";
     }
 
+    superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot, Color, igaze, K,vis_points, vis_step);
+
     if (visualization_on)
     {
-        superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot, Color, igaze, K,vis_points, vis_step);
-
         bool thread_started=superqVis->start();
 
         if (thread_started)
             yInfo()<<"[SuperqVisualization]: Thread started!";
         else
             yError()<<"[SuperqVisualization]: Problems in starting the thread!";
+    }
+    else
+    {
+        superqVis->threadInit();
+        // start and suspend?
     }
 
     return true;
@@ -491,11 +525,11 @@ bool SuperqModule::close()
 
     delete superqCom;
 
-    if (visualization_on)
-    {
+    //if (visualization_on)
+    //{
         superqVis->stop();
         delete superqVis;
-    }
+    //}
 
     if (portRpc.asPort().isOpen())
         portRpc.close();

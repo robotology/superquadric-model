@@ -79,7 +79,7 @@ Determines which barrier parameter update strategy is to be used. POssible value
     </output>
 
     <output>
-      <type>yarp::sig::Vector</type>
+      <type>yarp::os::Property</type>
       <port carrier="tcp">/superquadric-model/superq:o</port>
       <description>
         send the estimated superquadric in streaming.

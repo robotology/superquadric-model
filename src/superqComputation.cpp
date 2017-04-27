@@ -517,7 +517,7 @@ void SuperqComputation::acquirePointsFromBlob(ImageOf<PixelRgb>  *ImgIn)
     if (!one_shot)
         getBlob();
 
-    if (blob_points.size()>0)
+    if (blob_points.size()>=1)
     {
         get3Dpoints(ImgIn);
     }
@@ -537,17 +537,22 @@ void SuperqComputation::getBlob()
 
         if (Bottle *blob_list=reply->get(0).asList())
         {
-            for (int i=0; i<blob_list->size();i++)
+            if (blob_list->size()>1)
             {
-                if (Bottle *blob_pair=blob_list->get(i).asList())
+                for (int i=0; i<blob_list->size();i++)
                 {
-                    blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt()));
-                }
-                else
-                {
-                    yError()<<"[SuperqComputation]: Some problems in blob pixels!";
+                    if (Bottle *blob_pair=blob_list->get(i).asList())
+                    {
+                        blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt()));
+                    }
+                    else
+                    {
+                        yError()<<"[SuperqComputation]: Some problems in blob pixels!";
+                    }
                 }
             }
+            else
+                yError()<<"[SuperqComputation]: Blob size equal to 1!";
         }
         else
         {

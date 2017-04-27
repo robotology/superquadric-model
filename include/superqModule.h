@@ -78,7 +78,7 @@ protected:
     std::deque<double> times_vis;
 
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > portImgIn;
-    yarp::os::BufferedPort<yarp::sig::Vector> portSuperq;
+    yarp::os::BufferedPort<yarp::os::Property> portSuperq;
     yarp::os::RpcServer portRpc;
 
     yarp::dev::PolyDriver GazeCtrl;
@@ -123,6 +123,9 @@ protected:
 
     /**********************************************************************/
     yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> &blob, bool filtered_superq);
+
+    /**********************************************************************/
+    yarp::os::Property fillProperty(const yarp::sig::Vector &sol);
 
     /**********************************************************************/
     bool set_points_filtering(const std::string &entry);
