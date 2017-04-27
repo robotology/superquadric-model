@@ -8,19 +8,19 @@
   <copypolicy>Released under the terms of the GNU GPL v2.0</copypolicy>
   <version>1.0</version>
   
-  <description-long>
-    This module allows object  modeling with superquadric functions. 
-A tutorial on how to use the module is provided in a dedicated repository <a href="https://github.com/robotology/superquadric-model/tree/master/tutorial"><b>tutorial</b></a>
+<description-long>
+This module provides an object modeling tool based on superquadric functions. 
+A tutorial on how to use the module is provided in the dedicated repository <a href="https://github.com/robotology/superquadric-model/tree/master/tutorial"><b>tutorial</b></a>.
 
-    This page  illustrates the main parameters of the module (Section <b>Parameters</b>), the available ports and services. 
-    The modules parameters are labeled as standard and advanced. Note: change the advanced parameters only if you are familiar with the implemented techniques.
+This page illustrates the main parameters of the module (Section <b>Parameters</b>), the available ports and services. 
+The modules parameters are labeled as standard and advanced. Note: change the advanced parameters only if you are familiar with the implemented techniques.
 
-    The module can also provides <b>three output files</b> is the saving options is enabled:
-    - <b>_tag-file_.txt</b> or <b>output.txt</b> (if the point cloud is given through a file or a seed point), containing the reconstructed superquadric and some information about IPOPT algorithm;
-    - <b>SFM-_tag-file_.off</b> containing the 3D points coming from SFM;
-    - <b>filtered-_tag-file_.off</b> containing the filtered 3D points (if filtering is enabled).
+The module can also provides <b>three output files</b> is the saving options is enabled:
+  - <b>tag-file.txt</b> or <b>output.txt</b> (if the point cloud is given through a file or a seed point), containing the reconstructed superquadric and some information about IPOPT algorithm;
+  - <b>SFM-tag-file.off</b> containing the 3D points coming from SFM;
+  - <b>filtered-tag-file.off</b> containing the filtered 3D points (if filtering is enabled).
 
-  </description-long>
+</description-long>
 
   <arguments>
     <param default="superquadric-model" desc="Select the current context (standard parameter).">context</param>
@@ -42,7 +42,7 @@ Determines which barrier parameter update strategy is to be used. POssible value
     <param default="false" desc="Variable to decide to filter points or not (standard parameter - thrift service available).">filter_points</param> 
     <param default="0.005" desc="KNN radius value for filtering (advanced parameter  -  thrift service available).">radius</param> 
     <param default="100" desc="NKK threshold value for filtering (advanced parameter  -  thrift service available).">nnThreshold</param>  
-    <param default="false" desc="Variable to decide to filter points or not (standard parameter - thrift service available).">filter_superq</param> 
+    <param default="false" desc="Variable to decide to filter superq or not (standard parameter - thrift service available).">filter_superq</param> 
     <param default="true" desc="Variable to decide if to use a fixed window for the median filter on superquadrics (standard parameter - thrift service available).">fixed_window</param>    
     <param default="1" desc="Min window width in case an adaptive window is used (advanced parameter - thrift service available).">min_median_order</param> 
     <param default="30" desc="Max window width in case an adaptive window is used (advanced parameter - thrift service available).">max_median_order</param> 
