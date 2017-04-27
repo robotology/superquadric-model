@@ -31,7 +31,7 @@
 #include <opencv2/opencv.hpp>
 
 
-#include "src/graspingTest_IDL.h"
+#include "src/testingModule_IDL.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -40,7 +40,7 @@ using namespace yarp::sig;
 using namespace yarp::math;
 
 class AcquireBlob : public RFModule,
-                    graspingTest_IDL
+                    testingModule_IDL
 {
     string method;
     string objname;
@@ -137,12 +137,12 @@ public:
 
         streaming=(rf.check("streaming", Value("off")).asString()=="on");
 
-        portBlobRpc.open("/grasping-test/blob:rpc");
-        portOPCrpc.open("/grasping-test/OPC:rpc");
-        superqRpc.open("/grasping-test/superq:rpc");
-        portRpc.open("/grasping-test/rpc");
+        portBlobRpc.open("/testing-module/blob:rpc");
+        portOPCrpc.open("/testing-module/OPC:rpc");
+        superqRpc.open("/testing-module/superq:rpc");
+        portRpc.open("/testing-module/rpc");
 
-        blobPort.open("/grasping-test/blob:o");
+        blobPort.open("/testing-module/blob:o");
 
         attach(portRpc);
         return true;
@@ -381,7 +381,7 @@ int main(int argc,char *argv[])
 
     AcquireBlob mod;
     ResourceFinder rf;
-    rf.setDefaultContext("grasping-test");
+    rf.setDefaultContext("testing-module");
     rf.configure(argc,argv);
     return mod.runModule(rf);
 }

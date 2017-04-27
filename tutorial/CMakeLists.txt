@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-project(grasping-test)
+project(testing-module)
 
 find_package(YARP REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})

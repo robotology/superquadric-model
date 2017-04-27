@@ -16,12 +16,12 @@ struct Bottle
   )
 
 /**
-* graspingTest_IDL
+* testingModule_IDL
 *
-* IDL Interface to \ref grasping-test services.
+* IDL Interface to \ref testing-module services.
 */
 
-service graspingTest_IDL
+service testingModule_IDL
 {
 
     /* Send the current 2D blob
