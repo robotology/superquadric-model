@@ -1,5 +1,5 @@
 <application>
-    <name>grasping-test</name>
+    <name>testing-module</name>
 
     <dependencies>
         <port>/lbpExtract/rpc:i</port>
@@ -7,24 +7,24 @@
     </dependencies>
     
     <module>
-       <name>grasping-test</name>
+       <name>testing-module</name>
        <node>icub21</node>
     </module>
    
     <connection>
-        <from>/grasping-test/blob:rpc</from>
+        <from>/testing-module/blob:rpc</from>
         <to>/lbpExtract/rpc:i</to>
         <protocol>tcp</protocol>
     </connection>
 
     <connection>
-        <from>/grasping-test/OPC:rpc</from>
+        <from>/testing-module/OPC:rpc</from>
         <to>/memory/rpc</to>
         <protocol>tcp</protocol>
     </connection>
 
     <connection>
-        <from>/grasping-test/superq:rpc</from>
+        <from>/testing-module/superq:rpc</from>
         <to>/superquadric-model/rpc</to>
         <protocol>tcp</protocol>
     </connection>

@@ -38,7 +38,7 @@
 
     <connection>
         <from>/superquadric-model/blob:rpc</from>
-        <to>/grasping-test/rpc</to>
+        <to>/testing-module/rpc</to>
         <protocol>tcp</protocol>
     </connection>
 

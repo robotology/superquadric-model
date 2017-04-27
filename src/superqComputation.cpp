@@ -462,10 +462,14 @@ void SuperqComputation::run()
     {
         yError("[SuperqComputation]: Not found a suitable superquadric! ");
     }
-    else if (go_on==true && norm(x)>0.0)
+    else if (go_on==true && norm(x)>0.0 && (points.size()>0))
     {
         if (filter_superq)
             filterSuperq();
+    }
+    else
+    {
+        x_filtered.resize(11,0.0);
     }
 
     t_superq=Time::now() - t0;
