@@ -81,11 +81,15 @@ void SuperqComputation::setPointsFilterPar(const Property &newOptions)
     if (!groupBottle.isNull())
     {
         double radiusValue=groupBottle.get(1).asDouble();
-        if ((radiusValue)>0.0000001 && (radiusValue<0.01))
+        if ((radiusValue>0.0000001) && (radiusValue<0.01))
                 radius=radiusValue;
-        else
+        else if ((radiusValue>=0.01))
         {
-            radius=0.005;
+            radius=0.01;
+        }
+        else if ((radiusValue<=0.0000001))
+        {
+            radius=0.0000001;
         }
     }
 
