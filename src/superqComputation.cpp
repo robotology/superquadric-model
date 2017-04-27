@@ -517,7 +517,7 @@ void SuperqComputation::acquirePointsFromBlob(ImageOf<PixelRgb>  *ImgIn)
     if (!one_shot)
         getBlob();
 
-    if (blob_points.size()>=1)
+    if (blob_points.size()>1)
     {
         get3Dpoints(ImgIn);
     }
