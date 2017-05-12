@@ -466,6 +466,8 @@ void SuperqComputation::run()
     {
         if (filter_superq)
             filterSuperq();
+        else
+            x_filtered=x;
     }
     else
     {
@@ -822,6 +824,9 @@ void SuperqComputation::filterSuperq()
 
         x_filtered=mFilter->filt(x);
     }
+
+    if (norm(x_filtered)==0.0)
+        x_filtered=x;
 
     yInfo()<< "[SuperqComputation]: Filtered superq "<< x_filtered.toString(3,3);
 }
