@@ -102,7 +102,7 @@ public:
     void setColor (const int &r, const int &g, const int &b);
 
     /***********************************************************************/    
-    void setPar(const yarp::os::Property &newOptions);
+    void setPar(const yarp::os::Property &newOptions, bool first_time);
 
     /***********************************************************************/
     yarp::os::Property getPar();

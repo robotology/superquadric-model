@@ -57,10 +57,8 @@ protected:
     double radius;
     int nnThreshold;
     int numVertices;
-    int median_order;
-    int std_median_order;
-    int min_median_order;
-    int max_median_order;
+    int median_order;   
+    int min_median_order;    
     int new_median_order;
     bool filter_points;
     bool fixed_window;
@@ -94,6 +92,9 @@ protected:
     yarp::os::Property ipopt_par;
 public:
 
+    int std_median_order;
+    int max_median_order;
+
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
     /***********************************************************************/
@@ -102,13 +103,13 @@ public:
                       const yarp::os::Property &filters_superq_par, const yarp::os::Property &optimizer_par, const std::string &_homeContextPath, bool _save_points);
 
     /***********************************************************************/
-    void setPointsFilterPar(const yarp::os::Property &newOptions);
+    void setPointsFilterPar(const yarp::os::Property &newOptions, bool first_time);
 
     /***********************************************************************/
-    void setSuperqFilterPar(const yarp::os::Property &newOptions);
+    void setSuperqFilterPar(const yarp::os::Property &newOptions, bool first_time);
 
     /***********************************************************************/
-    void setIpoptPar(const yarp::os::Property &newOptions);
+    void setIpoptPar(const yarp::os::Property &newOptions, bool first_time);
 
     /***********************************************************************/
     yarp::os::Property getPointsFilterPar();
@@ -157,6 +158,9 @@ public:
 
     /***********************************************************************/
     void filterSuperq();
+
+    /***********************************************************************/
+    void resetMedianFilter();
 
     /***********************************************************************/
     int adaptWindComputation();

@@ -80,15 +80,6 @@ bool SuperqModule::set_visualization(const string &e)
 
         if ((visualization_on==false) && (e=="on"))
         {
-            //superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot, Color, igaze, K, vis_points, vis_step);
-
-//            bool thread_started=superqVis->start();
-
-//            if (thread_started)
-//                yInfo()<<"[SuperqVisualization] thread started!";
-//            else
-//                yError()<<"[SuperqVisualization] problems in starting the thread!";
-
             superqVis->resume();
 
             visualization_on=true;
@@ -97,7 +88,6 @@ bool SuperqModule::set_visualization(const string &e)
         else if ((visualization_on==true) && (e=="off"))
         {
             superqVis->suspend();
-            //delete superqVis;
             visualization_on=false;
         }
         return true;
@@ -113,13 +103,29 @@ Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_supe
 {
     Property superq;
 
-    //superqCom->suspend();
-
     superqCom->sendBlobPoints(blob);
 
     superqCom->setPar("one_shot", "on");
 
-    superqCom->step();
+    if (!filtered_superq)
+        superqCom->step();
+    else
+    {
+        superqCom->resetMedianFilter();
+
+        if (fixed_window)
+        {
+            median_order=superqCom->std_median_order;
+            for (size_t i=0; i<median_order; i++)
+                superqCom->step();
+        }
+        else
+        {
+            max_median_order=superqCom->max_median_order;
+            for (size_t i=0; i<max_median_order; i++)
+                superqCom->step();
+        }
+    }
 
     Vector sol(11,0.0);
     sol=superqCom->getSolution(filtered_superq);
@@ -130,26 +136,6 @@ Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_supe
     superqCom->sendBlobPoints(blob_empty);
 
     superq=fillProperty(sol);
-
-//    Bottle bottle;
-//    Bottle &b1=bottle.addList();
-//    b1.addDouble(sol[0]); b1.addDouble(sol[1]); b1.addDouble(sol[2]);
-//    superq.put("dimensions", bottle.get(0));
-
-//    Bottle &b2=bottle.addList();
-//    b2.addDouble(sol[3]); b2.addDouble(sol[4]);
-//    superq.put("exponents", bottle.get(1));
-
-//    Bottle &b3=bottle.addList();
-//    b3.addDouble(sol[5]); b3.addDouble(sol[6]); b3.addDouble(sol[7]);
-//    superq.put("center", bottle.get(2));
-
-//    Bottle &b4=bottle.addList();
-//    Vector orient=dcm2axis(euler2dcm(sol.subVector(8,10)));
-//    b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
-//    superq.put("orientation", bottle.get(3));
-
-    //superqCom->resume();
 
     return superq;
 }
@@ -193,7 +179,7 @@ bool SuperqModule::set_points_filtering(const string &entry)
             Property options;
             options.put("filter_radius", radius);
             options.put("filter_nnThreshold", nnThreshold);
-            superqCom->setPointsFilterPar(options);
+            superqCom->setPointsFilterPar(options, false);
             superqCom->setPar("filter_points", "on");
         }
         else
@@ -234,11 +220,11 @@ bool SuperqModule::set_superq_filtering(const string &entry)
         if (filter_superq)
         {
             median_order=5; 
-            fixed_window=false;
+            fixed_window=true;
             Property options;
             options.put("median_order", median_order);
             options.put("fixed_window", "on");
-            superqCom->setSuperqFilterPar(options);
+            superqCom->setSuperqFilterPar(options, false);
             superqCom->setPar("filter_superq", "on");
         }
         else
@@ -320,13 +306,13 @@ Property SuperqModule::get_options(const string &field)
 bool SuperqModule::set_options(const Property &newOptions, const string &field)
 {
     if (field=="points_filter")
-        superqCom->setPointsFilterPar(newOptions);
+        superqCom->setPointsFilterPar(newOptions, false);
     else if (field=="superq_filter")
-        superqCom->setSuperqFilterPar(newOptions);
+        superqCom->setSuperqFilterPar(newOptions, false);
     else if (field=="optimization")
-        superqCom->setIpoptPar(newOptions);
+        superqCom->setIpoptPar(newOptions, false);
     else if (field=="visualization")
-        superqVis->setPar(newOptions);
+        superqVis->setPar(newOptions, false);
     else
         return false;
 
