@@ -100,13 +100,14 @@ Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_supe
 {
     Property superq;
 
-    superqCom->sendBlobPoints(blob);
-
     superqCom->setPar("one_shot", "on");
+
+    superqCom->sendBlobPoints(blob);
 
     if (!filtered_superq)
         superqCom->step();
     else
+    if (filtered_superq)
     {
         superqCom->resetMedianFilter();
 
@@ -128,9 +129,9 @@ Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_supe
     sol=superqCom->getSolution(filtered_superq);
 
     superqCom->setPar("one_shot", "off");
-    vector<Vector> blob_empty;
-
-    superqCom->sendBlobPoints(blob_empty);
+    
+    superqCom->blob_points.clear();
+    //superqCom->sendBlobPoints(blob);
 
     superq=fillProperty(sol);
 
@@ -480,7 +481,6 @@ bool SuperqModule::configure(ResourceFinder &rf)
     else
     {
         superqVis->threadInit();
-        // start and suspend?
     }
 
     return true;

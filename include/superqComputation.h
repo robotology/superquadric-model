@@ -47,7 +47,6 @@ protected:
     std::string homeContextPath;
     yarp::os::ConstString pointCloudFileName;
     std::vector<cv::Point> contour;
-    std::deque<cv::Point> blob_points;
 
     yarp::os::RpcClient portSFMrpc;
 
@@ -95,6 +94,7 @@ public:
     yarp::sig::Vector &x;
     yarp::sig::Vector &x_filtered;
     std::deque<yarp::sig::Vector> &points;
+    std::deque<cv::Point> blob_points;
 
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 

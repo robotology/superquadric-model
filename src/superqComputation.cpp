@@ -464,6 +464,9 @@ void SuperqComputation::run()
     {
         yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
         go_on=computeSuperq();
+
+        if (one_shot)
+            blob_points.clear();
     }
 
     if ((go_on==false) && (points.size()>0))
