@@ -48,9 +48,6 @@ bool SuperqModule::set_tag_file(const string &tag)
     outputFileName=homeContextPath+"/"+tag_file+".txt";
     yDebug()<<" [SuperqModule]: File output "<<outputFileName;
 
-    x.resize(11,0.0);
-    x_filtered.resize(11,0.0);
-
     superqCom->setPar("tag_file", tag_file);
 
     return true;
@@ -171,11 +168,9 @@ bool SuperqModule::set_points_filtering(const string &entry)
     if ((entry=="on") || (entry=="off"))
     {
         LockGuard lg(mutex);
-        filter_points= (entry=="on");
+        filter_points=(entry=="on");
         if (filter_points)
         {
-            radius=0.005;
-            nnThreshold=100;
             Property options;
             options.put("filter_radius", radius);
             options.put("filter_nnThreshold", nnThreshold);
@@ -219,11 +214,13 @@ bool SuperqModule::set_superq_filtering(const string &entry)
         filter_superq= (entry=="on");
         if (filter_superq)
         {
-            median_order=5; 
-            fixed_window=true;
             Property options;
             options.put("median_order", median_order);
-            options.put("fixed_window", "on");
+            if (fixed_window)
+                options.put("fixed_window", "on");
+            else
+                options.put("fixed_window", "off");
+
             superqCom->setSuperqFilterPar(options, false);
             superqCom->setPar("filter_superq", "on");
         }
@@ -506,16 +503,12 @@ bool SuperqModule::close()
     yInfo()<<"[SuperqModule]: Closing ... ";
     saveSuperq();
 
-    //if (mode_online==true)
     superqCom->stop();
 
     delete superqCom;
 
-    //if (visualization_on)
-    //{
-        superqVis->stop();
-        delete superqVis;
-    //}
+    superqVis->stop();
+    delete superqVis;
 
     if (portRpc.asPort().isOpen())
         portRpc.close();
