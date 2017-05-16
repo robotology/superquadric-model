@@ -65,10 +65,18 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 }
 
 /***********************************************************************/
-SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, string _tag_file, double _threshold_median,
-                                const Property &_filter_points_par, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points):
-                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window(_fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points),
-                                filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate), homeContextPath(_homeContextPath)
+//SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, string _tag_file, double _threshold_median,
+//                                const Property &_filter_points_par, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points):
+//                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window(_fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points),
+//                                filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate), homeContextPath(_homeContextPath)
+//{
+//}
+
+/***********************************************************************/
+SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,deque<yarp::sig::Vector> &_points, ImageOf<PixelRgb> *_imgIn, string _tag_file, double _threshold_median,
+                                const Property &_filter_points_par, Vector &_x, Vector &_x_filtered, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points):
+                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window( _fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points), imgIn(_imgIn),
+                                filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate), homeContextPath(_homeContextPath), x(_x), x_filtered(_x_filtered), points(_points)
 {
 }
 
@@ -874,12 +882,12 @@ Vector SuperqComputation::getSolution(bool filtered_superq)
         return x_filtered;
 }
 
-/***********************************************************************/
-void SuperqComputation::sendImg(ImageOf<PixelRgb> *Img)
-{
-    LockGuard lg(mutex);
-    imgIn=Img;
-}
+///***********************************************************************/
+//void SuperqComputation::sendImg(ImageOf<PixelRgb> *Img)
+//{
+//    LockGuard lg(mutex);
+//    imgIn=Img;
+//}
 
 /***********************************************************************/
 void SuperqComputation::setContour(cv::Point p)
@@ -888,18 +896,18 @@ void SuperqComputation::setContour(cv::Point p)
     contour.push_back(p);
 }
 
-/***********************************************************************/
-void SuperqComputation::getPoints(deque<Vector> &p)
-{
-    LockGuard lg(mutex);
+///***********************************************************************/
+//void SuperqComputation::getPoints(deque<Vector> &p)
+//{
+//    LockGuard lg(mutex);
 
-    p.clear();
+//    p.clear();
 
-    for (size_t i=0; i<points.size(); i++)
-    {   
-        p.push_back(points[i]);
-    }
-}
+//    for (size_t i=0; i<points.size(); i++)
+//    {
+//        p.push_back(points[i]);
+//    }
+//}
 
 /***********************************************************************/
 void SuperqComputation::sendPoints(deque<Vector> &p)

@@ -328,8 +328,8 @@ bool SuperqModule::updateModule()
     t0=Time::now();
     LockGuard lg(mutex);
 
-    x.resize(11,0.0);
-    x_filtered.resize(11,0.0);
+    //x.resize(11,0.0);
+    //x_filtered.resize(11,0.0);
 
     if (mode_online)
     {
@@ -337,11 +337,11 @@ bool SuperqModule::updateModule()
 
         imgIn=portImgIn.read();
 
-        superqCom->sendImg(imgIn);
+        //superqCom->sendImg(imgIn);
 
-        x=superqCom->getSolution(false);
+        //x=superqCom->getSolution(false);
 
-        x_filtered=superqCom->getSolution(true);
+        //x_filtered=superqCom->getSolution(true);
 
         if (times_superq.size()<10)
             times_superq.push_back(superqCom->getTime());
@@ -366,19 +366,19 @@ bool SuperqModule::updateModule()
 
         if (visualization_on)
         {
-            superqVis->sendImg(imgIn);
-            if (what_to_plot=="superq")
-            {
-                if (filter_superq)
-                    superqVis->sendSuperq(x_filtered);
-                else 
-                    superqVis->sendSuperq(x);
-            }
-            else if (what_to_plot=="points")
-            {
-                superqCom->getPoints(points);
-                superqVis->sendPoints(points);
-            }
+//            superqVis->sendImg(imgIn);
+//            if (what_to_plot=="superq")
+//            {
+//                if (filter_superq)
+//                    superqVis->sendSuperq(x_filtered);
+//                else
+//                    superqVis->sendSuperq(x);
+//            }
+//            else if (what_to_plot=="points")
+//            {
+//                superqCom->getPoints(points);
+//                superqVis->sendPoints(points);
+//            }
 
             if (times_vis.size()<10)
             times_vis.push_back(superqVis->getTime());
@@ -453,8 +453,8 @@ bool SuperqModule::configure(ResourceFinder &rf)
         return false;
 
 
-    superqCom= new SuperqComputation(rate, filter_points, filter_superq,fixed_window, tag_file,
-                                     threshold_median,filter_points_par, filter_superq_par, ipopt_par, homeContextPath, save_points);
+    superqCom= new SuperqComputation(rate, filter_points, filter_superq, fixed_window, points, imgIn, tag_file,
+                                     threshold_median,filter_points_par, x, x_filtered, filter_superq_par, ipopt_par, homeContextPath, save_points);
 
     if (mode_online)
     {
@@ -466,7 +466,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
             yError()<<"[SuperqComputation]: Problems in starting the thread!";
     }
 
-    superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot, Color, igaze, K,vis_points, vis_step);
+    superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K, points, vis_points, vis_step, imgIn);
 
     if (visualization_on)
     {
@@ -620,7 +620,7 @@ bool SuperqModule::configServices(ResourceFinder &rf)
 bool SuperqModule::configSuperq(ResourceFinder &rf)
 {
     this->rf=&rf;
-    x_filtered.resize(11,0.0);
+    //x_filtered.resize(11,0.0);
 
     optimizer_points=rf.check("optimizer_points", Value(300)).asInt();
     max_cpu_time=rf.check("max_cpu_time", Value(5.0)).asDouble();

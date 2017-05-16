@@ -25,12 +25,22 @@ using namespace yarp::sig;
 using namespace yarp::dev;
 using namespace yarp::math;
 
+///***********************************************************************/
+//SuperqVisualization::SuperqVisualization(int _rate,const string &_eye, const string &_what_to_plot,
+//                                         deque<int> &_Color,IGazeControl *_igaze, const Matrix _K,
+//                                         const int &_vis_points, const int &_vis_step):
+//                                          RateThread(_rate), eye(_eye), what_to_plot(_what_to_plot), Color(_Color), igaze(_igaze), K(_K),
+//                                         vis_points(_vis_points), vis_step(_vis_step)
+//{
+
+//}
+
 /***********************************************************************/
-SuperqVisualization::SuperqVisualization(int _rate,const string &_eye, const string &_what_to_plot,
-                                         deque<int> &_Color,IGazeControl *_igaze, const Matrix _K,
-                                         const int &_vis_points, const int &_vis_step):
-                                          RateThread(_rate), eye(_eye), what_to_plot(_what_to_plot), Color(_Color), igaze(_igaze), K(_K),
-                                         vis_points(_vis_points), vis_step(_vis_step)
+SuperqVisualization::SuperqVisualization(int _rate,const string &_eye, const string &_what_to_plot, Vector &_x, Vector &_x_filtered,
+                                         deque<int> &_Color,IGazeControl *_igaze, const Matrix _K, deque<Vector> &_points,
+                                         const int &_vis_points, const int &_vis_step, ImageOf<PixelRgb> *_imgIn):
+                                         RateThread(_rate), eye(_eye), what_to_plot(_what_to_plot), Color(_Color), igaze(_igaze), K(_K),
+                                         vis_points(_vis_points), vis_step(_vis_step), superq(_x), superq_filtered(_x_filtered), points(_points), imgIn(_imgIn)
 {
 
 }
@@ -202,29 +212,29 @@ void SuperqVisualization::run()
 }
 
 /***********************************************************************/
-void SuperqVisualization::sendImg(ImageOf<PixelRgb> *Img)
-{
-    LockGuard lg(mutex);
-    imgIn=Img;
-}
+//void SuperqVisualization::sendImg(ImageOf<PixelRgb> *Img)
+//{
+//    LockGuard lg(mutex);
+//    imgIn=Img;
+//}
 
-/***********************************************************************/
-void SuperqVisualization::sendSuperq(Vector &x)
-{
-    LockGuard lg(mutex);
-    superq=x;
-}
+///***********************************************************************/
+//void SuperqVisualization::sendSuperq(Vector &x)
+//{
+//    LockGuard lg(mutex);
+//    superq=x;
+//}
 
-/***********************************************************************/
-void SuperqVisualization::sendPoints(deque<Vector> &p)
-{
-    LockGuard lg(mutex);
-    points.clear();
-    for (size_t i=0; i<p.size(); i++)
-    {
-        points.push_back(p[i]);
-    }
-}
+///***********************************************************************/
+//void SuperqVisualization::sendPoints(deque<Vector> &p)
+//{
+//    LockGuard lg(mutex);
+//    points.clear();
+//    for (size_t i=0; i<p.size(); i++)
+//    {
+//        points.push_back(p[i]);
+//    }
+//}
 
 /**********************************************************************/
 void SuperqVisualization:: threadRelease()

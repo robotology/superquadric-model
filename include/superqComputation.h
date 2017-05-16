@@ -47,7 +47,6 @@ protected:
     std::string homeContextPath;
     yarp::os::ConstString pointCloudFileName;
     std::vector<cv::Point> contour;
-    std::deque<yarp::sig::Vector> points;
     std::deque<cv::Point> blob_points;
 
     yarp::os::RpcClient portSFMrpc;
@@ -74,9 +73,7 @@ protected:
     int optimizer_points;
     bool bounds_automatic;
     std::string mu_strategy,nlp_scaling_method;
-    yarp::sig::Vector x;
     yarp::sig::Vector elem_x;
-    yarp::sig::Vector x_filtered;
 
     double t_superq;
     
@@ -95,12 +92,22 @@ public:
     int std_median_order;
     int max_median_order;
 
+    yarp::sig::Vector &x;
+    yarp::sig::Vector &x_filtered;
+    std::deque<yarp::sig::Vector> &points;
+
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
     /***********************************************************************/
-    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,
+    /*SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,
                       std::string _tag_file, double _threshold_median, const yarp::os::Property &filters_points_par, 
                       const yarp::os::Property &filters_superq_par, const yarp::os::Property &optimizer_par, const std::string &_homeContextPath, bool _save_points);
+
+    /***********************************************************************/
+    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, std::deque<yarp::sig::Vector> &_points, yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn,
+                      std::string _tag_file, double _threshold_median, const yarp::os::Property &filters_points_par, yarp::sig::Vector &_x, yarp::sig::Vector &_x_filtered,
+                      const yarp::os::Property &filters_superq_par, const yarp::os::Property &optimizer_par, const std::string &_homeContextPath, bool _save_points);
+
 
     /***********************************************************************/
     void setPointsFilterPar(const yarp::os::Property &newOptions, bool first_time);
