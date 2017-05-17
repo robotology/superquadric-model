@@ -7,6 +7,7 @@
 #include <yarp/os/Wire.h>
 #include <yarp/os/idl/WireTypes.h>
 #include <yarp/os/Property.h>
+#include <yarp/sig/Vector.h>
 
 class superquadricModel_IDL;
 
@@ -19,169 +20,92 @@ class superquadricModel_IDL : public yarp::os::Wire {
 public:
   superquadricModel_IDL();
   /**
-   * Set the name of the object
-   * to be detected and modeled.
-   * @param entry is the name of the object.
-   * @return true/false is the object is known/unknown.
+   * Set the tag for storing files.
+   * @param entry is the tag that will be used in file names.
+   * @return true.
    */
-  virtual bool set_object_name(const std::string& entry);
+  virtual bool set_tag_file(const std::string& entry);
   /**
-   * Get the seed point of the object
-   * without using the name object.
-   * @param x_pixel is the x pixel value of the object seed point.
-   * @param y_pixel is the x pixel value of the object seed point.
-   * return true/false on success/failure.
+   * Return the tag used for storing files.
+   * @return the tag name.
    */
-  virtual bool set_seed_point(const int32_t x_pixel, const int32_t y_pixel);
+  virtual std::string get_tag_file();
   /**
-   * Return the name of the object that is
-   * being detected and modeled.
-   * @return the name of the object.
+   * Get the parameters of the reconstructed superquadric.
+   * @param blob is the 2D blob of the object we want to model with the superquadric,
+   * for instance: ((100.0 102.0) (100.0 103.0) ... ).
+   * @param filtered_or_not is a bool variable specifing if we want the superquadric
+   * to be filtered (true/1) or not (false/0).
+   * @return the 12 parameters (x0, .. x11) of the current superquadric.
+   * In particular, the parameters are grouped in a Property as follows: "dimensions" (x0, x1, x2)
+   * are the three semi-axes lenghts; "exponents" (x3 and x4) are the exponents,
+   * responsible for the superquadric shape; "center"(x5, x6, x7) contains the coordinate of
+   * the superquadric center; and "orientation" (x8, x9, 10, x11) is the axis-angle representation
+   * obtained from the Euler angles.
    */
-  virtual std::string get_object_name();
+  virtual yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> & blob, const bool filtered_or_not);
   /**
-   * Say which method is set for getting
-   * blob.
-   * @return "name" if you have to type the name
-   * "point" if you have to click on the camera.
-   */
-  virtual std::string get_method();
-  /**
-   * Get RGB values
-   * @return a list with the RGB values of the
-   * superquadric and blob visualization.
-   */
-  virtual std::vector<int32_t>  get_color();
-  /**
-   * Set the RGB values of the superquadric
-   * and blob visualization.
-   * @param r is red value in [0,255].
-   * @param g is green value in [0,255].
-   * @param b is blue value in [0,255].
-   * @return true/false on success/failure.
-   */
-  virtual bool set_color(const int32_t r, const int32_t g, const int32_t b);
-  /**
-   * Get the eye used for projection of the
-   * 3D points on the superquadric surface
-   * to the 2D pixels.
-   * @return the name of the eye used.
-   */
-  virtual std::string get_eye();
-  /**
-   * Set the eye used for projection of the
-   * 3D points on the superquadric surface
-   * to the 2D pixels.
-   * @param eye is a string "left" or "right" for selecting the left or right eye.
-   * @return true/false on success/failure.
-   */
-  virtual bool set_eye(const std::string& eye);
-  /**
-   * Get the maximum number of points used
-   * for the superquadric reconstruction.
-   * @return the maximum number of the points.
-   */
-  virtual int32_t get_optimizer_points();
-  /**
-   * Set the maximum number of points used
-   * for the superquadric reconstruction.
-   * @param max is the number of points for superquadric reconstruction
-   * @return true/false on success/failur.
-   */
-  virtual bool set_optimizer_points(const int32_t max);
-  /**
-   * Get max number of visualized points
-   * on superquadric surface.
-   * @return the number of the visualized points.
-   */
-  virtual int32_t get_visualized_points();
-  /**
-   * Set max number of visualized points
-   * on superquadric surface.
-   * @param vis is the number of points to be visualized.
-   * @return true/false on success/failure.
-   */
-  virtual bool set_visualized_points(const int32_t vis);
-  /**
-   * Get the parameters of the reconstructed
-   * superquadric
-   * @param name of the object of which we want the superquadric
-   * @return the 11 parameters (x0, .. x10) of the current superquadric.
-   * In particular, x0, x1, x2 are the three semi-axes lenghts,
-   * x3 and x4 are the exponents, responsible for the superquadric shape.
-   * x5, x6, x7 are the coordinate of the superquadric center and
-   * x8, x9, 10 are the Euler angles, representing the superquadric orientation.
-   */
-  virtual std::vector<double>  get_superq(const std::string& name);
-  /**
-   * On/off point cloud filtering
+   * On/off point cloud filtering.
    * @param entry is "on/off" if you want/do not want to filter points.
    * @return true/false on success/failure.
    */
-  virtual bool set_filtering(const std::string& entry);
+  virtual bool set_points_filtering(const std::string& entry);
   /**
-   * Say if filtering is on or not.
-   * @return on/off string if filtering is on/off.
+   * Say if points filtering is on or not.
+   * @return on/off string if points filtering is on/off.
    */
-  virtual std::string get_filtering();
+  virtual std::string get_points_filtering();
   /**
-   * Set the desired tolerance value of the optimization algorithm
-   * @param desired_tol is the stop tolerance of the optimization algorithm.
+   * On/off superquadric filtering.
+   * @param entry is "on/off" if you want/do not want to filter the estimated superquadric.
    * @return true/false on success/failure.
    */
-  virtual bool set_tol(const double desired_tol);
+  virtual bool set_superq_filtering(const std::string& entry);
   /**
-   * Get the desired tolerance value of the optimization algorithm
-   * @return tolerance value.
+   * Say if superquadric filtering is on or not.
+   * @return on/off string if superquadeic filtering is on/off.
    */
-  virtual double get_tol();
+  virtual std::string get_superq_filtering();
   /**
-   * Set the maximum time acceptable for running the optimization algorithm.
-   * @param max_time is the maximum time acceptable for running the optimization algorithm.
+   *  Set if you want to save the acquired point cloud.
+   * @param entry can be: "on" or "off".
    * @return true/false on success/failure.
    */
-  virtual bool set_max_time(const double max_time);
+  virtual bool set_save_points(const std::string& entry);
   /**
-   * Get the maximum time for running the optimization algorithm.
-   * @return maximum time.
+   *  Set if you are saving the acquired point cloud.
+   * @return  "on" or "off".
    */
-  virtual double get_max_time();
+  virtual std::string get_save_points();
   /**
-   * Get the advanced parameters of the module. The user must pay attention
+   * Get the  parameters of the module. The user must pay attention
    * in changing them.
-   * @return the Property including all the advanced parameter values.
+   * @param field can be "points_filter", "superq_filter", "optimization", "visualization" or "statistics".
+   * depending on which parameters we are interested in.
+   * @return the Property including all the  parameter values.
    */
-  virtual yarp::os::Property get_advanced_options();
+  virtual yarp::os::Property get_options(const std::string& field);
   /**
-   * Set the advanced parameters of the module. The user must pay attention
+   * Set the  parameters of the module. The user must pay attention
    * in changing them.
-   * You can set the advanced parameters typing:
-   * command: ((filter_radius_advanced <radius-value>) (filter_nnThreshold_advanced <nnThreshold-value>))
-   * @return true/false on success/failure
+   * @param options is a Property containing the parameters the user want to change.
+   * @param field is a string specifying which can of parameter we are going to change.
+   * Field can be: "points_filter", "superq_filter", "optimization" or "visualization".
+   * You can set the  parameters typing:
+   * command:  set_options ((filter_radius <radius-value>) (filter_nnThreshold <nnThreshold-value>)) points_filter.
+   * @return true/false on success/failure.
    */
-  virtual bool set_advanced_options(const yarp::os::Property& options);
+  virtual bool set_options(const yarp::os::Property& options, const std::string& field);
   /**
-   *  Set what you want to show on the yarpview
-   * @param plot can be: "superq", "points", "filtered-points"
-   * @return true/false on success/failure
+   *  Set if the visualization has to be enabled.
+   * @return  true/false on success/failure.
    */
-  virtual bool set_plot(const std::string& plot);
+  virtual bool set_visualization(const std::string& e);
   /**
-   *  Get what is shown on the yarpview
-   * @return  "superq", "points" or "filtered-points"
+   *  Get if visualization is enabled.
+   * @return "on" or "off".
    */
-  virtual std::string get_plot();
-  /**
-   * Set the step used to downsample the points to be show
-   * @param step must be a positive value
-   * @return true/false on success/failure
-   */
-  virtual bool set_visualized_points_step(const int32_t step);
-  /**
-   * Get the step used to downsample the points to be show
-   * @return the step value
-   */
-  virtual int32_t get_visualized_points_step();
+  virtual std::string get_visualization();
   virtual bool read(yarp::os::ConnectionReader& connection);
   virtual std::vector<std::string> help(const std::string& functionName="--all");
 };
