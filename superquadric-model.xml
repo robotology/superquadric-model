@@ -7,12 +7,12 @@
   <description>Framework for object detecting and modeling.</description>
   <copypolicy>Released under the terms of the GNU GPL v2.0</copypolicy>
   <version>1.0</version>
-  
+
 <description-long>
-This module provides an object modeling tool based on superquadric functions. 
+This module provides an object modeling tool based on superquadric functions.
 A tutorial on how to use the module is provided in the dedicated repository <a href="https://github.com/robotology/superquadric-model/tree/master/tutorial"><b>tutorial</b></a>.
 
-This page illustrates the main parameters of the module (Section <b>Parameters</b>), the available ports and services. 
+This page illustrates the main parameters of the module (Section <b>Parameters</b>), the available ports and services.
 The modules parameters are labeled as standard and advanced. Note: change the advanced parameters only if you are familiar with the implemented techniques.
 
 The module can also provides <b>three output files</b> is the saving options is enabled:
@@ -35,21 +35,22 @@ The module can also provides <b>three output files</b> is the saving options is 
     <param default="0" desc="IPOPT acceptable iter. Number of acceptable iterates before triggering termination.
 If the algorithm encounters this many successive acceptable iterates, it terminates, assuming that the problem has been solved to best possible accuracy given round-off. If it is set to zero, this heuristic is disabled (advanced parameter- thrift service available).">acceptable_iter</param>
     <param default="max numeric limit" desc="IPOPT maximum iteration (advanced parameter- thrift service available).">max_iter</param>
-    <param default="0.6" desc="Maximum cpu time for IPOPT algorithm execution (advanced parameter - thrift service available).">max_cpu_time</param> 
+    <param default="0.6" desc="Maximum cpu time for IPOPT algorithm execution (advanced parameter - thrift service available).">max_cpu_time</param>
     <param default="adaptive" desc="IPOPT update strategy for barrier parameter.
-Determines which barrier parameter update strategy is to be used. POssible values: monotone or adaptive (advanced parameter- thrift service available).">mu_strategy</param> 
-    <param default="none" desc="IPOPT nlp_scaling_method: Select the technique used for scaling the problem. Possible values: none, user-scaling, gradient-based, equilibration-based (advanced parameter- thrift service available).">nlp_scaling_method</param>    
-    <param default="false" desc="Variable to decide to filter points or not (standard parameter - thrift service available).">filter_points</param> 
-    <param default="0.005" desc="KNN radius value for filtering (advanced parameter  -  thrift service available).">radius</param> 
-    <param default="100" desc="NKK threshold value for filtering (advanced parameter  -  thrift service available).">nnThreshold</param>  
-    <param default="false" desc="Variable to decide to filter superq or not (standard parameter - thrift service available).">filter_superq</param> 
-    <param default="true" desc="Variable to decide if to use a fixed window for the median filter on superquadrics (standard parameter - thrift service available).">fixed_window</param>    
-    <param default="1" desc="Min window width in case an adaptive window is used (advanced parameter - thrift service available).">min_median_order</param> 
-    <param default="30" desc="Max window width in case an adaptive window is used (advanced parameter - thrift service available).">max_median_order</param> 
+Determines which barrier parameter update strategy is to be used. POssible values: monotone or adaptive (advanced parameter- thrift service available).">mu_strategy</param>
+    <param default="none" desc="IPOPT nlp_scaling_method: Select the technique used for scaling the problem. Possible values: none, user-scaling, gradient-based, equilibration-based (advanced parameter- thrift service available).">nlp_scaling_method</param>
+    <param default="false" desc="Variable to decide to filter points or not (standard parameter - thrift service available).">filter_points</param>
+    <param default="0.005" desc="KNN radius value for filtering (advanced parameter  -  thrift service available).">radius</param>
+    <param default="100" desc="NKK threshold value for filtering (advanced parameter  -  thrift service available).">nnThreshold</param>
+    <param default="false" desc="Variable to decide to filter superq or not (standard parameter - thrift service available).">filter_superq</param>
+    <param default="true" desc="Variable to decide if to use a fixed window for the median filter on superquadrics (standard parameter - thrift service available).">fixed_window</param>
+    <param default="1" desc="Window width in case and adaptive window is not used (advanced parameter - thrift service available).">median_order</param>
+    <param default="1" desc="Min window width in case an adaptive window is used (advanced parameter - thrift service available).">min_median_order</param>
+    <param default="30" desc="Max window width in case an adaptive window is used (advanced parameter - thrift service available).">max_median_order</param>
 
-  
+
   </arguments>
- 
+
   <authors>
     <author email="giulia.vezzani@iit.it"> Giulia Vezzani </author>
   </authors>
@@ -87,7 +88,7 @@ Determines which barrier parameter update strategy is to be used. POssible value
     </output>
 
   </data>
- 
+
   <services>
     <server>
       <type>superquadricModel_IDL</type>
@@ -96,6 +97,5 @@ Determines which barrier parameter update strategy is to be used. POssible value
       <description>service port</description>
     </server>
   </services>
- 
-</module>
 
+</module>
