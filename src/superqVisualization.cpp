@@ -38,7 +38,7 @@ using namespace yarp::math;
 /***********************************************************************/
 SuperqVisualization::SuperqVisualization(int _rate,const string &_eye, const string &_what_to_plot, Vector &_x, Vector &_x_filtered,
                                          deque<int> &_Color,IGazeControl *_igaze, const Matrix _K, deque<Vector> &_points,
-                                         const int &_vis_points, const int &_vis_step, ImageOf<PixelRgb> *_imgIn):
+                                         const int &_vis_points, const int &_vis_step, ImageOf<PixelRgb> *&_imgIn):
                                          RateThread(_rate), eye(_eye), what_to_plot(_what_to_plot), Color(_Color), igaze(_igaze), K(_K),
                                          vis_points(_vis_points), vis_step(_vis_step), superq(_x), superq_filtered(_x_filtered), points(_points), imgIn(_imgIn)
 {
@@ -207,7 +207,7 @@ void SuperqVisualization::run()
     if (what_to_plot=="superq" && imgIn!=NULL)
         showSuperq(superq);
     else if (what_to_plot=="points" && points.size()>0)
-        showPoints();
+        showPoints();    
     t_vis=Time::now()-t0;
 }
 
