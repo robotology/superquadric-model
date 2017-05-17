@@ -64,7 +64,7 @@ The superquadric-model module launches two separate threads:
 
 The superquadric-model also provides some `thrift services` through a `rpc port`. The user can communicate with the module through these services in order to ask the state of the two threads or to modify some parameters on the fly.
 The module also receive the camera image and, if the `SuperqVisualization` is enabled, the output is shown on a yarpview.
-The `SuperqComputation` provides two buffered ports, respectively for receiving continuosly the 2D blob of the object and for sending the estimated superquadric.
+The `SuperqComputation` provides two buffered ports, respectively for receiving continuosly the 2D blob of the object and for sending the estimated superquadric. The computation and visualization threads also share some variables, such as the computed superquadric.
 
 In order to improve the superquadric modeling, the `SuperqComputation` thread provides **two filtering process**:
 
