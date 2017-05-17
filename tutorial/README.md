@@ -73,3 +73,25 @@ cmd.addInt(0);
 
 superqRpc.write(cmd, reply);
 ```
+## How to run the `superquadric-model` + `tutorial`
+
+If you want to test the `superquadric-model` code without writing your own code, you can use the this `tutorial`, following the following steps:
+
+1. Launch the basic modules of the iCub (`yarprobotinterface`, `iKinGazeCtrl`, `iKinCartesianSolver` - both for right and left arm-, `wholeBodyDynamics`, `gravityCompensator`, `imuFilter`) and the cameras.
+2. Launch the [IOL](https://github.com/robotology/iol) modules. [This xml file](https://github.com/robotology/iol/blob/master/app/scripts/iol.xml.template) contains all the required modules. 
+3. Launche the `superquadric-model` and a `yarpviewer`. You can use [this xml file](https://github.com/robotology/superquadric-model/blob/master/app/scripts/superquadric-model.xml.template).
+4. Launch the `tutorial` code with [this xml](https://github.com/robotology/superquadric-model/blob/master/tutorial/app/script/testing-module.xml.template).
+5. Connect everything.
+
+You can now play with the `/testing-module/rpc` port:
+- setting the name of the object you want to model
+```
+yarp rpc /testing-module/rpc
+>>set_object_name object
+```
+- setting if you want the streaming mode or not
+```
+set_streaming_mode on
+```
+
+Enjoy! :smiley:
