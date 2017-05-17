@@ -65,24 +65,24 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 }
 
 /***********************************************************************/
-SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, string _tag_file, double _threshold_median,
-                                const Property &_filter_points_par, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points):
-                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window(_fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points),
-                                filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate), homeContextPath(_homeContextPath)
+SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,deque<yarp::sig::Vector> &_points, ImageOf<PixelRgb> *_imgIn, string _tag_file, double _threshold_median,
+                                const Property &_filter_points_par, Vector &_x, Vector &_x_filtered, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points):
+                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window( _fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points), imgIn(_imgIn),
+                                filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate), homeContextPath(_homeContextPath), x(_x), x_filtered(_x_filtered), points(_points)
 {
 }
 
 /***********************************************************************/
-void SuperqComputation::setPointsFilterPar(const Property &newOptions)
+void SuperqComputation::setPointsFilterPar(const Property &newOptions, bool first_time)
 {
     LockGuard lg(mutex);
 
     double radiusValue=newOptions.find("filter_radius").asDouble();
-    if (newOptions.find("filter_radius").isNull())
+    if (newOptions.find("filter_radius").isNull() && (first_time==true))
     {
         radius=0.01;
     }
-    else
+    else if (!newOptions.find("filter_radius").isNull())
     {
         if ((radiusValue>0.0000001) && (radiusValue<0.01))
         {
@@ -99,11 +99,11 @@ void SuperqComputation::setPointsFilterPar(const Property &newOptions)
     }
 
    int nnThreValue=newOptions.find("filter_nnThreshold").asInt();
-    if (newOptions.find("filter_nnThreshold").isNull())
+    if (newOptions.find("filter_nnThreshold").isNull() && (first_time==true))
     {
         nnThreshold=100;
     }
-    else
+    else if (!newOptions.find("filter_nnThreshold").isNull())
     {
         if ((nnThreValue>0) && (nnThreValue<100))
         {
@@ -128,16 +128,16 @@ Property SuperqComputation::getPointsFilterPar()
 }
 
 /***********************************************************************/
-void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
+void SuperqComputation::setSuperqFilterPar(const Property &newOptions, bool first_time)
 {
     LockGuard lg(mutex);
 
     int mOrderValue=newOptions.find("median_order").asInt();
-    if (newOptions.find("median_order").isNull())
+    if (newOptions.find("median_order").isNull() && (first_time==true))
     {
         std_median_order=3;
     }
-    else
+    else if (!newOptions.find("median_order").isNull())
     {
         if((mOrderValue>=1) && (mOrderValue<=50))
         {
@@ -148,11 +148,11 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
     }
 
     mOrderValue=newOptions.find("min_median_order").asInt();
-    if (newOptions.find("min_median_order").isNull())
+    if (newOptions.find("min_median_order").isNull() && (first_time==true))
     {
         min_median_order=1;
     }
-    else
+    else if (!newOptions.find("min_median_order").isNull())
     {
         if ((mOrderValue>=1) && (mOrderValue<=50))
         {
@@ -163,11 +163,11 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
     }
 
     mOrderValue=newOptions.find("max_median_order").asInt();
-    if (newOptions.find("max_median_order").isNull())
+    if (newOptions.find("max_median_order").isNull() && (first_time==true))
     {
         max_median_order=30;
     }
-    else
+    else if (!newOptions.find("max_median_order").isNull())
     {
         if ((mOrderValue>=1) && (mOrderValue<=50))
         {
@@ -178,11 +178,11 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
     }
 
     double threValue=newOptions.find("threshold_median").asDouble();
-    if (newOptions.find("threhsold_median").isNull())
+    if (newOptions.find("threhsold_median").isNull() && (first_time==true))
     {
         threshold_median=0.1;
     }
-    else
+    else if (!newOptions.find("threhsold_median").isNull())
     {
         if ((threValue>0.005) && (threValue<=2.0))
         {
@@ -195,11 +195,11 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
     }
 
     double minNormVel=newOptions.find("min_norm_vel").asDouble();
-    if (newOptions.find("min_norm_vel").isNull())
+    if (newOptions.find("min_norm_vel").isNull() && (first_time==true))
     {
         min_norm_vel=0.01;
     }
-    else
+    else if (!newOptions.find("min_norm_vel").isNull())
     {
         if ((minNormVel>0.005) && (minNormVel<=0.1))
         {
@@ -212,11 +212,11 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions)
     }
 
     string par=newOptions.find("fixed_window").asString();
-    if (newOptions.find("fixed_window").isNull())
+    if (newOptions.find("fixed_window").isNull() && (first_time==true))
     {
         fixed_window=false;
     }
-    else
+    else if (!newOptions.find("fixed_window").isNull())
     {
         if ((par=="on") || (par=="off"))
         {
@@ -248,18 +248,18 @@ Property SuperqComputation::getSuperqFilterPar()
 }
 
 /***********************************************************************/
-void SuperqComputation::setIpoptPar(const Property &newOptions)
+void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
 {
     LockGuard lg(mutex);
 
     int points=newOptions.find("optimizer_points").asInt();
 
 
-    if (newOptions.find("optimizer_points").isNull())
+    if (newOptions.find("optimizer_points").isNull() && (first_time==true))
     {
         optimizer_points=50;
     }
-    else
+    else if (!newOptions.find("optimizer_points").isNull())
     {
         if ((points>=1) && (points<=300))
         {
@@ -272,11 +272,11 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
     }
 
     double maxCpuTime=newOptions.find("max_cpu_time").asDouble();
-    if (newOptions.find("max_cpu_time").isNull())
+    if (newOptions.find("max_cpu_time").isNull() && (first_time==true))
     {
         max_cpu_time=5.0;
     }
-    else
+    else if (!newOptions.find("max_cpu_time").isNull())
     {
         if ((maxCpuTime>=0.01) && (maxCpuTime<=10.0))
         {
@@ -289,11 +289,11 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
     }
 
     double tolValue=newOptions.find("tol").asDouble();
-    if (newOptions.find("tol").isNull())
+    if (newOptions.find("tol").isNull() && (first_time==true))
     {
         tol=1e-5;
     }
-    else
+    else if (!newOptions.find("tol").isNull())
     {
         if ((tolValue>1e-8) && (tolValue<=0.01))
         {
@@ -306,11 +306,11 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
     }
 
     int accIter=newOptions.find("acceptable_iter").asInt();
-    if (newOptions.find("acceptable_iter").isNull())
+    if (newOptions.find("acceptable_iter").isNull() && (first_time==true))
     {
         acceptable_iter=0;
     }
-    else
+    else if (!newOptions.find("acceptable_iter").isNull())
     {
         if ((accIter>=0 )&& (accIter<=100))
         {
@@ -323,11 +323,11 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
     }
 
     int maxIter=newOptions.find("max_iter").asInt();
-    if (newOptions.find("max_iter").isNull())
+    if (newOptions.find("max_iter").isNull() && (first_time==true))
     {
         max_iter=100;
     }
-    else
+    else if (!newOptions.find("max_iter").isNull())
     {
         if ((maxIter>1))
         {
@@ -340,11 +340,11 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
     }
 
     string mu_str=newOptions.find("mu_strategy").asString();
-    if (newOptions.find("mu_strategy").isNull())
+    if (newOptions.find("mu_strategy").isNull() && (first_time==true))
     {
         mu_strategy="monotone";
     }
-    else
+    else if (!newOptions.find("mu_strategy").isNull())
     {
         if ((mu_str=="adaptive") || (mu_str=="monotone"))
         {
@@ -357,11 +357,11 @@ void SuperqComputation::setIpoptPar(const Property &newOptions)
     }
 
     string nlp=newOptions.find("nlp_scaling_method").asString();
-    if (newOptions.find("nlp_scaling_method").isNull())
+    if (newOptions.find("nlp_scaling_method").isNull() && (first_time==true))
     {
         nlp_scaling_method="gradient-based";
     }
-    else
+    else if (!newOptions.find("nlp_scaling_method").isNull())
     {
         if ((nlp=="none") || (nlp=="gradient-based"))
         {
@@ -420,12 +420,12 @@ bool SuperqComputation::threadInit()
     yInfo()<<"[SuperqComputation]: Thread initing ... ";
 
     if (filter_points==true)
-        setPointsFilterPar(filter_points_par);
+        setPointsFilterPar(filter_points_par, true);
 
     if (filter_superq==true)
-        setSuperqFilterPar(filter_superq_par);
+        setSuperqFilterPar(filter_superq_par, true);
     
-    setIpoptPar(ipopt_par);
+    setIpoptPar(ipopt_par, true);
 
     configFilterSuperq();
     config3Dpoints();
@@ -456,6 +456,9 @@ void SuperqComputation::run()
     {
         yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
         go_on=computeSuperq();
+
+        if (one_shot)
+            blob_points.clear();
     }
 
     if ((go_on==false) && (points.size()>0))
@@ -466,6 +469,8 @@ void SuperqComputation::run()
     {
         if (filter_superq)
             filterSuperq();
+        else
+            x_filtered=x;
     }
     else
     {
@@ -823,7 +828,18 @@ void SuperqComputation::filterSuperq()
         x_filtered=mFilter->filt(x);
     }
 
+    if (norm(x_filtered)==0.0)
+        x_filtered=x;
+
     yInfo()<< "[SuperqComputation]: Filtered superq "<< x_filtered.toString(3,3);
+}
+
+/***********************************************************************/
+void SuperqComputation::resetMedianFilter()
+{
+    x.resize(11,0.0);
+    x_filtered.resize(11,0.0);
+    mFilter->init(x_filtered);
 }
 
 /***********************************************************************/
@@ -862,30 +878,10 @@ Vector SuperqComputation::getSolution(bool filtered_superq)
 }
 
 /***********************************************************************/
-void SuperqComputation::sendImg(ImageOf<PixelRgb> *Img)
-{
-    LockGuard lg(mutex);
-    imgIn=Img;
-}
-
-/***********************************************************************/
 void SuperqComputation::setContour(cv::Point p)
 {
     LockGuard lg(mutex);
     contour.push_back(p);
-}
-
-/***********************************************************************/
-void SuperqComputation::getPoints(deque<Vector> &p)
-{
-    LockGuard lg(mutex);
-
-    p.clear();
-
-    for (size_t i=0; i<points.size(); i++)
-    {   
-        p.push_back(points[i]);
-    }
 }
 
 /***********************************************************************/

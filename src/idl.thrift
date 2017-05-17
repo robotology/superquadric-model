@@ -31,34 +31,35 @@ struct Vector
 service superquadricModel_IDL
 {
     /**
-    * Set the tag for storing files
+    * Set the tag for storing files.
     * @param entry is the tag that will be used in file names.
     * @return true.
     */
     bool set_tag_file(1:string entry);
 
     /**
-    * Return the tag used for storing files
+    * Return the tag used for storing files.
     * @return the tag name.
     */
     string get_tag_file();
 
     /**
-    * Get the parameters of the reconstructed superquadric .
-    * @param blob is the 2D blob of the object we want to model with the superquadric.
+    * Get the parameters of the reconstructed superquadric.
+    * @param blob is the 2D blob of the object we want to model with the superquadric, 
+    * for instance: ((100.0 102.0) (100.0 103.0) ... ).
     * @param filtered_or_not is a bool variable specifing if we want the superquadric
-    * to be filtered (true) or not (false).
+    * to be filtered (true/1) or not (false/0).
     * @return the 12 parameters (x0, .. x11) of the current superquadric. 
     * In particular, the parameters are grouped in a Property as follows: "dimensions" (x0, x1, x2) 
     * are the three semi-axes lenghts; "exponents" (x3 and x4) are the exponents,
     * responsible for the superquadric shape; "center"(x5, x6, x7) contains the coordinate of
-    * the superquadric center; and "orientation" (x8, x9, 10, x11) is the axis-angle representatin
+    * the superquadric center; and "orientation" (x8, x9, 10, x11) is the axis-angle representation
     * obtained from the Euler angles.
     */
     Property get_superq(1:list<Vector> blob, 2:bool filtered_or_not);
 
     /**
-    * On/off point cloud filtering
+    * On/off point cloud filtering.
     * @param entry is "on/off" if you want/do not want to filter points.
     * @return true/false on success/failure.
     */
@@ -71,7 +72,7 @@ service superquadricModel_IDL
     string get_points_filtering();
 
     /**
-    * On/off superquadric filtering
+    * On/off superquadric filtering.
     * @param entry is "on/off" if you want/do not want to filter the estimated superquadric.
     * @return true/false on success/failure.
     */

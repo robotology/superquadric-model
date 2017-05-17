@@ -26,11 +26,11 @@ using namespace yarp::dev;
 using namespace yarp::math;
 
 /***********************************************************************/
-SuperqVisualization::SuperqVisualization(int _rate,const string &_eye, const string &_what_to_plot,
-                                         deque<int> &_Color,IGazeControl *_igaze, const Matrix _K,
-                                         const int &_vis_points, const int &_vis_step):
-                                          RateThread(_rate), eye(_eye), what_to_plot(_what_to_plot), Color(_Color), igaze(_igaze), K(_K),
-                                         vis_points(_vis_points), vis_step(_vis_step)
+SuperqVisualization::SuperqVisualization(int _rate,const string &_eye, const string &_what_to_plot, Vector &_x, Vector &_x_filtered,
+                                         deque<int> &_Color,IGazeControl *_igaze, const Matrix _K, deque<Vector> &_points,
+                                         const int &_vis_points, const int &_vis_step, ImageOf<PixelRgb> *&_imgIn):
+                                         RateThread(_rate), eye(_eye), what_to_plot(_what_to_plot), Color(_Color), igaze(_igaze), K(_K),
+                                         vis_points(_vis_points), vis_step(_vis_step), superq(_x), superq_filtered(_x_filtered), points(_points), imgIn(_imgIn)
 {
 
 }
@@ -195,35 +195,10 @@ void SuperqVisualization::run()
 {
     double t0=Time::now();
     if (what_to_plot=="superq" && imgIn!=NULL)
-        showSuperq(superq);
+        showSuperq(superq_filtered);
     else if (what_to_plot=="points" && points.size()>0)
-        showPoints();
+        showPoints();    
     t_vis=Time::now()-t0;
-}
-
-/***********************************************************************/
-void SuperqVisualization::sendImg(ImageOf<PixelRgb> *Img)
-{
-    LockGuard lg(mutex);
-    imgIn=Img;
-}
-
-/***********************************************************************/
-void SuperqVisualization::sendSuperq(Vector &x)
-{
-    LockGuard lg(mutex);
-    superq=x;
-}
-
-/***********************************************************************/
-void SuperqVisualization::sendPoints(deque<Vector> &p)
-{
-    LockGuard lg(mutex);
-    points.clear();
-    for (size_t i=0; i<p.size(); i++)
-    {
-        points.push_back(p[i]);
-    }
 }
 
 /**********************************************************************/
@@ -236,15 +211,15 @@ void SuperqVisualization:: threadRelease()
 }
 
 /***********************************************************************/
-void SuperqVisualization::setPar(const Property &newOptions)
+void SuperqVisualization::setPar(const Property &newOptions, bool first_time)
 {
     LockGuard lg(mutex);
     int v_points=newOptions.find("visualized_points").asInt();
-    if (newOptions.find("visualized_points").isNull())
+    if (newOptions.find("visualized_points").isNull() && (first_time==true))
     {
         vis_points=3;
     }
-    else
+    else if (!newOptions.find("visualized_points").isNull())
     {
         if ((v_points>=1) && (v_points<=300))
         {
@@ -257,11 +232,11 @@ void SuperqVisualization::setPar(const Property &newOptions)
     }
 
     string plot=newOptions.find("what_to_plot").asString();
-    if (newOptions.find("what_to_plot").isNull())
+    if (newOptions.find("what_to_plot").isNull() && (first_time==true))
     {
         what_to_plot="superq";
     }
-    else
+    else if (!newOptions.find("what_to_plot").isNull())
     {
         if ((plot=="superq") || (plot=="points"))
         {
@@ -274,11 +249,11 @@ void SuperqVisualization::setPar(const Property &newOptions)
     }
 
     int vpoint=newOptions.find("visualized_points_step").asInt();
-    if (!newOptions.find("visualized_points_step").isNull())
+    if (newOptions.find("visualized_points_step").isNull() && (first_time==true))
     {
         vis_step=10;
     }
-    else
+    else if (!newOptions.find("visualized_points_step").isNull())
     {
         if ((vpoint>=1) && (vpoint<=100))
             vis_step=vpoint;
@@ -287,11 +262,11 @@ void SuperqVisualization::setPar(const Property &newOptions)
     }
 
     string cam=newOptions.find("camera").asString();
-    if (newOptions.find("camera").isNull())
+    if (newOptions.find("camera").isNull() && (first_time==true))
     {
         eye="left";
     }
-    else
+    else if (!newOptions.find("camera").isNull())
     {
         if ((cam=="left") || (cam=="right"))
         {
@@ -304,11 +279,11 @@ void SuperqVisualization::setPar(const Property &newOptions)
     }
 
     string col=newOptions.find("color").asString();
-    if (newOptions.find("color").isNull())
+    if (newOptions.find("color").isNull() && (first_time==true))
     {
         Color[0]=255; Color[1]=0; Color[2]=0;
     }
-    else
+    else if (!newOptions.find("color").isNull())
     {
         if (col=="red")
         {
