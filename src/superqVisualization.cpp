@@ -201,31 +201,6 @@ void SuperqVisualization::run()
     t_vis=Time::now()-t0;
 }
 
-/***********************************************************************/
-//void SuperqVisualization::sendImg(ImageOf<PixelRgb> *Img)
-//{
-//    LockGuard lg(mutex);
-//    imgIn=Img;
-//}
-
-///***********************************************************************/
-//void SuperqVisualization::sendSuperq(Vector &x)
-//{
-//    LockGuard lg(mutex);
-//    superq=x;
-//}
-
-///***********************************************************************/
-//void SuperqVisualization::sendPoints(deque<Vector> &p)
-//{
-//    LockGuard lg(mutex);
-//    points.clear();
-//    for (size_t i=0; i<p.size(); i++)
-//    {
-//        points.push_back(p[i]);
-//    }
-//}
-
 /**********************************************************************/
 void SuperqVisualization:: threadRelease()
 {

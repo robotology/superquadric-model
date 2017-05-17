@@ -28,5 +28,11 @@
         <to>/superquadric-model/rpc</to>
         <protocol>tcp</protocol>
     </connection>
+
+    <connection>
+        <from>/testing-module/blob:o</from>
+        <to>/superquadric-model/blob:i</to>
+        <protocol>tcp</protocol>
+    </connection>
 </application>
 

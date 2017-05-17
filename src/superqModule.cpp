@@ -131,7 +131,6 @@ Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_supe
     superqCom->setPar("one_shot", "off");
     
     superqCom->blob_points.clear();
-    //superqCom->sendBlobPoints(blob);
 
     superq=fillProperty(sol);
 
@@ -231,6 +230,8 @@ bool SuperqModule::set_superq_filtering(const string &entry)
         yInfo()<<"[SuperqModule]: filter_superq         "<<filter_superq;
         yInfo()<<"[SuperqModule]: fixed_window          "<<fixed_window;
         yInfo()<<"[SuperqModule]: median_order          "<<median_order;
+        yInfo()<<"[SuperqModule]: min_median_order      "<<min_median_order;
+        yInfo()<<"[SuperqModule]: max_median_order      "<<max_median_order;
 
         return true;        
     }
@@ -329,20 +330,11 @@ bool SuperqModule::updateModule()
     t0=Time::now();
     LockGuard lg(mutex);
 
-    //x.resize(11,0.0);
-    //x_filtered.resize(11,0.0);
-
     if (mode_online)
     {
         Property &x_to_send=portSuperq.prepare();
 
         imgIn=portImgIn.read();
-
-        //superqCom->sendImg(imgIn);
-
-        //x=superqCom->getSolution(false);
-
-        //x_filtered=superqCom->getSolution(true);
 
         if (times_superq.size()<10)
             times_superq.push_back(superqCom->getTime());
@@ -367,20 +359,6 @@ bool SuperqModule::updateModule()
 
         if (visualization_on)
         {
-//            superqVis->sendImg(imgIn);
-//            if (what_to_plot=="superq")
-//            {
-//                if (filter_superq)
-//                    superqVis->sendSuperq(x_filtered);
-//                else
-//                    superqVis->sendSuperq(x);
-//            }
-//            else if (what_to_plot=="points")
-//            {
-//                superqCom->getPoints(points);
-//                superqVis->sendPoints(points);
-//            }
-
             if (times_vis.size()<10)
             times_vis.push_back(superqVis->getTime());
             else if (times_vis.size()==10)
@@ -620,7 +598,6 @@ bool SuperqModule::configServices(ResourceFinder &rf)
 bool SuperqModule::configSuperq(ResourceFinder &rf)
 {
     this->rf=&rf;
-    //x_filtered.resize(11,0.0);
 
     optimizer_points=rf.check("optimizer_points", Value(300)).asInt();
     max_cpu_time=rf.check("max_cpu_time", Value(5.0)).asDouble();

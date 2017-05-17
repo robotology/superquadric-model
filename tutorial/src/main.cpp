@@ -194,7 +194,7 @@ public:
 
         if (blob_points.size()>0 && streaming==true)
             sendBlob();
-        else if (!streaming)
+        else if (blob_points.size()>0 && (streaming==false))
         {
             Bottle cmd, reply;
             cmd.addString("get_superq");
@@ -212,9 +212,9 @@ public:
             cmd.addInt(0);
 
             superqRpc.write(cmd, reply);
+
             cout<<"Received superquadric: "<<reply.toString()<<endl;
         }
-
 
         return true;
     }
