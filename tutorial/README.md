@@ -97,7 +97,7 @@ yarp rpc /testing-module/rpc
 ```
 - setting if you want the streaming mode or not
 ```
-set_streaming_mode on
+>>set_streaming_mode on
 ```
 
 Enjoy! :smiley:
