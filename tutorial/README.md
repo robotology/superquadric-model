@@ -73,6 +73,12 @@ cmd.addInt(0);
 
 superqRpc.write(cmd, reply);
 ```
+
+**Note for one-shot mode**: Using the `thrift` tool for the rpc services gives the computed superquadric (`reply` in the previous example) with extra parenthesis:
+```
+((dimensions (x0 x1 x2)) (exponents (x3 x4)) (center (x5 x6 x7)) (orinetation (x8 x9 x10 x11)))
+```
+If you need to handle it, use it as a `Bottle` in this format, rather than a `Property`.
 ## How to run the `superquadric-model` + `tutorial`
 
 If you want to test the `superquadric-model` code without writing your own code, you can use the this `tutorial`, following the following steps:
