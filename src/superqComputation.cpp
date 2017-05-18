@@ -457,8 +457,8 @@ void SuperqComputation::run()
         yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
         go_on=computeSuperq();
 
-        if (one_shot)
-            blob_points.clear();
+        //if (one_shot)
+        //    blob_points.clear();
     }
 
     if ((go_on==false) && (points.size()>0))
@@ -523,8 +523,10 @@ bool SuperqComputation::config3Dpoints()
 /***********************************************************************/
 void SuperqComputation::acquirePointsFromBlob(ImageOf<PixelRgb>  *ImgIn)
 {
-    if (!one_shot)
+    if ((one_shot==false))
+    {
         getBlob();
+    }
 
     if (blob_points.size()>1)
     {
@@ -581,6 +583,8 @@ void SuperqComputation::get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
     cmd.addString("Points");
     count=0;
     int count_blob=0;
+
+    points.clear();
 
     for (size_t i=0; i<blob_points.size(); i++)
     {
@@ -824,12 +828,12 @@ void SuperqComputation::filterSuperq()
             mFilter->setOrder(median_order);
             x_filtered=mFilter->filt(x);
         }
-
-        x_filtered=mFilter->filt(x);
+        else
+            x_filtered=mFilter->filt(x);
     }
 
-    if (norm(x_filtered)==0.0)
-        x_filtered=x;
+    //if (norm(x_filtered)==0.0)
+    //    x_filtered=x;
 
     yInfo()<< "[SuperqComputation]: Filtered superq "<< x_filtered.toString(3,3);
 }

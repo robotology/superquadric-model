@@ -106,10 +106,11 @@ Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_supe
 
     if (!filtered_superq)
         superqCom->step();
-    else
-    if (filtered_superq)
+    else if (filtered_superq)
     {
         superqCom->resetMedianFilter();
+
+        yDebug()<<"FIXED WINDOW: "<<fixed_window;
 
         if (fixed_window)
         {
@@ -121,7 +122,7 @@ Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_supe
         {
             max_median_order=superqCom->max_median_order;
             for (size_t i=0; i<max_median_order; i++)
-                superqCom->step();
+                superqCom->step();               
         }
     }
 
@@ -559,13 +560,14 @@ bool SuperqModule::configFilter(ResourceFinder &rf)
 /***********************************************************************/
 bool SuperqModule::configFilterSuperq(ResourceFinder &rf)
 {
-    fixed_window=(rf.check("fixed_window", Value("no")).asString()=="yes");
+    fixed_window=(rf.check("fixed_window", Value("off")).asString()=="on");
     median_order=rf.check("median_order", Value(1)).asInt();
     min_median_order=rf.check("min_median_order", Value(1)).asInt();
     max_median_order=rf.check("max_median_order", Value(30)).asInt();
     min_norm_vel=rf.check("min_norm_vel", Value(0.01)).asDouble();
     x.resize(11,0.0);
 
+    filter_superq_par.put("fixed_window",fixed_window);
     filter_superq_par.put("median_order",median_order);
     filter_superq_par.put("min_median_order",min_median_order);
     filter_superq_par.put("max_median_order",max_median_order);
