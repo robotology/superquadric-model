@@ -110,8 +110,6 @@ Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_supe
     {
         superqCom->resetMedianFilter();
 
-        yDebug()<<"FIXED WINDOW: "<<fixed_window;
-
         if (fixed_window)
         {
             median_order=superqCom->std_median_order;

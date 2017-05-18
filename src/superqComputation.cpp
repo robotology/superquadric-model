@@ -832,8 +832,8 @@ void SuperqComputation::filterSuperq()
             x_filtered=mFilter->filt(x);
     }
 
-    //if (norm(x_filtered)==0.0)
-    //    x_filtered=x;
+    if (norm(x_filtered)==0.0)
+        x_filtered=x;
 
     yInfo()<< "[SuperqComputation]: Filtered superq "<< x_filtered.toString(3,3);
 }
@@ -842,8 +842,9 @@ void SuperqComputation::filterSuperq()
 void SuperqComputation::resetMedianFilter()
 {
     x.resize(11,0.0);
-    x_filtered.resize(11,0.0);
-    mFilter->init(x_filtered);
+    x_filtered.resize(11,0.0); 
+
+    mFilter->init(x);
 }
 
 /***********************************************************************/
