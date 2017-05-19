@@ -13,7 +13,7 @@ ccmake ..
 make install
 ```
 ## How to communicate with the superquadric-model
-The user can provide the 2D blob and ask the estimated superquadric in two modes:
+The user can provide the 2D blob (a set of 2D pixels representing the object surface) and ask the estimated superquadric in two modes:
 
 1. **streaming**
 2. **one-shot**
