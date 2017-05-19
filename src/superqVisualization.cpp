@@ -99,7 +99,7 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
 
                  if ((target_point.x<0) || (target_point.y<0) || (target_point.x>=320) || (target_point.y>=240))
                  {
-                     yError("[SuperqVisualization]: Not acceptable pixels!");
+                     yWarning("[SuperqVisualization]: Not acceptable pixels!");
                  }
                  else
                     imgOut.pixel(target_point.x, target_point.y)=color;
@@ -152,7 +152,7 @@ bool SuperqVisualization::showPoints()
 
          if ((target_point.x<0) || (target_point.y<0) || (target_point.x>=320) || (target_point.y>=240))
          {
-             yError("[SuperqVisualization]:  Not acceptable pixels!");
+             yWarning("[SuperqVisualization]:  Not acceptable pixels!");
          }
          else
             imgOut.pixel(target_point.x, target_point.y)=color;
@@ -255,10 +255,18 @@ void SuperqVisualization::setPar(const Property &newOptions, bool first_time)
     }
     else if (!newOptions.find("visualized_points_step").isNull())
     {
-        if ((vpoint>=1) && (vpoint<=100))
+        if ((vpoint>=10) && (vpoint<=100))
+        {
             vis_step=vpoint;
-        else
+        }
+        else if (vpoint<10)
+        {
             vis_step=10;
+        }
+        else if (vpoint>100)
+        {
+            vis_step=100;
+        }
     }
 
     string cam=newOptions.find("camera").asString();

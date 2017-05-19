@@ -46,7 +46,7 @@ class AcquireBlob : public RFModule,
     string objname;
     bool streaming;
 
-    vector<cv::Point> contour;
+    vector<cv::Point> object_center;
     deque<cv::Point> blob_points;
 
     RpcClient portBlobRpc;
@@ -169,7 +169,7 @@ public:
         {
             blob_points.clear();
 
-            if (contour.size()>0)
+            if (object_center.size()>0)
             {
                 getBlob();
             }
@@ -182,7 +182,7 @@ public:
         {
             pointFromName();
 
-            if ((contour.size()>0) )
+            if ((object_center.size()>0) )
             {
                 getBlob();
             }
@@ -226,7 +226,7 @@ public:
         blob_points.clear();
         
         cmd.addString("get_component_around");
-        cmd.addInt(contour[0].x); cmd.addInt(contour[0].y);
+        cmd.addInt(object_center[0].x); cmd.addInt(object_center[0].y);
 
         if (portBlobRpc.write(cmd,reply))
         {
@@ -261,7 +261,7 @@ public:
     {
         Bottle cmd,reply;
         blob_points.clear();
-        contour.clear();
+        object_center.clear();
         cmd.addVocab(Vocab::encode("ask"));
         Bottle &content=cmd.addList();
         Bottle &cond_1=content.addList();
@@ -298,13 +298,13 @@ public:
                     else
                     {
                         yError("no object id provided by OPC!");
-                        contour.clear();
+                        object_center.clear();
                     }
                 }
                 else
                 {
                     yError("uncorrect reply from OPC!");
-                    contour.clear();
+                    object_center.clear();
                 }
 
                 Bottle reply;
@@ -326,30 +326,30 @@ public:
                                     p2.y=b1->get(3).asInt();
                                     p.x=p1.x+(p2.x-p1.x)/2;
                                     p.y=p1.y+(p2.y-p1.y)/2;
-                                    contour.push_back(p);
+                                    object_center.push_back(p);
                                 }
                                 else
                                 {
                                     yError("position_2d_left field not found in the OPC reply!");
-                                    contour.clear();
+                                    object_center.clear();
                                 }
                             }
                             else
                             {
                                 yError("uncorrect reply structure received!");
-                                contour.clear();
+                                object_center.clear();
                             }
                         }
                         else
                         {
                             yError("Failure in reply for object 2D point!");
-                            contour.clear();
+                            object_center.clear();
                         }
                     }
                     else
                     {
                         yError("reply size for 2D point less than 1!");
-                        contour.clear();
+                        object_center.clear();
                     }
                 }
                 else
@@ -358,13 +358,13 @@ public:
             else
             {
                 yError("Failure in reply for object id!");
-                contour.clear();
+                object_center.clear();
             }
         }
         else
         {
             yError("reply size for object id less than 1!");
-            contour.clear();
+            object_center.clear();
         }
     }
 };

@@ -143,8 +143,14 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions, bool firs
         {
             std_median_order=mOrderValue;
         }
-        else
-            std_median_order=3;
+        else if (mOrderValue<1)
+        {
+            std_median_order=1;
+        }
+        else if (mOrderValue>50)
+        {
+            std_median_order=50;
+        }
     }
 
     mOrderValue=newOptions.find("min_median_order").asInt();
@@ -158,8 +164,14 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions, bool firs
         {
             min_median_order=mOrderValue;
         }
-        else
+        else if (mOrderValue<1)
+        {
             min_median_order=1;
+        }
+        else if (mOrderValue>50)
+        {
+            min_median_order=50;
+        }
     }
 
     mOrderValue=newOptions.find("max_median_order").asInt();
@@ -169,12 +181,18 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions, bool firs
     }
     else if (!newOptions.find("max_median_order").isNull())
     {
-        if ((mOrderValue>=1) && (mOrderValue<=50))
+        if ((mOrderValue>=1) && (mOrderValue<=50) && (mOrderValue>=min_median_order))
         {
             max_median_order=mOrderValue;
         }
-        else
-            max_median_order=1;
+        else if ((mOrderValue<1) || (mOrderValue<min_median_order))
+        {
+            max_median_order=min_median_order;
+        }
+        else if (mOrderValue>50)
+        {
+            max_median_order=50;
+        }
     }
 
     double threValue=newOptions.find("threshold_median").asDouble();
@@ -188,9 +206,13 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions, bool firs
         {
             threshold_median=threValue;
         }
-        else
+        else if (threValue<0.005)
         {
-            threshold_median=0.1;
+            threshold_median=0.005;
+        }
+        else if (threValue>2.0)
+        {
+            threshold_median=2.0;
         }
     }
 
@@ -205,9 +227,13 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions, bool firs
         {
             min_norm_vel=minNormVel;
         }
-        else
+        else if (minNormVel<0.005)
         {
-            min_norm_vel=0.01;
+            min_norm_vel=0.005;
+        }
+        else if (minNormVel>0.1)
+        {
+            min_norm_vel=0.1;
         }
     }
 
@@ -261,13 +287,17 @@ void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
     }
     else if (!newOptions.find("optimizer_points").isNull())
     {
-        if ((points>=1) && (points<=300))
+        if ((points>=10) && (points<=300))
         {
             optimizer_points=points;
         }
-        else
+        else if (points<10)
         {
-            optimizer_points=50;
+            optimizer_points=10;
+        }
+        else if (points>300)
+        {
+            optimizer_points=300;
         }
     }
 
@@ -282,9 +312,13 @@ void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
         {
             max_cpu_time=maxCpuTime;
         }
-        else
+        else if (maxCpuTime<0.01)
         {
-            max_cpu_time=5.0;
+            max_cpu_time=0.01;
+        }
+        else if (maxCpuTime>10.0)
+        {
+            max_cpu_time=10.0;
         }
     }
 
@@ -299,9 +333,13 @@ void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
         {
             tol=tolValue;
         }
-        else
+        else if (tolValue<1e-8)
         {
-            tol=1e-5;
+            tol=1e-8;
+        }
+        else if (tolValue>0.01)
+        {
+            tol=0.01;
         }
     }
 
@@ -312,13 +350,17 @@ void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
     }
     else if (!newOptions.find("acceptable_iter").isNull())
     {
-        if ((accIter>=0 )&& (accIter<=100))
+        if ((accIter>=0 )&& (accIter<=10))
         {
              acceptable_iter=accIter;
         }
-        else
+        else if (accIter<0)
         {
             acceptable_iter=0;
+        }
+        else if (accIter>10)
+        {
+            acceptable_iter=10;
         }
     }
 
@@ -373,7 +415,6 @@ void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
         }
     }
 }
-
 
 /***********************************************************************/
 Property SuperqComputation::getIpoptPar()
@@ -456,9 +497,6 @@ void SuperqComputation::run()
     {
         yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
         go_on=computeSuperq();
-
-        //if (one_shot)
-        //    blob_points.clear();
     }
 
     if ((go_on==false) && (points.size()>0))
@@ -572,7 +610,7 @@ void SuperqComputation::getBlob()
     }
     else
     {       
-        yError("[SuperqComputation]: 2D blob not received!");
+        yWarning("[SuperqComputation]: 2D blob not received!");
     }
 }
 

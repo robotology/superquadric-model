@@ -22,7 +22,6 @@
 #include <deque>
 #include <map>
 
-
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
 #include <yarp/dev/all.h>
@@ -58,11 +57,6 @@ public:
     std::deque<yarp::sig::Vector> &points;
 
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *&imgIn;
-
-    /***********************************************************************/
-    /*SuperqVisualization(int rate, const std::string &_eye, const std::string &_what_to_plot,
-                        std::deque<int> &_Color, yarp::dev::IGazeControl *_igaze, const yarp::sig::Matrix _K,
-                        const int &_vis_points, const int &_vis_step);
 
     /***********************************************************************/
     SuperqVisualization(int rate, const std::string &_eye, const std::string &_what_to_plot, yarp::sig::Vector &x, yarp::sig::Vector &x_filtered,
@@ -116,7 +110,6 @@ public:
 
     /***********************************************************************/
     double getTime();
-
 };
 
 #endif
