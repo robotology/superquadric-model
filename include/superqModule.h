@@ -63,6 +63,7 @@ protected:
     bool mode_online;
     bool visualization_on;
     bool go_on;
+    bool reset;
     bool save_points;
     double tol, sum;
     double max_cpu_time;
@@ -122,7 +123,7 @@ protected:
     bool set_visualization(const std::string &e);
 
     /**********************************************************************/
-    yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> &blob, bool filtered_superq);
+    yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> &blob, bool filtered_superq, bool reset);
 
     /**********************************************************************/
     yarp::os::Property fillProperty(const yarp::sig::Vector &sol);
