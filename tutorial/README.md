@@ -19,7 +19,7 @@ The user can provide the 2D blob (a set of 2D pixels representing the object sur
 2. **one-shot**
 
 **Streaming**: In this case,  the user should send the 2D blob to the module, for example:
-```
+```cpp
   blobPort.open("/testing-module/blob:o");
   
   Bottle &blob=blobPort.prepare();
@@ -56,7 +56,7 @@ where:
 yarp connect /testing-module/superq:rpc /superquadric-model/rpc
 ```
 An example of code is the following:
-```
+```cpp
 Bottle cmd, reply;
 cmd.addString("get_superq");
 
@@ -69,6 +69,11 @@ for (size_t i=0; i<blob_points.size(); i++)
     in.addDouble(blob_points[i].y);
 }
 //0 is for getting the estimated superquadric, 1 is for getting the filtered estimated superquadric
+cmd.addInt(0);
+
+//1 is for resetting the superquadric, 0 for keeping using the previous computed superquadrics.
+// Usually, the filter needs to be reset when the object or its pose change.
+// If nothing is specified, the filter is never reset.
 cmd.addInt(0);
 
 superqRpc.write(cmd, reply);
