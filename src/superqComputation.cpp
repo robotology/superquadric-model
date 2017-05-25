@@ -901,6 +901,7 @@ int SuperqComputation::adaptWindComputation()
         new_median_order=min_median_order;
     else
     {
+        cout<<"new_median_order"<<endl;
         if (new_median_order<max_median_order)
             new_median_order++;
     }
