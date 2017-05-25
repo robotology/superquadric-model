@@ -43,7 +43,7 @@ public:
    * the superquadric center; and "orientation" (x8, x9, 10, x11) is the axis-angle representation
    * obtained from the Euler angles.
    */
-  virtual yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> & blob, const bool filtered_or_not);
+  virtual yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> & blob, const bool filtered_or_not, const bool reset);
   /**
    * On/off point cloud filtering.
    * @param entry is "on/off" if you want/do not want to filter points.
