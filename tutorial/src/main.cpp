@@ -148,7 +148,7 @@ public:
         superqRpc.open("/testing-module/superq:rpc");
         portRpc.open("/testing-module/rpc");
 
-        pointPort.open("/testing-module/blob:o");
+        pointPort.open("/testing-module/point:o");
         portImgIn.open("/superquadric-model/img:i");
 
         attach(portRpc);
@@ -175,7 +175,7 @@ public:
 
     /**********************************************************************/
     bool updateModule()
-    {
+    {        
         if (method=="point")
         {
             blob_points.clear();
@@ -203,10 +203,10 @@ public:
             }
         }
 
+        ImgIn=portImgIn.read();
+
         if (blob_points.size()>1)
         {
-            ImgIn=portImgIn.read();
-
             get3Dpoints(ImgIn);
         }
 

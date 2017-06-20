@@ -24,6 +24,12 @@
     </connection>
 
     <connection>
+        <from>/testing-module/SFM:rpc</from>
+        <to>/SFM/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/testing-module/superq:rpc</from>
         <to>/superquadric-model/rpc</to>
         <protocol>tcp</protocol>
@@ -34,5 +40,6 @@
         <to>/superquadric-model/blob:i</to>
         <protocol>tcp</protocol>
     </connection>
+
 </application>
 
