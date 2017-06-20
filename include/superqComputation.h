@@ -50,7 +50,7 @@ protected:
 
     yarp::os::RpcClient portSFMrpc;
 
-    yarp::os::BufferedPort<yarp::os::Bottle> blobPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> pointPort;
 
     double radius;
     int nnThreshold;
@@ -134,9 +134,6 @@ public:
     virtual void threadRelease();
 
     /***********************************************************************/
-    void acquirePointsFromBlob(yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn);
-
-    /***********************************************************************/
     void getBlob();
 
     /***********************************************************************/
@@ -185,10 +182,10 @@ public:
     void getPoints(std::deque<yarp::sig::Vector> &p);
 
     /***********************************************************************/
-    void sendPoints(std::deque<yarp::sig::Vector> &p);
+    void sendPoints(const std::deque<yarp::sig::Vector> &p);
 
     /***********************************************************************/
-    void sendPoints(const std::vector<yarp::sig::Vector> &p);
+    void getPoints3D();
 
     /***********************************************************************/
     double getTime();     

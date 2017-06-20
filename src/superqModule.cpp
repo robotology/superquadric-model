@@ -96,7 +96,7 @@ bool SuperqModule::set_visualization(const string &e)
 }
 
 /**********************************************************************/
-Property SuperqModule::get_superq(const vector<Vector> &points, bool filtered_superq, bool reset=false)
+Property SuperqModule::get_superq(const deque<Vector> &points, bool filtered_superq, bool reset=false)
 {
     Property superq;
 
