@@ -123,7 +123,7 @@ protected:
     bool set_visualization(const std::string &e);
 
     /**********************************************************************/
-    yarp::os::Property get_superq(const std::deque<yarp::sig::Vector> &blob, bool filtered_superq, bool reset);
+    yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> &blob, bool filtered_superq, bool reset);
 
     /**********************************************************************/
     yarp::os::Property fillProperty(const yarp::sig::Vector &sol);

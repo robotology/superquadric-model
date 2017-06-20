@@ -96,13 +96,16 @@ bool SuperqModule::set_visualization(const string &e)
 }
 
 /**********************************************************************/
-Property SuperqModule::get_superq(const deque<Vector> &points, bool filtered_superq, bool reset=false)
+Property SuperqModule::get_superq(const vector<Vector> &p, bool filtered_superq, bool reset)
 {
     Property superq;
 
     superqCom->setPar("one_shot", "on");
+    points.clear();
+    for (size_t i=0; i<p.size(); i++)
+        points.push_back(p[i]);
 
-    superqCom->sendPoints(points);
+    //superqCom->sendPoints(points);
 
     if (!filtered_superq)
         superqCom->step();

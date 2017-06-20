@@ -493,6 +493,7 @@ void SuperqComputation::run()
     {
         filter();
     }
+cout<<"points 2"<<points.size()<<endl;
 
     if (points.size()>0)
     {
@@ -855,23 +856,16 @@ void SuperqComputation::sendPoints(const deque<Vector> &p)
     LockGuard lg(mutex);
 
     points.clear();
-    for (size_t i=0; i<p.size(); i++)
+
+    for (int i=0; i<p.size(); i++)
     {
         points.push_back(p[i]);
     }
+
+    cout<<"points "<<points.size()<<endl;
 }
 
-/***********************************************************************/
-/*void SuperqComputation::sendPoints(const vector<Vector> &p)
-{
-    LockGuard lg(mutex);
 
-    points.clear();
-    for (size_t i=0; i<p.size(); i++)
-    {
-        points.push_back(p[i]);
-    }
-}*/
 
 
 
