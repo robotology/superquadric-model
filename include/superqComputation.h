@@ -188,7 +188,7 @@ public:
     void sendPoints(std::deque<yarp::sig::Vector> &p);
 
     /***********************************************************************/
-    void sendBlobPoints(const std::vector<yarp::sig::Vector> &p);
+    void sendPoints(const std::vector<yarp::sig::Vector> &p);
 
     /***********************************************************************/
     double getTime();     

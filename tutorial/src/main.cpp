@@ -48,15 +48,20 @@ class AcquireBlob : public RFModule,
 
     vector<cv::Point> object_center;
     deque<cv::Point> blob_points;
+    deque<Vector> points;
 
     RpcClient portBlobRpc;
     RpcClient portOPCrpc;
+    RpcClient portSFMRpc;
     RpcClient superqRpc;
     RpcServer portRpc;
 
-    BufferedPort<Bottle > blobPort;
+    BufferedPort<Bottle > pointPort;
+    BufferedPort<ImageOf<PixelRgb> > portImgIn;
 
     Mutex mutex;
+
+    ImageOf<PixelRgb> *ImgIn;
 
 public:
 
@@ -92,19 +97,19 @@ public:
     }
 
     /************************************************************************/
-    void  sendBlob()
+    void  sendPoints()
     {
-        Bottle &blob=blobPort.prepare();
-        blob.clear();
-        Bottle &b1=blob.addList();
+        Bottle &point=pointPort.prepare();
+        point.clear();
+        Bottle &b1=point.addList();
         
-        for (size_t i=0; i<blob_points.size(); i++)
+        for (size_t i=0; i<points.size(); i++)
         {
             Bottle &b=b1.addList();
-            b.addDouble(blob_points[i].x); b.addDouble(blob_points[i].y);
+            b.addDouble(points[i][0]); b.addDouble(points[i][1]); b.addDouble(points[i][2]);
         }
 
-        blobPort.write();
+        pointPort.write();
         
     }
 
@@ -139,10 +144,12 @@ public:
 
         portBlobRpc.open("/testing-module/blob:rpc");
         portOPCrpc.open("/testing-module/OPC:rpc");
+        portSFMRpc.open("/testing-module/SFM:rpc");
         superqRpc.open("/testing-module/superq:rpc");
         portRpc.open("/testing-module/rpc");
 
-        blobPort.open("/testing-module/blob:o");
+        pointPort.open("/testing-module/blob:o");
+        portImgIn.open("/superquadric-model/img:i");
 
         attach(portRpc);
         return true;
@@ -156,8 +163,12 @@ public:
             portBlobRpc.close();
         if (portOPCrpc.asPort().isOpen())
             portOPCrpc.close();
+        if (portSFMRpc.asPort().isOpen())
+            portSFMRpc.close();
         if (superqRpc.asPort().isOpen())
             superqRpc.close();
+        if (!portImgIn.isClosed())
+            portImgIn.close();
 
         return true;
     }
@@ -192,20 +203,28 @@ public:
             }
         }
 
-        if (blob_points.size()>0 && streaming==true)
-            sendBlob();
-        else if (blob_points.size()>0 && (streaming==false))
+        if (blob_points.size()>1)
+        {
+            ImgIn=portImgIn.read();
+
+            get3Dpoints(ImgIn);
+        }
+
+        if (points.size()>0 && streaming==true)
+            sendPoints();
+        else if (points.size()>0 && (streaming==false))
         {
             Bottle cmd, reply;
             cmd.addString("get_superq");
 
             Bottle &in1=cmd.addList();
         
-            for (size_t i=0; i<blob_points.size(); i++)
+            for (size_t i=0; i<points.size(); i++)
             {
                 Bottle &in=in1.addList();
-                in.addDouble(blob_points[i].x);                        
-                in.addDouble(blob_points[i].y);
+                in.addDouble(points[i][0]);
+                in.addDouble(points[i][1]);
+                in.addDouble(points[i][2]);
             }
             
             // Add 1 instead of 0 if you want the filtered superquadric
@@ -365,6 +384,58 @@ public:
         {
             yError("reply size for object id less than 1!");
             object_center.clear();
+        }
+    }
+
+    /***********************************************************************/
+    void get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
+    {
+        Bottle cmd,reply;
+        cmd.addString("Points");
+        int count_blob=0;
+
+        points.clear();
+
+        for (size_t i=0; i<blob_points.size(); i++)
+        {
+            cv::Point single_point=blob_points[i];
+            cmd.addInt(single_point.x);
+            cmd.addInt(single_point.y);
+        }
+
+        if (portSFMRpc.write(cmd,reply))
+        {
+            count_blob=0;
+
+            for (int idx=0;idx<reply.size();idx+=3)
+            {
+                Vector point(6,0.0);
+                point[0]=reply.get(idx+0).asDouble();
+                point[1]=reply.get(idx+1).asDouble();
+                point[2]=reply.get(idx+2).asDouble();
+
+                count_blob+=2;
+
+                if ((norm(point)>0))
+                {
+                    points.push_back(point);
+                }
+            }
+
+            if (points.size()<=0)
+            {
+                yError("[SuperqComputation]: Some problems in point acquisition!");
+            }
+            else
+            {
+                Vector colors(3,0.0);
+                colors[0]=255;
+            }
+        }
+        else
+        {
+            yError("[SuperqComputation]: SFM reply is fail!");
+            points.clear();
         }
     }
 };

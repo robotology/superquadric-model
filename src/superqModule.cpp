@@ -96,13 +96,13 @@ bool SuperqModule::set_visualization(const string &e)
 }
 
 /**********************************************************************/
-Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_superq, bool reset=false)
+Property SuperqModule::get_superq(const vector<Vector> &points, bool filtered_superq, bool reset=false)
 {
     Property superq;
 
     superqCom->setPar("one_shot", "on");
 
-    superqCom->sendBlobPoints(blob);
+    superqCom->sendPoints(points);
 
     if (!filtered_superq)
         superqCom->step();
@@ -136,7 +136,7 @@ Property SuperqModule::get_superq(const vector<Vector> &blob, bool filtered_supe
 
     superqCom->setPar("one_shot", "off");
     
-    superqCom->blob_points.clear();
+    superqCom->points.clear();
 
     superq=fillProperty(sol);
 
