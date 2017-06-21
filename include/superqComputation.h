@@ -48,8 +48,6 @@ protected:
     yarp::os::ConstString pointCloudFileName;
     std::vector<cv::Point> contour;
 
-    yarp::os::RpcClient portSFMrpc;
-
     yarp::os::BufferedPort<yarp::os::Bottle> pointPort;
 
     double radius;

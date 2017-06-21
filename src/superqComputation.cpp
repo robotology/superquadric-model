@@ -524,9 +524,6 @@ void SuperqComputation::threadRelease()
 {
     yInfo()<<"[SuperComputation]: Thread releasing ... ";
 
-    if (portSFMrpc.asPort().isOpen())
-        portSFMrpc.close();
-
     if (!pointPort.isClosed())
         pointPort.close();
 
@@ -554,7 +551,6 @@ bool SuperqComputation::configFilterSuperq()
 bool SuperqComputation::config3Dpoints()
 {
     pointPort.open("/superquadric-model/point:i");
-    portSFMrpc.open("/superquadric-model/SFM:rpc");
 
     return true;
 }
