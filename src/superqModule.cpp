@@ -100,12 +100,16 @@ Property SuperqModule::get_superq(const vector<Vector> &p, bool filtered_superq,
 {
     Property superq;
 
-    superqCom->setPar("one_shot", "on");
-    points.clear();
-    for (size_t i=0; i<p.size(); i++)
-        points.push_back(p[i]);
+    LockGuard lg(mutex);
 
-    //superqCom->sendPoints(points);
+    superqCom->setPar("one_shot", "on");
+
+    deque<Vector> p_aux;
+    
+    for (size_t i=0; i<p.size(); i++)
+        p_aux.push_back(p[i]);
+
+    superqCom->sendPoints(p_aux);
 
     if (!filtered_superq)
         superqCom->step();
@@ -138,8 +142,8 @@ Property SuperqModule::get_superq(const vector<Vector> &p, bool filtered_superq,
     sol=superqCom->getSolution(filtered_superq);
 
     superqCom->setPar("one_shot", "off");
-    
-    superqCom->points.clear();
+    p_aux.clear();
+    superqCom->sendPoints(p_aux);
 
     superq=fillProperty(sol);
 

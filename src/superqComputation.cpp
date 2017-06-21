@@ -493,7 +493,6 @@ void SuperqComputation::run()
     {
         filter();
     }
-cout<<"points 2"<<points.size()<<endl;
 
     if (points.size()>0)
     {
@@ -823,7 +822,6 @@ int SuperqComputation::adaptWindComputation()
         new_median_order=min_median_order;
     else
     {
-        cout<<"new_median_order"<<endl;
         if (new_median_order<max_median_order)
             new_median_order++;
     }
@@ -861,8 +859,6 @@ void SuperqComputation::sendPoints(const deque<Vector> &p)
     {
         points.push_back(p[i]);
     }
-
-    cout<<"points "<<points.size()<<endl;
 }
 
 

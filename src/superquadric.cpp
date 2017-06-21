@@ -60,7 +60,7 @@ void SuperQuadric_NLP::setPoints(const deque<Vector> &point_cloud, const int &op
         }
     }
 
-    yInfo("points actually used for modeling: %lu ",points_downsampled.size());
+    yInfo("[Superquadric] points actually used for modeling: %lu ",points_downsampled.size());
 
     x0.resize(11,0.0);
     computeX0(x0, points_downsampled);
