@@ -30,11 +30,5 @@
         <protocol>tcp</protocol>
     </connection>
 
-    <connection>
-        <from>/superquadric-model/blob:rpc</from>
-        <to>/testing-module/rpc</to>
-        <protocol>tcp</protocol>
-    </connection>
-
 </application>
 
