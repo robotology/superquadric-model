@@ -13,29 +13,27 @@ ccmake ..
 make install
 ```
 ## How to communicate with the superquadric-model
-The user can provide the 2D blob (a set of 2D pixels representing the object surface) and ask the estimated superquadric in two modes:
+The user can provide the 3D point cloud (a set of points in the 3D space representing the object surface) and ask the estimated superquadric in two modes:
 
 1. **streaming**
 2. **one-shot**
 
-**Streaming**: In this case,  the user should send the 2D blob to the module, for example:
+**Streaming**: In this case,  the user should send the 3D point cloud to the module, for example:
 ```cpp
-  blobPort.open("/testing-module/blob:o");
-  
-  Bottle &blob=blobPort.prepare();
-  Bottle &b1=blob.addList();
-  
-  for (size_t i=0; i<blob_points.size(); i++)
+  pointPort.open("/testing-module/point:o");
+  Bottle &b1=point.addList();
+        
+  for (size_t i=0; i<points.size(); i++)
   {
       Bottle &b=b1.addList();
-      b.addDouble(blob_points[i].x); b.addDouble(blob_points[i].y);
+      b.addDouble(points[i][0]); b.addDouble(points[i][1]); b.addDouble(points[i][2]);
   }
 
-blobPort.write();
+  pointPort.write();
 ```
 connecting to the  corresponding buffered port of the superquadric-model:
 ```
-yarp connect /testing-module/blob:o /superquadric-model/blob:i
+yarp connect /testing-module/point:o /superquadric-model/point:i
 ```
 The estimated superquadric can be read from another buffered port 
 ```
@@ -60,15 +58,20 @@ An example of code is the following:
 Bottle cmd, reply;
 cmd.addString("get_superq");
 
+Bottle cmd, reply;
+cmd.addString("get_superq");
+
 Bottle &in1=cmd.addList();
 
-for (size_t i=0; i<blob_points.size(); i++)
+for (size_t i=0; i<points.size(); i++)
 {
     Bottle &in=in1.addList();
-    in.addDouble(blob_points[i].x);                        
-    in.addDouble(blob_points[i].y);
+    in.addDouble(points[i][0]);
+    in.addDouble(points[i][1]);
+    in.addDouble(points[i][2]);
 }
-//0 is for getting the estimated superquadric, 1 is for getting the filtered estimated superquadric
+
+// Add 1 instead of 0 if you want the filtered superquadric
 cmd.addInt(0);
 
 //1 is for resetting the superquadric, 0 for keeping using the previous computed superquadrics.
@@ -90,8 +93,8 @@ If you want to test the `superquadric-model` code without writing your own code,
 
 1. Launch the basic modules of the iCub (`yarprobotinterface`, `iKinGazeCtrl`, `iKinCartesianSolver` - both for right and left arm-, `wholeBodyDynamics`, `gravityCompensator`, `imuFilter`) and the cameras.
 2. Launch the [IOL](https://github.com/robotology/iol) modules. [This xml file](https://github.com/robotology/iol/blob/master/app/scripts/iol.xml.template) contains all the required modules. 
-3. Launche the `superquadric-model` and a `yarpviewer`. You can use [this xml file](https://github.com/robotology/superquadric-model/blob/master/app/scripts/superquadric-model.xml.template).
-4. Launch the `tutorial` code with [this xml](https://github.com/robotology/superquadric-model/blob/master/tutorial/app/script/testing-module.xml.template).
+3. Launch the `superquadric-model` and a `yarpviewer`. You can use [this xml file](https://github.com/robotology/superquadric-model/blob/feature-noSFM/app/scripts/superquadric-model.xml.template).
+4. Launch the `tutorial` code with [this xml](https://github.com/robotology/superquadric-model/blob/feature-noSFM/tutorial/app/script/testing-module.xml.template).
 5. Connect everything.
 
 You can now play with the `/testing-module/rpc` port:
