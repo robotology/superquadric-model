@@ -58,9 +58,6 @@ An example of code is the following:
 Bottle cmd, reply;
 cmd.addString("get_superq");
 
-Bottle cmd, reply;
-cmd.addString("get_superq");
-
 Bottle &in1=cmd.addList();
 
 for (size_t i=0; i<points.size(); i++)
