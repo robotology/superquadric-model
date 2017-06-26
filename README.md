@@ -59,12 +59,12 @@ The module structure is outlined in the following picture:
 <p align="center" > <img src="https://github.com/robotology/superquadric-model/blob/master/misc/superquadric-model.png" width=600 > </p>
 
 The superquadric-model module launches two separate threads:
-- `SuperqComputation`, computing the superquadric given the 2D blob of the object;
+- `SuperqComputation`, computing the superquadric given the 3D point cloud of the object;
 - `SuperqVisualization`, showing the estimated superquadric or the points used for the computation (optional).
 
 The superquadric-model also provides some `thrift services` through a `rpc port`. The user can communicate with the module through these services in order to ask the state of the two threads or to modify some parameters on the fly.
 The module also receive the camera image and, if the `SuperqVisualization` is enabled, the output is shown on a yarpview.
-The `SuperqComputation` provides two buffered ports, respectively for receiving continuosly the 2D blob of the object and for sending the estimated superquadric. The computation and visualization threads also share some variables, such as the computed superquadric.
+The `SuperqComputation` provides two buffered ports, respectively for receiving continuosly the 3D point cloud of the object and for sending the estimated superquadric. The computation and visualization threads also share some variables, such as the computed superquadric.
 
 In order to improve the superquadric modeling, the `SuperqComputation` thread provides **two filtering process**:
 
@@ -75,7 +75,7 @@ The former is a **density filter**, discarding noisy queues of the point cloud, 
 The latter is a **median filter with an adaptive moving window**. Each filtered superquadric is obtained by applying a median filter on the last _m_ estimated superquadrics. The value of _m_ depends on the estimated velocity of the object. If the object is moving the window width is low in order to correctly track the object (e.g.` _m_=1`), otherwise _m_ is incrementally increased up to a maximum value.
 
 ## Use case
-The superquadric-model module requires the 2D blob of the object we want to model with a superquadric function.
+The superquadric-model module requires the 3D point cloud of the object we want to model with a superquadric function.
 An example code for retriving this information, together with a tutorial, is provided in the folder [`tutorial`](https://github.com/robotology/superquadric-model/tree/master/tutorial) in this repository.
 
 
