@@ -3,9 +3,6 @@
 
     <dependencies>
         <port>/icub/camcalib/left/out</port>
-        <port>/lbpExtract/rpc:i</port>
-        <port>/SFM/rpc/</port>
-        <port>/memory/rpc</port>
     </dependencies>
     
     <module>
