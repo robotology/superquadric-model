@@ -32,7 +32,7 @@ public:
   virtual std::string get_tag_file();
   /**
    * Get the parameters of the reconstructed superquadric.
-   * @param blob is the 2D blob of the object we want to model with the superquadric,
+   * @param point_cloud is the 3D point cloud of the object we want to model with the superquadric,
    * for instance: ((100.0 102.0) (100.0 103.0) ... ).
    * @param filtered_or_not is a bool variable specifing if we want the superquadric
    * to be filtered (true/1) or not (false/0).
@@ -45,7 +45,7 @@ public:
    * the superquadric center; and "orientation" (x8, x9, 10, x11) is the axis-angle representation
    * obtained from the Euler angles.
    */
-  virtual yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> & blob, const bool filtered_or_not, const bool reset_or_not);
+  virtual yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> & point_cloud, const bool filtered_or_not, const bool reset_or_not);
   /**
    * On/off point cloud filtering.
    * @param entry is "on/off" if you want/do not want to filter points.
