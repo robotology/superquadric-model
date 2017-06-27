@@ -3,9 +3,6 @@
 
     <dependencies>
         <port>/icub/camcalib/left/out</port>
-        <port>/lbpExtract/rpc:i</port>
-        <port>/SFM/rpc/</port>
-        <port>/memory/rpc</port>
     </dependencies>
     
     <module>
@@ -19,12 +16,6 @@
     </module>
 
     <connection>
-        <from>/superquadric-model/SFM:rpc</from>
-        <to>/SFM/rpc</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
         <from>/superquadric-model/img:o</from>
         <to>/dispSuperq</to>
         <protocol>tcp</protocol>
@@ -33,12 +24,6 @@
     <connection>
         <from>/icub/camcalib/left/out</from>
         <to>/superquadric-model/img:i</to>
-        <protocol>tcp</protocol>
-    </connection>
-
-    <connection>
-        <from>/superquadric-model/blob:rpc</from>
-        <to>/testing-module/rpc</to>
         <protocol>tcp</protocol>
     </connection>
 

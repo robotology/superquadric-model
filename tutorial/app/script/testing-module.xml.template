@@ -1,5 +1,5 @@
 <application>
-    <name>testing-module</name>
+    <name>testing-module-3Dpoints</name>
 
     <dependencies>
         <port>/lbpExtract/rpc:i</port>
@@ -24,15 +24,21 @@
     </connection>
 
     <connection>
+        <from>/testing-module/SFM:rpc</from>
+        <to>/SFM/rpc</to>
+        <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
         <from>/testing-module/superq:rpc</from>
         <to>/superquadric-model/rpc</to>
         <protocol>tcp</protocol>
     </connection>
 
     <connection>
-        <from>/testing-module/blob:o</from>
-        <to>/superquadric-model/blob:i</to>
+        <from>/testing-module/point:o</from>
+        <to>/superquadric-model/point:i</to>
         <protocol>tcp</protocol>
     </connection>
-</application>
 
+</application>
