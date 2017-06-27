@@ -70,7 +70,10 @@ for (size_t i=0; i<blob_points.size(); i++)
 }
 //0 is for getting the estimated superquadric, 1 is for getting the filtered estimated superquadric
 cmd.addInt(0);
-
+```
+:warning: The `get_superquadric` service can also deal with an extra parameter for resetting the median filter
+used for improving the superquadric estimation:
+```
 //1 is for resetting the superquadric, 0 for keeping using the previous computed superquadrics.
 // Usually, the filter needs to be reset when the object or its pose change.
 // If nothing is specified, the filter is never reset.
