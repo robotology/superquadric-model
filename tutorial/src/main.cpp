@@ -149,7 +149,7 @@ public:
         portRpc.open("/testing-module/rpc");
 
         pointPort.open("/testing-module/point:o");
-        portImgIn.open("/superquadric-model/img:i");
+        portImgIn.open("/testing-module/img:i");
 
         attach(portRpc);
         return true;
@@ -248,8 +248,7 @@ public:
         cmd.addInt(object_center[0].x); cmd.addInt(object_center[0].y);
 
         if (portBlobRpc.write(cmd,reply))
-        {
-            
+        {         
             if (Bottle *blob_list=reply.get(0).asList())
             {
                 for (int i=0; i<blob_list->size();i++)
