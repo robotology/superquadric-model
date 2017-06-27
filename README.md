@@ -56,7 +56,7 @@ make install
 ## Module structure
 The module structure is outlined in the following picture:
 
-<p align="center" > <img src="https://raw.githubusercontent.com/robotology/superquadric-model/feature-noSFM/misc/superquadric-model-3d.png" width=600 > </p>
+<p align="center" > <img src="https://raw.githubusercontent.com/robotology/superquadric-model/master/misc/superquadric-model-3d.png" width=600 > </p>
 
 The superquadric-model module launches two separate threads:
 - `SuperqComputation`, computing the superquadric given the 3D point cloud of the object;
