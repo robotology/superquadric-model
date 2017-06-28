@@ -86,14 +86,10 @@ void SuperQuadric_NLP::computeBounds()
         bounds(0,1)=x0[0]*2.0;
         bounds(1,1)=x0[1]*2.0;
         bounds(2,1)=x0[2]*2.0;
-        yDebug()<<"bounding box "<<(2*x0).subVector(0,2).toString();
+
         bounds(0,0)=0.001;
         bounds(1,0)=0.001;
         bounds(2,0)=0.001;
-        bounds(3,0)=0.1;
-        bounds(4,0)=0.1;
-        bounds(3,1)=1.9;
-        bounds(4,1)=1.9;
 
         bounds(5,0)=x0[5]-bounds(0,1);
         bounds(6,0)=x0[6]-bounds(1,1);
@@ -256,16 +252,13 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
  }
 
 /****************************************************************/
-void SuperQuadric_NLP::configure(bool b_automatic)
+void SuperQuadric_NLP::configure(ResourceFinder *rf, bool b_automatic)
 {
     bounds.resize(11,2);
 
     bounds_automatic=b_automatic;
 
-    //bounds_automatic=(rf->check("bounds_automatic",Value("yes")).asString()=="yes");
-
-    //if (bounds_automatic==false)
-     //   readMatrix("bounds",bounds, 11, rf);
+    readMatrix("bounds",bounds, 11, rf);
 }
 
 /****************************************************************/
@@ -391,7 +384,7 @@ Matrix SuperQuadric_NLP::computeBoundingBox(deque<Vector> &points, const Vector 
 }
 
 /****************************************************************/
-/*bool SuperQuadric_NLP::readMatrix(const string &tag, Matrix &matrix, const int &dimension, ResourceFinder *rf)
+bool SuperQuadric_NLP::readMatrix(const string &tag, Matrix &matrix, const int &dimension, ResourceFinder *rf)
 {
    string tag_x=tag+"_x";
    string tag_y=tag+"_y";

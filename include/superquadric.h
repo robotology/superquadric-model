@@ -39,6 +39,8 @@ protected:
     yarp::sig::Matrix bounds;
     double aux_objvalue;
 
+    yarp::os::ResourceFinder *rf;
+
     /****************************************************************/
     bool get_nlp_info(Ipopt::Index &n, Ipopt::Index &m,Ipopt::Index &nnz_jac_g,
                       Ipopt::Index &nnz_h_lag, Ipopt::TNLP::IndexStyleEnum &index_style);
@@ -114,10 +116,13 @@ public:
     void setPoints(const std::deque<yarp::sig::Vector> &point_cloud, const int &optimizer_points);
 
     /****************************************************************/
-    void configure(bool bounds_aut);
+    void configure(yarp::os::ResourceFinder *rf, bool bounds_aut);
 
     /****************************************************************/
     yarp::sig::Vector get_result() const;
+
+    /****************************************************************/
+    bool readMatrix(const std::string &tag, yarp::sig::Matrix &matrix, const int &dimension, yarp::os::ResourceFinder *rf);
 
 };
 

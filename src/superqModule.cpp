@@ -391,7 +391,7 @@ bool SuperqModule::updateModule()
     {
         readPointCloud();
         superqCom->threadInit();
-        superqCom->sendPoints(points);
+        superqCom->sendPoints(points_aux);
 
         if ((filter_points==true) && (points.size()>0))
         {
@@ -446,7 +446,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
 
 
     superqCom= new SuperqComputation(rate, filter_points, filter_superq, fixed_window, points, imgIn, tag_file,
-                                     threshold_median,filter_points_par, x, x_filtered, filter_superq_par, ipopt_par, homeContextPath, save_points);
+                                     threshold_median,filter_points_par, x, x_filtered, filter_superq_par, ipopt_par, homeContextPath, save_points, this->rf);
 
     if (mode_online)
     {
@@ -752,7 +752,7 @@ void SuperqModule::saveSuperq()
 bool SuperqModule::readPointCloud()
 {
     ifstream pointsFile(pointCloudFileName.c_str());
-    points.clear();
+    points_aux.clear();
     int nPoints;
     int state=0;
     char line[255];
@@ -793,7 +793,7 @@ bool SuperqModule::readPointCloud()
                 point[0]=b.get(0).asDouble();
                 point[1]=b.get(1).asDouble();
                 point[2]=b.get(2).asDouble();
-                points.push_back(point);
+                points_aux.push_back(point);
 
                 if (--nPoints<=0)
                     return true;

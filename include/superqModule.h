@@ -44,6 +44,7 @@ protected:
     std::string outputFileName;
     std::vector<cv::Point> contour;
     std::deque<yarp::sig::Vector> points;
+    std::deque<yarp::sig::Vector> points_aux;
     std::deque<cv::Point> blob_points;
 
     double radius;
