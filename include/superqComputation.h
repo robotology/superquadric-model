@@ -73,6 +73,7 @@ protected:
     yarp::sig::Vector elem_x;
 
     double t_superq;
+    int count_file;
     
     yarp::os::ResourceFinder *rf;
     double t,t0;

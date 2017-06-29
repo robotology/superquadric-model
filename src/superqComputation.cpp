@@ -477,6 +477,8 @@ bool SuperqComputation::threadInit()
     x.resize(11,0.00);
     x_filtered.resize(11,0.0);
 
+    count_file=0;
+
     return true;
 }
 
@@ -600,7 +602,7 @@ void SuperqComputation::getPoints3D()
 void SuperqComputation::savePoints(const string &namefile, const Vector &colors)
 {
     ofstream fout;
-    fout.open((homeContextPath+namefile+".off").c_str());
+    fout.open((homeContextPath+namefile+count_file+".off").c_str());
 
     if (fout.is_open())
     {
@@ -619,6 +621,8 @@ void SuperqComputation::savePoints(const string &namefile, const Vector &colors)
         yError()<<"[SuperqComputation]: Some problems in opening output file!";
 
     fout.close();
+
+    count_file++;
 }
 
 /***********************************************************************/
