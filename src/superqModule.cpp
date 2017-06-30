@@ -102,6 +102,11 @@ Property SuperqModule::get_superq(const vector<Vector> &p, bool filtered_superq,
 
     LockGuard lg(mutex);
 
+    if (object_class!="default")
+        superqCom->setPar("object_class", object_class);
+    else
+        superqCom->setPar("object_class", "default");
+
     superqCom->setPar("one_shot", "on");
 
     deque<Vector> p_aux;
@@ -331,6 +336,14 @@ bool SuperqModule::set_options(const Property &newOptions, const string &field)
     return true;
 }
 
+/**********************************************************************/
+bool SuperqModule::set_object_class(const string &objclass)
+{
+    object_class=objclass;
+
+    return true;
+}
+
 /***********************************************************************/
 double SuperqModule::getPeriod()
 {
@@ -392,6 +405,11 @@ bool SuperqModule::updateModule()
         readPointCloud();
         superqCom->threadInit();
         superqCom->sendPoints(points_aux);
+
+        if (object_class!="default")
+            superqCom->setPar("object_class", object_class);
+        else
+            superqCom->setPar("object_class", "default");
 
         if ((filter_points==true) && (points.size()>0))
         {
@@ -528,6 +546,8 @@ bool SuperqModule::configOnOff(ResourceFinder &rf)
     rate_vis=rf.check("rate_vis", Value(100)).asInt();
 
     threshold_median=rf.check("threshold_median", Value(0.1)).asDouble();
+
+    object_class=rf.check("object_class", Value("default")).asString();
 
     if (rf.find("pointCloudFile").isNull())
     {

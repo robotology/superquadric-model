@@ -132,6 +132,13 @@ service superquadricModel_IDL
     */
     string get_visualization()
 
+    /**
+    * Set object class for speeding up superquadric reconstruction
+    *@param a string with the name of the class
+    *@return return true
+    */
+    bool set_object_class(1:string objclass)
+
 
 
 }

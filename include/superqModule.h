@@ -99,6 +99,8 @@ protected:
     std::deque<std::string> advanced_params;
     yarp::os::Mutex mutex;
 
+    std::string object_class;
+
     SuperqComputation *superqCom;
     SuperqVisualization *superqVis;
 
@@ -146,6 +148,9 @@ protected:
 
     /**********************************************************************/
     bool set_options(const yarp::os::Property &newOptions, const std::string &field);
+
+    /**********************************************************************/
+    bool set_object_class(const std::string &objclass);
 
 public:
     /***********************************************************************/

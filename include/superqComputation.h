@@ -74,6 +74,7 @@ protected:
 
     double t_superq;
     int count_file;
+    std::string ob_class;
     
     yarp::os::ResourceFinder *rf;
     double t,t0;

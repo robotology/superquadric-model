@@ -435,6 +435,8 @@ Property SuperqComputation::getIpoptPar()
 /***********************************************************************/
 void SuperqComputation::setPar(const string &par_name, const string &value)
 {
+
+    cout<<"Debug 2"<<endl;
     LockGuard lg(mutex);
     if (par_name=="tag_file")
         tag_file=value;
@@ -446,6 +448,10 @@ void SuperqComputation::setPar(const string &par_name, const string &value)
         save_points=(value=="on");
     else if (par_name=="one_shot")
         one_shot=(value=="on");
+    else if (par_name=="object_class")
+        ob_class=value;
+
+    cout<<"Debug 3"<<endl;
 }
 
 /***********************************************************************/
@@ -732,7 +738,7 @@ bool SuperqComputation::computeSuperq()
     Ipopt::SmartPtr<SuperQuadric_NLP> superQ_nlp= new SuperQuadric_NLP;
 
     superQ_nlp->init();
-    superQ_nlp->configure(this->rf,bounds_automatic);
+    superQ_nlp->configure(this->rf,bounds_automatic, ob_class);
 
     superQ_nlp->setPoints(points, optimizer_points);
 

@@ -252,13 +252,16 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
  }
 
 /****************************************************************/
-void SuperQuadric_NLP::configure(ResourceFinder *rf, bool b_automatic)
+void SuperQuadric_NLP::configure(ResourceFinder *rf, bool b_automatic, const string &object_class)
 {
     bounds.resize(11,2);
 
     bounds_automatic=b_automatic;
+    obj_class=object_class;
 
-    readMatrix("bounds",bounds, 11, rf);
+    readMatrix("bounds_"+object_class,bounds, 11, rf);
+
+    cout<<"bounds "<<bounds.toString()<<endl;
 }
 
 /****************************************************************/
@@ -407,7 +410,7 @@ bool SuperQuadric_NLP::readMatrix(const string &tag, Matrix &matrix, const int &
    }
    else
    {
-       if (tag=="bounds")
+       if (tag=="bounds_"+obj_class)
        {
            tag_x=tag+"_l";
            tag_y=tag+"_u";
@@ -426,6 +429,7 @@ bool SuperQuadric_NLP::readMatrix(const string &tag, Matrix &matrix, const int &
            check_x=true;
 
        }
+
        if (Bottle *b=rf->find(tag_y.c_str()).asList())
        {
            Vector col;
@@ -439,6 +443,7 @@ bool SuperQuadric_NLP::readMatrix(const string &tag, Matrix &matrix, const int &
            if (check_x==true)
                return true;
        }
+
    }
    return false;
 }

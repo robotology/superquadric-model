@@ -38,6 +38,7 @@ protected:
     yarp::sig::Vector x0;
     yarp::sig::Matrix bounds;
     double aux_objvalue;
+    std::string obj_class;
 
     yarp::os::ResourceFinder *rf;
 
@@ -116,7 +117,7 @@ public:
     void setPoints(const std::deque<yarp::sig::Vector> &point_cloud, const int &optimizer_points);
 
     /****************************************************************/
-    void configure(yarp::os::ResourceFinder *rf, bool bounds_aut);
+    void configure(yarp::os::ResourceFinder *rf, bool bounds_aut, const std::string &object_class);
 
     /****************************************************************/
     yarp::sig::Vector get_result() const;
