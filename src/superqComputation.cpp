@@ -713,6 +713,11 @@ void SuperqComputation::filter()
 /***********************************************************************/
 bool SuperqComputation::computeSuperq()
 {
+    Vector colors(3,0.0);
+    colors[1]=255;
+
+    savePoints("/3Dpoints-"+tag_file, colors);
+
     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
     app->Options()->SetNumericValue("tol",tol);
     app->Options()->SetIntegerValue("acceptable_iter",acceptable_iter);
