@@ -112,6 +112,8 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
                      Ipopt::Index m, Ipopt::Number *g_l, Ipopt::Number *g_u)
 {
     computeBounds();
+
+    //cout<<"bounds after automatic "<<bounds.toString()<<endl;
     for (Ipopt::Index i=0; i<n; i++)
     {
        x_l[i]=bounds(i,0);
@@ -261,7 +263,7 @@ void SuperQuadric_NLP::configure(ResourceFinder *rf, bool b_automatic, const str
 
     readMatrix("bounds_"+object_class,bounds, 11, rf);
 
-    cout<<"bounds "<<bounds.toString()<<endl;
+    //cout<<"bounds "<<bounds.toString()<<endl;
 }
 
 /****************************************************************/
