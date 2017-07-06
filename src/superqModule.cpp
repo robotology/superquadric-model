@@ -96,7 +96,7 @@ bool SuperqModule::set_visualization(const string &e)
 }
 
 /**********************************************************************/
-Property SuperqModule::get_superq(const vector<Vector> &p, bool filtered_superq, bool reset)
+Property SuperqModule::get_superq(const vector<Vector> &p)
 {
     Property superq;
 
@@ -116,30 +116,110 @@ Property SuperqModule::get_superq(const vector<Vector> &p, bool filtered_superq,
 
     superqCom->sendPoints(p_aux);
 
-    if (!filtered_superq)
-        superqCom->step();
-    else if (filtered_superq)
-    {
-        if (reset)
-        {
-            superqCom->resetMedianFilter();
+    //if (!filtered_superq)
+    superqCom->step();
+    //else if (filtered_superq)
+    //{
+//        if (reset)
+//        {
+//            superqCom->resetMedianFilter();
 
-            if (fixed_window)
+//            if (fixed_window)
+//            {
+//                median_order=superqCom->std_median_order;
+//                for (size_t i=0; i<median_order; i++)
+//                    superqCom->step();
+//            }
+//            else
+//            {
+//                max_median_order=superqCom->max_median_order;
+//                for (size_t i=0; i<max_median_order; i++)
+//                    superqCom->step();
+//            }
+//        }
+//        else
+//        {
+//            superqCom->step();
+//        }
+    //}
+
+    Vector sol(11,0.0);
+    sol=superqCom->getSolution(0);
+
+    superqCom->setPar("one_shot", "off");
+    p_aux.clear();
+    superqCom->sendPoints(p_aux);
+
+    superq=fillProperty(sol);
+
+    return superq;
+}
+
+/**********************************************************************/
+Property SuperqModule::get_superq(const Bottle &all_point_cloud, bool &filtered_superq, bool &reset, const int &n_point_cloud)
+{
+    Property superq;
+
+    LockGuard lg(mutex);
+
+    if (object_class!="default")
+        superqCom->setPar("object_class", object_class);
+    else
+        superqCom->setPar("object_class", "default");
+
+    superqCom->setPar("one_shot", "on");
+
+    deque<Vector> p_aux;
+
+    for (size_t i=0; i<n_point_cloud; i++)
+    {
+        vector<Vector> p;
+
+        p_aux.clear();
+
+        Bottle *all_pc=all_point_cloud.get(0).asList();
+
+        stringstream ss;
+        ss<<i;
+
+        Bottle *i_pc=all_pc->get(i).asList();
+
+        if (i_pc->get(0).asString() == "point_cloud_"+ ss.str())
+        {
+            Bottle *pc=i_pc->get(1).asList();
+            for (size_t j=0; j<pc->size(); j++)
             {
-                median_order=superqCom->std_median_order;
-                for (size_t i=0; i<median_order; i++)
-                    superqCom->step();
+                p_aux.push_back(p[i]);
+            }
+        }
+
+        superqCom->sendPoints(p_aux);
+
+        if (!filtered_superq)
+        superqCom->step();
+        else if (filtered_superq)
+        {
+            if (reset)
+            {
+                superqCom->resetMedianFilter();
+
+                if (fixed_window)
+                {
+                    median_order=superqCom->std_median_order;
+                    for (size_t i=0; i<median_order; i++)
+                        superqCom->step();
+                }
+                else
+                {
+                    max_median_order=superqCom->max_median_order;
+                    for (size_t i=0; i<max_median_order; i++)
+                        superqCom->step();
+                }
             }
             else
             {
-                max_median_order=superqCom->max_median_order;
-                for (size_t i=0; i<max_median_order; i++)
-                    superqCom->step();
+                superqCom->step();
             }
-        }
-        else
-        {
-            superqCom->step();
         }
     }
 

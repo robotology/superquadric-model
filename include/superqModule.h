@@ -126,7 +126,10 @@ protected:
     bool set_visualization(const std::string &e);
 
     /**********************************************************************/
-    yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> &blob, bool filtered_superq, bool reset);
+    yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> &blob);
+
+    /**********************************************************************/
+    yarp::os::Property get_superq(const yarp::os::Bottle &all_point_cloud, bool &filtered_superq, bool &reset, const int &n_point_cloud);
 
     /**********************************************************************/
     yarp::os::Property fillProperty(const yarp::sig::Vector &sol);
