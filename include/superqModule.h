@@ -129,7 +129,13 @@ protected:
     yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> &blob);
 
     /**********************************************************************/
-    yarp::os::Property get_superq_filtered(const std::vector<yarp::os::Bottle> &all_point_cloud, const bool &reset,  const int &n_point_cloud);
+    bool send_point_clouds(const std::vector<yarp::sig::Vector> &p);
+
+    /**********************************************************************/
+    bool reset_filter();
+
+    /**********************************************************************/
+    yarp::os::Property get_superq_filtered();
 
     /**********************************************************************/
     yarp::os::Property fillProperty(const yarp::sig::Vector &sol);
