@@ -22,6 +22,13 @@ struct Vector
    yarp.includefile="yarp/sig/Vector.h"
   )
 
+struct Bottle
+{
+} (
+   yarp.name = "yarp::os::Bottle"
+   yarp.includefile="yarp/os/Bottle.h"
+  )
+
 /**
 * superquadricModel_IDL
 *
@@ -47,10 +54,6 @@ service superquadricModel_IDL
     * Get the parameters of the reconstructed superquadric.
     * @param point_cloud is the 3D point cloud of the object we want to model with the superquadric, 
     * for instance: ((100.0 102.0) (100.0 103.0) ... ).
-    * @param filtered_or_not is a bool variable specifing if we want the superquadric
-    * to be filtered (true/1) or not (false/0).
-    * @param reset_or_not is a bool variable specifing if we want to reset the
-    * superquadric filtered (if enabled) or not.
     * @return the 12 parameters (x0, .. x11) of the current superquadric. 
     * In particular, the parameters are grouped in a Property as follows: "dimensions" (x0, x1, x2) 
     * are the three semi-axes lenghts; "exponents" (x3 and x4) are the exponents,
@@ -58,7 +61,23 @@ service superquadricModel_IDL
     * the superquadric center; and "orientation" (x8, x9, 10, x11) is the axis-angle representation
     * obtained from the Euler angles.
     */
-    Property get_superq(1:list<Vector> point_cloud, 2:bool filtered_or_not, 3: bool reset_or_not);
+    Property get_superq(1:list<Vector> point_cloud);
+
+     /**
+    * Get the parameters of the reconstructed and filtered superquadric.
+    * @param point_cloud is a set of the 3D point clouds of the object we want to model with the superquadric, 
+    * for instance: ((100.0 102.0) (100.0 103.0) ... ).
+    * @param reset_or_not is a bool variable specifing if we want to reset the
+    * superquadric filtered (if enabled) or not.
+    * @param n_point_cloud is the number of point cloud sent
+    * @return the 12 parameters (x0, .. x11) of the current superquadric. 
+    * In particular, the parameters are grouped in a Property as follows: "dimensions" (x0, x1, x2) 
+    * are the three semi-axes lenghts; "exponents" (x3 and x4) are the exponents,
+    * responsible for the superquadric shape; "center"(x5, x6, x7) contains the coordinate of
+    * the superquadric center; and "orientation" (x8, x9, 10, x11) is the axis-angle representation
+    * obtained from the Euler angles.
+    */
+    Property get_superq_filtered(1:list<Bottle> point_cloud, 2:bool reset_or_not, 3:i32 n_point_cloud);
 
     /**
     * On/off point cloud filtering.

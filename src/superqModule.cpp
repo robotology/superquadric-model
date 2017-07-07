@@ -156,7 +156,7 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
 }
 
 /**********************************************************************/
-Property SuperqModule::get_superq_filtered(const Bottle &all_point_cloud, bool &reset, const int &n_point_cloud)
+Property SuperqModule::get_superq_filtered(const vector<Bottle> &all_point_cloud, const bool &reset, const int &n_point_cloud)
 {
     Property superq;
 
@@ -171,7 +171,7 @@ Property SuperqModule::get_superq_filtered(const Bottle &all_point_cloud, bool &
 
     deque<Vector> p_aux;
 
-    Bottle *all_pc=all_point_cloud.get(0).asList();
+    Bottle all_pc=all_point_cloud[0];
 
     if (reset)
     {
@@ -187,7 +187,7 @@ Property SuperqModule::get_superq_filtered(const Bottle &all_point_cloud, bool &
         stringstream ss;
         ss<<i;
 
-        Bottle *i_pc=all_pc->get(i).asList();
+        Bottle *i_pc=all_pc.get(i).asList();
 
         if (i_pc->get(0).asString() == "point_cloud_"+ ss.str())
         {
