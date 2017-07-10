@@ -435,8 +435,6 @@ Property SuperqComputation::getIpoptPar()
 /***********************************************************************/
 void SuperqComputation::setPar(const string &par_name, const string &value)
 {
-
-    cout<<"Debug 2"<<endl;
     LockGuard lg(mutex);
     if (par_name=="tag_file")
         tag_file=value;
@@ -450,8 +448,6 @@ void SuperqComputation::setPar(const string &par_name, const string &value)
         one_shot=(value=="on");
     else if (par_name=="object_class")
         ob_class=value;
-
-    cout<<"Debug 3"<<endl;
 }
 
 /***********************************************************************/

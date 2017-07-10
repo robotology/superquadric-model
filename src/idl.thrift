@@ -81,7 +81,7 @@ service superquadricModel_IDL
     /*
     *Send point cloud and execute one superquadric reconstruction (useful for filtering with one-shot mode)
     */    
-    bool send_point_clouds();
+    bool send_point_clouds(1:list<Vector> point_cloud);
 
     /**
     * On/off point cloud filtering.

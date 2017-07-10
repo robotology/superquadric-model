@@ -150,7 +150,6 @@ bool SuperqModule::send_point_clouds(const vector<Vector> &p)
     superqCom->sendPoints(p_aux);
 
     superqCom->step();
-    p_aux.clear();
 
     return true;
 }
@@ -383,6 +382,11 @@ bool SuperqModule::updateModule()
 
     if (mode_online)
     {
+         if (object_class!="default")
+            superqCom->setPar("object_class", object_class);
+        else
+            superqCom->setPar("object_class", "default");
+
         Property &x_to_send=portSuperq.prepare();
 
         imgIn=portImgIn.read();
