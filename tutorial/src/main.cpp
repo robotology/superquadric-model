@@ -50,6 +50,7 @@ class AcquireBlob : public RFModule,
     vector<cv::Point> object_center;
     deque<Vector> blob_points;
     deque<Vector> points;
+     deque<Vector> points_rotated;
 
     RpcClient portBlobRpc;
     RpcClient portOPCrpc;
@@ -59,6 +60,7 @@ class AcquireBlob : public RFModule,
 
     BufferedPort<Bottle > pointPort;
     BufferedPort<ImageOf<PixelRgb> > portImgIn;
+    BufferedPort<Bottle > portFrame;
 
     Mutex mutex;
 
@@ -104,10 +106,10 @@ public:
         point.clear();
         Bottle &b1=point.addList();
         
-        for (size_t i=0; i<points.size(); i++)
+        for (size_t i=0; i<points_rotated.size(); i++)
         {
             Bottle &b=b1.addList();
-            b.addDouble(points[i][0]); b.addDouble(points[i][1]); b.addDouble(points[i][2]);
+            b.addDouble(points_rotated[i][0]); b.addDouble(points_rotated[i][1]); b.addDouble(points_rotated[i][2]);
         }
 
         pointPort.write();
@@ -153,6 +155,8 @@ public:
         pointPort.open("/testing-module/point:o");
         portImgIn.open("/testing-module/img:i");
 
+        portFrame.open("/testing-module/frame:i");
+
         attach(portRpc);
         return true;
     }
@@ -171,6 +175,8 @@ public:
             superqRpc.close();
         if (!portImgIn.isClosed())
             portImgIn.close();
+        if (!portFrame.isClosed())
+            portFrame.close();
 
         return true;
     }
@@ -216,21 +222,24 @@ public:
             get3Dpoints(ImgIn);
         }
 
-        if (points.size()>0 && streaming==true)
+        if (points.size()>0)
+            fromCameraToRoot();
+
+        if (points_rotated.size()>0 && streaming==true)
             sendPoints();
-        else if (points.size()>0 && (streaming==false))
+        else if (points_rotated.size()>0 && (streaming==false))
         {
             Bottle cmd, reply;
             cmd.addString("get_superq");
 
             Bottle &in1=cmd.addList();
         
-            for (size_t i=0; i<points.size(); i++)
+            for (size_t i=0; i<points_rotated.size(); i++)
             {
                 Bottle &in=in1.addList();
-                in.addDouble(points[i][0]);
-                in.addDouble(points[i][1]);
-                in.addDouble(points[i][2]);
+                in.addDouble(points_rotated[i][0]);
+                in.addDouble(points_rotated[i][1]);
+                in.addDouble(points_rotated[i][2]);
             }
             
             // Add 1 instead of 0 if you want the filtered superquadric
@@ -472,6 +481,53 @@ public:
             yError("[SuperqComputation]: RGBD reply is fail!");
             points.clear();
         }
+    }
+
+    /***********************************************************************/
+    void fromCameraToRoot()
+    {
+        Bottle *frame_info=portFrame.read(false);
+        Vector x(3);
+        Vector o(4);
+
+        if (frame_info!=NULL)
+        {
+            for (size_t i=0; i<frame_info->size(); i++)
+            {
+                Bottle *sub_bottle=frame_info->get(i).asList();
+                string tag=sub_bottle->get(0).asString();
+                if (tag=="depth")
+                {
+                    Bottle *pose=sub_bottle->get(1).asList();
+                    x[0]=pose->get(0).asDouble();
+                    x[1]=pose->get(1).asDouble();
+                    x[2]=pose->get(2).asDouble();
+
+                    o[0]=pose->get(3).asDouble();
+                    o[1]=pose->get(4).asDouble();
+                    o[2]=pose->get(5).asDouble();
+                    o[3]=pose->get(6).asDouble();
+                }
+            }
+
+            Matrix H;
+            H.resize(4,4);
+            H=axis2dcm(o);
+            H.setSubcol(x,0,3);
+            H(3,3)=1;
+
+            if (norm(x)!=0.0 && norm(o)!=0.0)
+            {
+                for (size_t i=0; i<points.size(); i++)
+                {
+                    Vector aux;
+                    aux.resize(4,1.0);
+                    aux.setSubvector(0,points[i]);
+                    points_rotated.push_back((H*aux).subVector(0,2));
+                }
+            }
+        }
+
     }
 };
 

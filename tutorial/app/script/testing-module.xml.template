@@ -41,4 +41,10 @@
         <protocol>tcp</protocol>
     </connection>
 
+    <connection>
+        <from>/cer_gaze-controller/state:o</from>
+        <to>/testing-module/frame:i</to>
+        <protocol>tcp</protocol>
+    </connection>
+
 </application>
