@@ -83,8 +83,8 @@ protected:
     yarp::os::BufferedPort<yarp::os::Property> portSuperq;
     yarp::os::RpcServer portRpc;
 
-    yarp::dev::PolyDriver GazeCtrl;
-    yarp::dev::IGazeControl *igaze;
+//    yarp::dev::PolyDriver GazeCtrl;
+//    yarp::dev::IGazeControl *igaze;
 
     int vis_points;
     int vis_step;

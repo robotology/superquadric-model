@@ -505,7 +505,8 @@ bool SuperqModule::configure(ResourceFinder &rf)
             yError()<<"[SuperqComputation]: Problems in starting the thread!";
     }
 
-    superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K, points, vis_points, vis_step, imgIn);
+//    superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K, points, vis_points, vis_step, imgIn);
+    superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color,  K, points, vis_points, vis_step, imgIn);
 
     if (visualization_on)
     {
@@ -556,8 +557,8 @@ bool SuperqModule::close()
      if (!portSuperq.isClosed())
         portSuperq.close();
 
-    if (mode_online)
-        GazeCtrl.close();
+//    if (mode_online)
+//        GazeCtrl.close();
 
     return true;
 }
@@ -723,39 +724,39 @@ bool SuperqModule::configViewer(ResourceFinder &rf)
 
     if (mode_online)
     {
-        Property optionG;
-        optionG.put("device","gazecontrollerclient");
-        optionG.put("remote","/iKinGazeCtrl");
-        optionG.put("local","/superquadric-model/gaze");
+//        Property optionG;
+//        optionG.put("device","gazecontrollerclient");
+//        optionG.put("remote","/iKinGazeCtrl");
+//        optionG.put("local","/superquadric-model/gaze");
 
-        GazeCtrl.open(optionG);
-        igaze=NULL;
-
-
-        if (GazeCtrl.isValid())
-            GazeCtrl.view(igaze);
-        else
-            return false;
-
-        Bottle info;
-        igaze->getInfo(info);
-        K.resize(3,4);
-        K.zero();
+//        GazeCtrl.open(optionG);
+//        igaze=NULL;
 
 
-        Bottle *intr_par;
+//        if (GazeCtrl.isValid())
+//            GazeCtrl.view(igaze);
+//        else
+//            return false;
 
-        if (eye=="left")
-            intr_par=info.find("camera_intrinsics_left").asList();
-        else
-            intr_par=info.find("camera_intrinsics_right").asList();
+//        Bottle info;
+//        igaze->getInfo(info);
+//        K.resize(3,4);
+//        K.zero();
 
-        K(0,0)=intr_par->get(0).asDouble();
-        K(0,1)=intr_par->get(1).asDouble();
-        K(0,2)=intr_par->get(2).asDouble();
-        K(1,1)=intr_par->get(5).asDouble();
-        K(1,2)=intr_par->get(6).asDouble();
-        K(2,2)=1;
+
+//        Bottle *intr_par;
+
+//        if (eye=="left")
+//            intr_par=info.find("camera_intrinsics_left").asList();
+//        else
+//            intr_par=info.find("camera_intrinsics_right").asList();
+
+//        K(0,0)=intr_par->get(0).asDouble();
+//        K(0,1)=intr_par->get(1).asDouble();
+//        K(0,2)=intr_par->get(2).asDouble();
+//        K(1,1)=intr_par->get(5).asDouble();
+//        K(1,2)=intr_par->get(6).asDouble();
+//        K(2,2)=1;
 
         R.resize(4,4);
         H.resize(4,4);

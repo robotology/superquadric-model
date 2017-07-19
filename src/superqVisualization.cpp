@@ -27,13 +27,23 @@ using namespace yarp::math;
 
 /***********************************************************************/
 SuperqVisualization::SuperqVisualization(int _rate,const string &_eye, const string &_what_to_plot, Vector &_x, Vector &_x_filtered,
-                                         deque<int> &_Color,IGazeControl *_igaze, const Matrix _K, deque<Vector> &_points,
+                                         deque<int> &_Color, const Matrix _K, deque<Vector> &_points,
                                          const int &_vis_points, const int &_vis_step, ImageOf<PixelRgb> *&_imgIn):
-                                         RateThread(_rate), eye(_eye), what_to_plot(_what_to_plot), Color(_Color), igaze(_igaze), K(_K),
+                                         RateThread(_rate), eye(_eye), what_to_plot(_what_to_plot), Color(_Color), K(_K),
                                          vis_points(_vis_points), vis_step(_vis_step), superq(_x), superq_filtered(_x_filtered), points(_points), imgIn(_imgIn)
 {
 
 }
+
+///***********************************************************************/
+//SuperqVisualization::SuperqVisualization(int _rate,const string &_eye, const string &_what_to_plot, Vector &_x, Vector &_x_filtered,
+//                                         deque<int> &_Color,IGazeControl *_igaze, const Matrix _K, deque<Vector> &_points,
+//                                         const int &_vis_points, const int &_vis_step, ImageOf<PixelRgb> *&_imgIn):
+//                                         RateThread(_rate), eye(_eye), what_to_plot(_what_to_plot), Color(_Color), igaze(_igaze), K(_K),
+//                                         vis_points(_vis_points), vis_step(_vis_step), superq(_x), superq_filtered(_x_filtered), points(_points), imgIn(_imgIn)
+//{
+
+//}
 
 /***********************************************************************/
 bool SuperqVisualization::showSuperq(Vector &x_toshow)
@@ -53,24 +63,24 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
 
     if ((norm(x_toshow)>0.0))
     {
-        if (eye=="left")
-        {
-            if (igaze->getLeftEyePose(pos,orient,stamp))
-            {
-                H=axis2dcm(orient);
-                H.setSubcol(pos,0,3);
-                H=SE3inv(H);
-            }
-        }
-        else
-        {
-            if (igaze->getRightEyePose(pos,orient,stamp))
-            {
-                H=axis2dcm(orient);
-                H.setSubcol(pos,0,3);
-                H=SE3inv(H);
-            }
-        }
+//        if (eye=="left")
+//        {
+//            if (igaze->getLeftEyePose(pos,orient,stamp))
+//            {
+//                H=axis2dcm(orient);
+//                H.setSubcol(pos,0,3);
+//                H=SE3inv(H);
+//            }
+//        }
+//        else
+//        {
+//            if (igaze->getRightEyePose(pos,orient,stamp))
+//            {
+//                H=axis2dcm(orient);
+//                H.setSubcol(pos,0,3);
+//                H=SE3inv(H);
+//            }
+//        }
 
         double step=2*M_PI/vis_points;
 
@@ -122,24 +132,24 @@ bool SuperqVisualization::showPoints()
     ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
     imgOut=*imgIn;
 
-    if (eye=="left")
-    {
-        if (igaze->getLeftEyePose(pos,orient,stamp))
-        {
-            H=axis2dcm(orient);
-            H.setSubcol(pos,0,3);
-            H=SE3inv(H);
-        }
-    }
-    else
-    {
-        if (igaze->getRightEyePose(pos,orient,stamp))
-        {
-            H=axis2dcm(orient);
-            H.setSubcol(pos,0,3);
-            H=SE3inv(H);
-        }
-    }
+//    if (eye=="left")
+//    {
+//        if (igaze->getLeftEyePose(pos,orient,stamp))
+//        {
+//            H=axis2dcm(orient);
+//            H.setSubcol(pos,0,3);
+//            H=SE3inv(H);
+//        }
+//    }
+//    else
+//    {
+//        if (igaze->getRightEyePose(pos,orient,stamp))
+//        {
+//            H=axis2dcm(orient);
+//            H.setSubcol(pos,0,3);
+//            H=SE3inv(H);
+//        }
+//    }
 
     Vector point(3,0.0);
 

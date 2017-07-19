@@ -45,14 +45,15 @@ class AcquireBlob : public RFModule,
     string method;
     string objname;
     bool streaming;
+    bool color;
 
     vector<cv::Point> object_center;
-    deque<cv::Point> blob_points;
+    deque<Vector> blob_points;
     deque<Vector> points;
 
     RpcClient portBlobRpc;
     RpcClient portOPCrpc;
-    RpcClient portSFMRpc;
+    RpcClient portRGBDRpc;
     RpcClient superqRpc;
     RpcServer portRpc;
 
@@ -71,18 +72,18 @@ public:
         return this->yarp().attachAsServer(source);
     }
 
-    /************************************************************************/
-    Bottle  get_Blob()
-    {
-        Bottle blob;
-        for (size_t i=0; i<blob_points.size(); i++)
-        {
-            Bottle &b=blob.addList();
-            b.addDouble(blob_points[i].x); b.addDouble(blob_points[i].y);
-        }
+//    /************************************************************************/
+//    Bottle  get_Blob()
+//    {
+//        Bottle blob;
+//        for (size_t i=0; i<blob_points.size(); i++)
+//        {
+//            Bottle &b=blob.addList();
+//            b.addDouble(blob_points[i].x); b.addDouble(blob_points[i].y);
+//        }
 
-        return blob;
-    }
+//        return blob;
+//    }
 
     /************************************************************************/
     bool  set_streaming_mode(const string &entry)
@@ -141,10 +142,11 @@ public:
             objname="object";
 
         streaming=(rf.check("streaming", Value("off")).asString()=="on");
+        color=(rf.check("color", Value("off")).asString()=="on");
 
         portBlobRpc.open("/testing-module/blob:rpc");
         portOPCrpc.open("/testing-module/OPC:rpc");
-        portSFMRpc.open("/testing-module/SFM:rpc");
+        portRGBDRpc.open("/testing-module/RGBD:rpc");
         superqRpc.open("/testing-module/superq:rpc");
         portRpc.open("/testing-module/rpc");
 
@@ -163,8 +165,8 @@ public:
             portBlobRpc.close();
         if (portOPCrpc.asPort().isOpen())
             portOPCrpc.close();
-        if (portSFMRpc.asPort().isOpen())
-            portSFMRpc.close();
+        if (portRGBDRpc.asPort().isOpen())
+            portRGBDRpc.close();
         if (superqRpc.asPort().isOpen())
             superqRpc.close();
         if (!portImgIn.isClosed())
@@ -186,7 +188,9 @@ public:
             }
             else
             {
-                blob_points.push_back(cv::Point(0,0));
+                Vector aux(2);
+                aux.resize(2,0.0);
+                blob_points.push_back(aux);
             }
         }
         else if (method=="name")
@@ -199,7 +203,9 @@ public:
             }
             else
             {
-                blob_points.push_back(cv::Point(0,0));
+                Vector aux(2);
+                aux.resize(2,0.0);
+                blob_points.push_back(aux);
             }
         }
 
@@ -243,6 +249,8 @@ public:
     {
         Bottle cmd,reply;
         blob_points.clear();
+
+        Vector aux(2);
         
         cmd.addString("get_component_around");
         cmd.addInt(object_center[0].x); cmd.addInt(object_center[0].y);
@@ -255,7 +263,10 @@ public:
                 {
                     if (Bottle *blob_pair=blob_list->get(i).asList())
                     {
-                        blob_points.push_back(cv::Point(blob_pair->get(0).asInt(),blob_pair->get(1).asInt()));
+                        aux[0]=blob_pair->get(0).asDouble();
+                        aux[1]=blob_pair->get(1).asDouble();
+
+                        blob_points.push_back(aux);
                     }
                     else
                     {
@@ -390,35 +401,60 @@ public:
     void get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
     {
         Bottle cmd,reply;
-        cmd.addString("Points");
+        cmd.addString("get_3D_points");
         int count_blob=0;
 
         points.clear();
 
+        Bottle &content=cmd.addList();
+
         for (size_t i=0; i<blob_points.size(); i++)
         {
-            cv::Point single_point=blob_points[i];
-            cmd.addInt(single_point.x);
-            cmd.addInt(single_point.y);
+            Bottle &vector=content.addList();
+            vector.addDouble(blob_points[i][0]);
+            vector.addDouble(blob_points[i][1]);
         }
 
-        if (portSFMRpc.write(cmd,reply))
+        cmd.addInt(color);
+
+        if (portRGBDRpc.write(cmd,reply))
         {
             count_blob=0;
 
-            for (int idx=0;idx<reply.size();idx+=3)
+            Bottle *content=reply.get(0).asList();
+
+            Vector aux;
+
+            Bottle *in1=content->get(0).asList();
+
+            for (size_t i=0; i<in1->size(); i++)
             {
-                Vector point(6,0.0);
-                point[0]=reply.get(idx+0).asDouble();
-                point[1]=reply.get(idx+1).asDouble();
-                point[2]=reply.get(idx+2).asDouble();
+                Bottle *in=in1->get(i).asList();
+                if (in->size()==3)
+                {
+                    aux.resize(6,0.0);
+                    aux[0]=in->get(0).asDouble();
+                    aux[1]=in->get(1).asDouble();
+                    aux[2]=in->get(2).asDouble();
+                    aux[3]=255.0;
+                    aux[4]=0.0;
+                    aux[5]=0.0;
+                }
+                else if (in->size()==6)
+                {
+                    aux.resize(6,0.0);
+                    aux[0]=in->get(0).asDouble();
+                    aux[1]=in->get(1).asDouble();
+                    aux[2]=in->get(2).asDouble();
+                    aux[3]=in->get(3).asDouble();
+                    aux[4]=in->get(4).asDouble();
+                    aux[5]=in->get(5).asDouble();
+                }
 
                 count_blob+=2;
 
-                if ((norm(point)>0))
-                {
-                    points.push_back(point);
-                }
+                if ((norm(aux)>0))
+                    points.push_back(aux);;
             }
 
             if (points.size()<=0)
@@ -433,7 +469,7 @@ public:
         }
         else
         {
-            yError("[SuperqComputation]: SFM reply is fail!");
+            yError("[SuperqComputation]: RGBD reply is fail!");
             points.clear();
         }
     }

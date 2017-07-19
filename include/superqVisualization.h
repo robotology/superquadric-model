@@ -45,7 +45,7 @@ protected:
     yarp::sig::Vector point2D;
     std::deque<int> Color;
 
-    yarp::dev::IGazeControl *igaze;
+    //yarp::dev::IGazeControl *igaze;
 
     yarp::os::Mutex mutex;
 
@@ -58,9 +58,13 @@ public:
 
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *&imgIn;
 
+//    /***********************************************************************/
+//    SuperqVisualization(int rate, const std::string &_eye, const std::string &_what_to_plot, yarp::sig::Vector &x, yarp::sig::Vector &x_filtered,
+//                        std::deque<int> &_Color, yarp::dev::IGazeControl *_igaze, const yarp::sig::Matrix _K, std::deque<yarp::sig::Vector> &_points,
+//                        const int &_vis_points, const int &_vis_step, yarp::sig::ImageOf<yarp::sig::PixelRgb> *&imgIn);
     /***********************************************************************/
     SuperqVisualization(int rate, const std::string &_eye, const std::string &_what_to_plot, yarp::sig::Vector &x, yarp::sig::Vector &x_filtered,
-                        std::deque<int> &_Color, yarp::dev::IGazeControl *_igaze, const yarp::sig::Matrix _K, std::deque<yarp::sig::Vector> &_points,
+                        std::deque<int> &_Color, const yarp::sig::Matrix _K, std::deque<yarp::sig::Vector> &_points,
                         const int &_vis_points, const int &_vis_step, yarp::sig::ImageOf<yarp::sig::PixelRgb> *&imgIn);
 
     /***********************************************************************/
