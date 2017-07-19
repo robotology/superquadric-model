@@ -7,6 +7,7 @@
     
     <module>
        <name>superquadric-model</name>
+       <parameters> --from config-classes.ini </parameters>
        <node>icub21</node>
     </module>
     <module>
