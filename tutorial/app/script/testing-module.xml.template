@@ -24,8 +24,8 @@
     </connection>
 
     <connection>
-        <from>/testing-module/SFM:rpc</from>
-        <to>/SFM/rpc</to>
+        <from>/testing-module/RGBD:rpc</from>
+        <to>/RGBD2PointCloud/rpc</to>
         <protocol>tcp</protocol>
     </connection>
 
