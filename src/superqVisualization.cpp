@@ -63,6 +63,39 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
 
     if ((norm(x_toshow)>0.0))
     {
+        Bottle *frame_info=portFrameIn.read(false);
+        Vector x(3);
+        Vector o(4);
+
+        if (frame_info!=NULL)
+        {
+            for (size_t i=0; i<frame_info->size(); i++)
+            {
+                Bottle *sub_bottle=frame_info->get(i).asList();
+                string tag=sub_bottle->get(0).asString();
+                if (tag=="depth_rgb")
+                {
+                    Bottle *pose=sub_bottle->get(1).asList();
+                    x[0]=pose->get(0).asDouble();
+                    x[1]=pose->get(1).asDouble();
+                    x[2]=pose->get(2).asDouble();
+
+                    o[0]=pose->get(3).asDouble();
+                    o[1]=pose->get(4).asDouble();
+                    o[2]=pose->get(5).asDouble();
+                    o[3]=pose->get(6).asDouble();
+                }
+            }
+
+            Matrix H;
+            H.resize(4,4);
+            H=axis2dcm(o);
+            H.setSubcol(x,0,3);
+            H(3,3)=1;
+            H=SE3inv(H);
+        }
+        else
+            H.eye();
 //        if (eye=="left")
 //        {
 //            if (igaze->getLeftEyePose(pos,orient,stamp))
@@ -131,6 +164,40 @@ bool SuperqVisualization::showPoints()
 
     ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
     imgOut=*imgIn;
+
+    Bottle *frame_info=portFrameIn.read(false);
+    Vector x(3);
+    Vector o(4);
+
+    if (frame_info!=NULL)
+    {
+        for (size_t i=0; i<frame_info->size(); i++)
+        {
+            Bottle *sub_bottle=frame_info->get(i).asList();
+            string tag=sub_bottle->get(0).asString();
+            if (tag=="depth_rgb")
+            {
+                Bottle *pose=sub_bottle->get(1).asList();
+                x[0]=pose->get(0).asDouble();
+                x[1]=pose->get(1).asDouble();
+                x[2]=pose->get(2).asDouble();
+
+                o[0]=pose->get(3).asDouble();
+                o[1]=pose->get(4).asDouble();
+                o[2]=pose->get(5).asDouble();
+                o[3]=pose->get(6).asDouble();
+            }
+        }
+
+        Matrix H;
+        H.resize(4,4);
+        H=axis2dcm(o);
+        H.setSubcol(x,0,3);
+        H(3,3)=1;
+        H=SE3inv(H);
+    }
+    else
+        H.eye();
 
 //    if (eye=="left")
 //    {

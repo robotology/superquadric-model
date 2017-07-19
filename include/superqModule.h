@@ -83,6 +83,8 @@ protected:
     yarp::os::BufferedPort<yarp::os::Property> portSuperq;
     yarp::os::RpcServer portRpc;
 
+    yarp::os::BufferedPort<yarp::os::Property> portIntrins;
+
 //    yarp::dev::PolyDriver GazeCtrl;
 //    yarp::dev::IGazeControl *igaze;
 

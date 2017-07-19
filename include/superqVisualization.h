@@ -36,6 +36,7 @@ protected:
     double t_vis;
     std::string what_to_plot;
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > portImgOut;
+    yarp::os::BufferedPort<yarp::os::Bottle > portFrameIn;
 
     int vis_points;
     int vis_step;

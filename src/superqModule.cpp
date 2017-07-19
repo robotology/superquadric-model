@@ -557,6 +557,12 @@ bool SuperqModule::close()
      if (!portSuperq.isClosed())
         portSuperq.close();
 
+     if (mode_online)
+     {
+         if (!portIntrins.isClosed())
+            portIntrins.close();
+     }
+
 //    if (mode_online)
 //        GazeCtrl.close();
 
@@ -757,6 +763,27 @@ bool SuperqModule::configViewer(ResourceFinder &rf)
 //        K(1,1)=intr_par->get(5).asDouble();
 //        K(1,2)=intr_par->get(6).asDouble();
 //        K(2,2)=1;
+
+        portIntrins.open("/superquadric-model/itr:i");
+        Property *intr_par=portIntrins.read();
+
+        double k00=intr_par->find("focalLenghtX").asDouble();
+        if (intr_par->find("focalLenghtX").isNull())
+            return false;
+        double k01=intr_par->find("focalLenghtY").asDouble();
+        if (intr_par->find("focalLenghtY").isNull())
+            return false;
+        double k11=intr_par->find("principalPointX").asDouble();
+        if (intr_par->find("principalPointX").isNull())
+            return false;
+        double k12=intr_par->find("principalPointY").asDouble();
+        if (intr_par->find("principalPointY").isNull())
+            return false;
+
+        K(0,0)=k00;
+        K(0,1)=k01;
+        K(1,1)=k11;
+        K(1,2)=k12;
 
         R.resize(4,4);
         H.resize(4,4);
