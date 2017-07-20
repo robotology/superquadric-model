@@ -60,7 +60,7 @@ class AcquireBlob : public RFModule,
 
     BufferedPort<Bottle > pointPort;
     BufferedPort<ImageOf<PixelRgb> > portImgIn;
-    BufferedPort<Bottle > portFrame;
+    BufferedPort<Property > portFrame;
 
     Mutex mutex;
 
@@ -486,29 +486,25 @@ public:
     /***********************************************************************/
     void fromCameraToRoot()
     {
-        Bottle *frame_info=portFrame.read(false);
+        Property *frame_info=portFrame.read(false);
         Vector x(3);
         Vector o(4);
 
         if (frame_info!=NULL)
         {
-            for (size_t i=0; i<frame_info->size(); i++)
-            {
-                Bottle *sub_bottle=frame_info->get(i).asList();
-                string tag=sub_bottle->get(0).asString();
-                if (tag=="depth")
-                {
-                    Bottle *pose=sub_bottle->get(1).asList();
-                    x[0]=pose->get(0).asDouble();
-                    x[1]=pose->get(1).asDouble();
-                    x[2]=pose->get(2).asDouble();
+            Bottle &pose_b=frame_info->findGroup("depth");
+            cout<<" Bottle pose "<<pose_b.toString();
+            Bottle *pose=pose_b.get(1).asList();
+            x[0]=pose->get(0).asDouble();
+            x[1]=pose->get(1).asDouble();
+            x[2]=pose->get(2).asDouble();
 
-                    o[0]=pose->get(3).asDouble();
-                    o[1]=pose->get(4).asDouble();
-                    o[2]=pose->get(5).asDouble();
-                    o[3]=pose->get(6).asDouble();
-                }
-            }
+            cout<<"pose 0 "<<pose->get(0).asDouble()<<endl;
+
+            o[0]=pose->get(3).asDouble();
+            o[1]=pose->get(4).asDouble();
+            o[2]=pose->get(5).asDouble();
+            o[3]=pose->get(6).asDouble();
 
             Matrix H;
             H.resize(4,4);
@@ -516,18 +512,31 @@ public:
             H.setSubcol(x,0,3);
             H(3,3)=1;
 
+            cout<<"H "<<H.toString()<<endl;
+            //H=SE3inv(H);
+
+            cout<<"Out from depth "<<frame_info->toString()<<endl;
+            cout<<"x "<<x.toString()<<endl;
+            cout<<"o "<<o.toString()<<endl;
+
             if (norm(x)!=0.0 && norm(o)!=0.0)
             {
+                points_rotated.clear();
                 for (size_t i=0; i<points.size(); i++)
                 {
                     Vector aux;
                     aux.resize(4,1.0);
-                    aux.setSubvector(0,points[i]);
-                    points_rotated.push_back((H*aux).subVector(0,2));
+                    aux.setSubvector(0,points[i].subVector(0,2));
+
+                    Vector aux2(6);
+                    aux2.setSubvector(0,(H*aux).subVector(0,2));
+                    aux2[3]=points[i][3]; aux2[4]=points[i][4]; aux2[5]=points[i][5];
+                    points_rotated.push_back(aux2);
                 }
             }
         }
-
+        else
+          yError()<<"Frame info null";
     }
 };
 
