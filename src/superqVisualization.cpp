@@ -50,12 +50,17 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
 {
     LockGuard lg(mutex);
 
+    Matrix H;
+    H.resize(4,4);
+
     PixelRgb color(Color[0],Color[1],Color[2]);
     Vector pos, orient;
     double co,so,ce,se;
     Stamp *stamp=NULL;
 
     ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
+
+    //yDebug()<<"imgIn "<<imgIn->width()<<imgIn->height();
     imgOut=*imgIn;
 
     R=euler2dcm(x_toshow.subVector(8,10));
@@ -63,39 +68,35 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
 
     if ((norm(x_toshow)>0.0))
     {
-        Bottle *frame_info=portFrameIn.read(false);
+        Property *frame_info=portFrameIn.read(false);
         Vector x(3);
         Vector o(4);
 
         if (frame_info!=NULL)
         {
-            for (size_t i=0; i<frame_info->size(); i++)
-            {
-                Bottle *sub_bottle=frame_info->get(i).asList();
-                string tag=sub_bottle->get(0).asString();
-                if (tag=="depth_rgb")
-                {
-                    Bottle *pose=sub_bottle->get(1).asList();
-                    x[0]=pose->get(0).asDouble();
-                    x[1]=pose->get(1).asDouble();
-                    x[2]=pose->get(2).asDouble();
+            Bottle &pose_b=frame_info->findGroup("depth");
+            cout<<" Bottle pose "<<pose_b.toString();
+            Bottle *pose=pose_b.get(1).asList();
+            x[0]=pose->get(0).asDouble();
+            x[1]=pose->get(1).asDouble();
+            x[2]=pose->get(2).asDouble();
+            
+            cout<<"pose 0 "<<pose->get(0).asDouble()<<endl;
 
-                    o[0]=pose->get(3).asDouble();
-                    o[1]=pose->get(4).asDouble();
-                    o[2]=pose->get(5).asDouble();
-                    o[3]=pose->get(6).asDouble();
-                }
-            }
+            o[0]=pose->get(3).asDouble();
+            o[1]=pose->get(4).asDouble();
+            o[2]=pose->get(5).asDouble();
+            o[3]=pose->get(6).asDouble();
 
-            Matrix H;
-            H.resize(4,4);
             H=axis2dcm(o);
             H.setSubcol(x,0,3);
             H(3,3)=1;
             H=SE3inv(H);
+
+cout<<"H "<<H.toString()<<endl;
         }
-        else
-            H.eye();
+
+        //cout<<"H "<<H.toString()<<endl;
 //        if (eye=="left")
 //        {
 //            if (igaze->getLeftEyePose(pos,orient,stamp))
@@ -114,41 +115,51 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
 //                H=SE3inv(H);
 //            }
 //        }
-
-        double step=2*M_PI/vis_points;
-
-        for (double eta=-M_PI; eta<M_PI; eta+=step)
+    
+        if (H(0,0)!=0.0)
         {
-             for (double omega=-M_PI; omega<M_PI;omega+=step)
-             {
-                 co=cos(omega); so=sin(omega);
-                 ce=cos(eta); se=sin(eta);
+            cout<<"H "<<H.toString()<<endl;
+            yDebug()<<"Debug 1";
+            double step=2*M_PI/vis_points;
 
-                 point[0]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(0,0) +
-                            x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3]))* sign(so)*(pow(abs(so),x_toshow[4])) * R(0,1)+
-                                x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(0,2) + x_toshow[5];
-
-                 point[1]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(1,0) +
-                            x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(so)*(pow(abs(so),x_toshow[4])) * R(1,1)+
-                                x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(1,2) + x_toshow[6];
-
-                 point[2]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(2,0) +
-                            x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(so)*(pow(abs(so),x_toshow[4])) * R(2,1)+
-                                x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(2,2) + x_toshow[7];
-
-                 point2D=from3Dto2D(point);
-
-                 cv::Point target_point((int)point2D[0],(int)point2D[1]);
-
-                 if ((target_point.x<0) || (target_point.y<0) || (target_point.x>=320) || (target_point.y>=240))
+            for (double eta=-M_PI; eta<M_PI; eta+=step)
+            {
+                 for (double omega=-M_PI; omega<M_PI;omega+=step)
                  {
-                     yWarning("[SuperqVisualization]: Not acceptable pixels!");
+                     co=cos(omega); so=sin(omega);
+                     ce=cos(eta); se=sin(eta);
+
+                     point[0]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(0,0) +
+                                x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3]))* sign(so)*(pow(abs(so),x_toshow[4])) * R(0,1)+
+                                    x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(0,2) + x_toshow[5];
+
+                     point[1]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(1,0) +
+                                x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(so)*(pow(abs(so),x_toshow[4])) * R(1,1)+
+                                    x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(1,2) + x_toshow[6];
+
+                     point[2]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(2,0) +
+                                x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(so)*(pow(abs(so),x_toshow[4])) * R(2,1)+
+                                    x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(2,2) + x_toshow[7];
+
+                     //cout<<"point 3d "<<point.toString()<<endl;
+                     point2D=from3Dto2D(point, H);
+
+                     //cout<<"point 2d "<<point2D.toString()<<endl;
+
+                     cv::Point target_point((int)point2D[0],(int)point2D[1]);
+
+                     if ((target_point.x<0) || (target_point.y<0) || (target_point.x>=320) || (target_point.y>=240))
+                     {
+                         yWarning("[SuperqVisualization]: Not acceptable pixels!");
+                     }
+                     else
+                        imgOut.pixel(target_point.x, target_point.y)=color;
                  }
-                 else
-                    imgOut.pixel(target_point.x, target_point.y)=color;
              }
-         }
+        }
     }
+
+yDebug()<<"Debug 2";
 
     portImgOut.write();
 
@@ -162,34 +173,33 @@ bool SuperqVisualization::showPoints()
     Stamp *stamp=NULL;
     Vector pos, orient;
 
+    Matrix H;
+    H.resize(4,4);
+
     ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
     imgOut=*imgIn;
 
-    Bottle *frame_info=portFrameIn.read(false);
+    Property *frame_info=portFrameIn.read(false);
     Vector x(3);
     Vector o(4);
 
     if (frame_info!=NULL)
     {
-        for (size_t i=0; i<frame_info->size(); i++)
-        {
-            Bottle *sub_bottle=frame_info->get(i).asList();
-            string tag=sub_bottle->get(0).asString();
-            if (tag=="depth_rgb")
-            {
-                Bottle *pose=sub_bottle->get(1).asList();
-                x[0]=pose->get(0).asDouble();
-                x[1]=pose->get(1).asDouble();
-                x[2]=pose->get(2).asDouble();
+        Bottle &pose_b=frame_info->findGroup("depth");
+        cout<<" Bottle pose "<<pose_b.toString();
+        Bottle *pose=pose_b.get(1).asList();
+        x[0]=pose->get(0).asDouble();
+        x[1]=pose->get(1).asDouble();
+        x[2]=pose->get(2).asDouble();
+        
+        cout<<"pose 0 "<<pose->get(0).asDouble()<<endl;
 
-                o[0]=pose->get(3).asDouble();
-                o[1]=pose->get(4).asDouble();
-                o[2]=pose->get(5).asDouble();
-                o[3]=pose->get(6).asDouble();
-            }
-        }
+        o[0]=pose->get(3).asDouble();
+        o[1]=pose->get(4).asDouble();
+        o[2]=pose->get(5).asDouble();
+        o[3]=pose->get(6).asDouble();
 
-        Matrix H;
+        
         H.resize(4,4);
         H=axis2dcm(o);
         H.setSubcol(x,0,3);
@@ -198,6 +208,13 @@ bool SuperqVisualization::showPoints()
     }
     else
         H.eye();
+
+    cout<<"H "<<H.toString()<<endl;
+    //H=SE3inv(H);
+    
+    cout<<"Out from depth "<<frame_info->toString()<<endl;
+    cout<<"x "<<x.toString()<<endl;
+    cout<<"o "<<o.toString()<<endl;
 
 //    if (eye=="left")
 //    {
@@ -223,7 +240,7 @@ bool SuperqVisualization::showPoints()
      for (size_t i=0; i<points.size(); i+=vis_step)
      {
          point=points[i].subVector(0,2);
-         point2D=from3Dto2D(point);
+         point2D=from3Dto2D(point, H);
 
          cv::Point target_point((int)point2D[0],(int)point2D[1]);
 
@@ -241,7 +258,7 @@ bool SuperqVisualization::showPoints()
 }
 
 /*******************************************************************************/
-Vector SuperqVisualization::from3Dto2D(const Vector &point3D)
+Vector SuperqVisualization::from3Dto2D(const Vector &point3D, Matrix &H)
 {
     Vector point2D(3,0.0);
     Vector point_aux(4,1.0);
@@ -256,9 +273,9 @@ bool SuperqVisualization::threadInit()
     yInfo()<<"[SuperqVisualization]: Thread initing ... ";
     
     portImgOut.open("/superquadric-model/img:o");
+    portFrameIn.open("/superquadric-model/frame:i");
 
     R.resize(4,4);
-    H.resize(4,4);
     point2D.resize(2,0.0);
     point.resize(3,0.0);
     point1.resize(3,0.0);
@@ -271,6 +288,7 @@ bool SuperqVisualization::threadInit()
 void SuperqVisualization::run()
 {
     double t0=Time::now();
+    yDebug()<<"DEBUG";
     if (what_to_plot=="superq" && imgIn!=NULL)
         showSuperq(superq_filtered);
     else if (what_to_plot=="points" && points.size()>0)

@@ -36,12 +36,12 @@ protected:
     double t_vis;
     std::string what_to_plot;
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > portImgOut;
-    yarp::os::BufferedPort<yarp::os::Bottle > portFrameIn;
+    yarp::os::BufferedPort<yarp::os::Property > portFrameIn;
 
     int vis_points;
     int vis_step;
     std::string eye;
-    yarp::sig::Matrix R,H,K;
+    yarp::sig::Matrix R,K;
     yarp::sig::Vector point,point1;
     yarp::sig::Vector point2D;
     std::deque<int> Color;
@@ -78,7 +78,7 @@ public:
     bool showSuperq(yarp::sig::Vector &x_to_show);
 
     /***********************************************************************/
-    yarp::sig::Vector from3Dto2D(const yarp::sig::Vector &point3D);
+    yarp::sig::Vector from3Dto2D(const yarp::sig::Vector &point3D, yarp::sig::Matrix &H);
 
     /***********************************************************************/
     virtual bool threadInit();

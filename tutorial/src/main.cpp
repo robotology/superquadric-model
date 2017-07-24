@@ -59,12 +59,9 @@ class AcquireBlob : public RFModule,
     RpcServer portRpc;
 
     BufferedPort<Bottle > pointPort;
-    BufferedPort<ImageOf<PixelRgb> > portImgIn;
     BufferedPort<Property > portFrame;
 
     Mutex mutex;
-
-    ImageOf<PixelRgb> *ImgIn;
 
 public:
 
@@ -153,7 +150,6 @@ public:
         portRpc.open("/testing-module/rpc");
 
         pointPort.open("/testing-module/point:o");
-        portImgIn.open("/testing-module/img:i");
 
         portFrame.open("/testing-module/frame:i");
 
@@ -173,8 +169,6 @@ public:
             portRGBDRpc.close();
         if (superqRpc.asPort().isOpen())
             superqRpc.close();
-        if (!portImgIn.isClosed())
-            portImgIn.close();
         if (!portFrame.isClosed())
             portFrame.close();
 
@@ -215,11 +209,11 @@ public:
             }
         }
 
-        ImgIn=portImgIn.read();
+        yDebug()<<"blob_points size "<<blob_points.size();
 
         if (blob_points.size()>1)
         {
-            get3Dpoints(ImgIn);
+            get3Dpoints();
         }
 
         if (points.size()>0)
@@ -331,7 +325,7 @@ public:
                         Bottle &info3=info.addList();
                         info3.addString("propSet");
                         Bottle &info4=info3.addList();
-                        info4.addString("position_2d_left");
+                        info4.addString("position_2d");
                     }
                     else
                     {
@@ -355,7 +349,7 @@ public:
                         {
                             if (Bottle *b=reply.get(1).asList())
                             {
-                                if (Bottle *b1=b->find("position_2d_left").asList())
+                                if (Bottle *b1=b->find("position_2d").asList())
                                 {
                                     cv::Point p1,p2,p;
                                     p1.x=b1->get(0).asInt();
@@ -368,7 +362,7 @@ public:
                                 }
                                 else
                                 {
-                                    yError("position_2d_left field not found in the OPC reply!");
+                                    yError("position_2d field not found in the OPC reply!");
                                     object_center.clear();
                                 }
                             }
@@ -407,7 +401,7 @@ public:
     }
 
     /***********************************************************************/
-    void get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
+    void get3Dpoints()
     {
         Bottle cmd,reply;
         cmd.addString("get_3D_points");
@@ -426,8 +420,11 @@ public:
 
         cmd.addInt(color);
 
+        yDebug()<<"cmd "<<cmd.toString();
+
         if (portRGBDRpc.write(cmd,reply))
         {
+            yDebug()<<"reply "<<reply.toString();
             count_blob=0;
 
             Bottle *content=reply.get(0).asList();
@@ -468,7 +465,7 @@ public:
 
             if (points.size()<=0)
             {
-                yError("[SuperqComputation]: Some problems in point acquisition!");
+                yError(" Some problems in point acquisition!");
             }
             else
             {
@@ -478,7 +475,7 @@ public:
         }
         else
         {
-            yError("[SuperqComputation]: RGBD reply is fail!");
+            yError(" RGBD reply is fail!");
             points.clear();
         }
     }
