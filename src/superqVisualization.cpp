@@ -35,16 +35,6 @@ SuperqVisualization::SuperqVisualization(int _rate,const string &_eye, const str
 
 }
 
-///***********************************************************************/
-//SuperqVisualization::SuperqVisualization(int _rate,const string &_eye, const string &_what_to_plot, Vector &_x, Vector &_x_filtered,
-//                                         deque<int> &_Color,IGazeControl *_igaze, const Matrix _K, deque<Vector> &_points,
-//                                         const int &_vis_points, const int &_vis_step, ImageOf<PixelRgb> *&_imgIn):
-//                                         RateThread(_rate), eye(_eye), what_to_plot(_what_to_plot), Color(_Color), igaze(_igaze), K(_K),
-//                                         vis_points(_vis_points), vis_step(_vis_step), superq(_x), superq_filtered(_x_filtered), points(_points), imgIn(_imgIn)
-//{
-
-//}
-
 /***********************************************************************/
 bool SuperqVisualization::showSuperq(Vector &x_toshow)
 {
@@ -60,7 +50,6 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
 
     ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
 
-    //yDebug()<<"imgIn "<<imgIn->width()<<imgIn->height();
     imgOut=*imgIn;
 
     R=euler2dcm(x_toshow.subVector(8,10));
@@ -75,13 +64,10 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
         if (frame_info!=NULL)
         {
             Bottle &pose_b=frame_info->findGroup("depth");
-            cout<<" Bottle pose "<<pose_b.toString();
             Bottle *pose=pose_b.get(1).asList();
             x[0]=pose->get(0).asDouble();
             x[1]=pose->get(1).asDouble();
             x[2]=pose->get(2).asDouble();
-            
-            cout<<"pose 0 "<<pose->get(0).asDouble()<<endl;
 
             o[0]=pose->get(3).asDouble();
             o[1]=pose->get(4).asDouble();
@@ -92,34 +78,10 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
             H.setSubcol(x,0,3);
             H(3,3)=1;
             H=SE3inv(H);
-
-cout<<"H "<<H.toString()<<endl;
         }
-
-        //cout<<"H "<<H.toString()<<endl;
-//        if (eye=="left")
-//        {
-//            if (igaze->getLeftEyePose(pos,orient,stamp))
-//            {
-//                H=axis2dcm(orient);
-//                H.setSubcol(pos,0,3);
-//                H=SE3inv(H);
-//            }
-//        }
-//        else
-//        {
-//            if (igaze->getRightEyePose(pos,orient,stamp))
-//            {
-//                H=axis2dcm(orient);
-//                H.setSubcol(pos,0,3);
-//                H=SE3inv(H);
-//            }
-//        }
     
         if (H(0,0)!=0.0)
         {
-            cout<<"H "<<H.toString()<<endl;
-            yDebug()<<"Debug 1";
             double step=2*M_PI/vis_points;
 
             for (double eta=-M_PI; eta<M_PI; eta+=step)
@@ -141,10 +103,7 @@ cout<<"H "<<H.toString()<<endl;
                                 x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(so)*(pow(abs(so),x_toshow[4])) * R(2,1)+
                                     x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(2,2) + x_toshow[7];
 
-                     //cout<<"point 3d "<<point.toString()<<endl;
                      point2D=from3Dto2D(point, H);
-
-                     //cout<<"point 2d "<<point2D.toString()<<endl;
 
                      cv::Point target_point((int)point2D[0],(int)point2D[1]);
 
@@ -158,8 +117,6 @@ cout<<"H "<<H.toString()<<endl;
              }
         }
     }
-
-yDebug()<<"Debug 2";
 
     portImgOut.write();
 
@@ -186,13 +143,10 @@ bool SuperqVisualization::showPoints()
     if (frame_info!=NULL)
     {
         Bottle &pose_b=frame_info->findGroup("depth");
-        cout<<" Bottle pose "<<pose_b.toString();
         Bottle *pose=pose_b.get(1).asList();
         x[0]=pose->get(0).asDouble();
         x[1]=pose->get(1).asDouble();
         x[2]=pose->get(2).asDouble();
-        
-        cout<<"pose 0 "<<pose->get(0).asDouble()<<endl;
 
         o[0]=pose->get(3).asDouble();
         o[1]=pose->get(4).asDouble();
@@ -208,32 +162,6 @@ bool SuperqVisualization::showPoints()
     }
     else
         H.eye();
-
-    cout<<"H "<<H.toString()<<endl;
-    //H=SE3inv(H);
-    
-    cout<<"Out from depth "<<frame_info->toString()<<endl;
-    cout<<"x "<<x.toString()<<endl;
-    cout<<"o "<<o.toString()<<endl;
-
-//    if (eye=="left")
-//    {
-//        if (igaze->getLeftEyePose(pos,orient,stamp))
-//        {
-//            H=axis2dcm(orient);
-//            H.setSubcol(pos,0,3);
-//            H=SE3inv(H);
-//        }
-//    }
-//    else
-//    {
-//        if (igaze->getRightEyePose(pos,orient,stamp))
-//        {
-//            H=axis2dcm(orient);
-//            H.setSubcol(pos,0,3);
-//            H=SE3inv(H);
-//        }
-//    }
 
     Vector point(3,0.0);
 
@@ -288,7 +216,6 @@ bool SuperqVisualization::threadInit()
 void SuperqVisualization::run()
 {
     double t0=Time::now();
-    yDebug()<<"DEBUG";
     if (what_to_plot=="superq" && imgIn!=NULL)
         showSuperq(superq_filtered);
     else if (what_to_plot=="points" && points.size()>0)

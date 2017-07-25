@@ -85,9 +85,6 @@ protected:
 
     yarp::os::BufferedPort<yarp::os::Property> portFrameIn;
 
-//    yarp::dev::PolyDriver GazeCtrl;
-//    yarp::dev::IGazeControl *igaze;
-
     int vis_points;
     int vis_step;
     std::string eye;
