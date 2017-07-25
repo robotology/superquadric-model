@@ -63,13 +63,13 @@
     <connection>
         <from>/superquadric-model/img:o</from>
         <to>/dispSuperq</to>
-        <protocol>tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
     <connection>
         <from>/depthCamera/rgbImage:o</from>
         <to>/superquadric-model/img:i</to>
-        <protocol>tcp</protocol>
+        <protocol>mjpeg</protocol>
     </connection>
 
      <connection>
