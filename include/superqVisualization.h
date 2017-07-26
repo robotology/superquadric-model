@@ -40,8 +40,7 @@ protected:
 
     int vis_points;
     int vis_step;
-    std::string eye;
-    yarp::sig::Matrix R,K;
+    yarp::sig::Matrix R,K,H;
     yarp::sig::Vector point,point1;
     yarp::sig::Vector point2D;
     std::deque<int> Color;
@@ -58,7 +57,7 @@ public:
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *&imgIn;
 
     /***********************************************************************/
-    SuperqVisualization(int rate, const std::string &_eye, const std::string &_what_to_plot, yarp::sig::Vector &x, yarp::sig::Vector &x_filtered,
+    SuperqVisualization(int rate, const std::string &_what_to_plot, yarp::sig::Vector &x, yarp::sig::Vector &x_filtered,
                         std::deque<int> &_Color, const yarp::sig::Matrix _K, std::deque<yarp::sig::Vector> &_points,
                         const int &_vis_points, const int &_vis_step, yarp::sig::ImageOf<yarp::sig::PixelRgb> *&imgIn);
 

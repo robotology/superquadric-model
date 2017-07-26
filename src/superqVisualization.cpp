@@ -26,10 +26,10 @@ using namespace yarp::dev;
 using namespace yarp::math;
 
 /***********************************************************************/
-SuperqVisualization::SuperqVisualization(int _rate,const string &_eye, const string &_what_to_plot, Vector &_x, Vector &_x_filtered,
+SuperqVisualization::SuperqVisualization(int _rate, const string &_what_to_plot, Vector &_x, Vector &_x_filtered,
                                          deque<int> &_Color, const Matrix _K, deque<Vector> &_points,
                                          const int &_vis_points, const int &_vis_step, ImageOf<PixelRgb> *&_imgIn):
-                                         RateThread(_rate), eye(_eye), what_to_plot(_what_to_plot), Color(_Color), K(_K),
+                                         RateThread(_rate), what_to_plot(_what_to_plot), Color(_Color), K(_K),
                                          vis_points(_vis_points), vis_step(_vis_step), superq(_x), superq_filtered(_x_filtered), points(_points), imgIn(_imgIn)
 {
 
@@ -40,13 +40,8 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
 {
     LockGuard lg(mutex);
 
-    Matrix H;
-    H.resize(4,4);
-
     PixelRgb color(Color[0],Color[1],Color[2]);
-    Vector pos, orient;
     double co,so,ce,se;
-    Stamp *stamp=NULL;
 
     ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
 
@@ -80,42 +75,39 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
             H=SE3inv(H);
         }
     
-        if (H(0,0)!=0.0)
+        double step=2*M_PI/vis_points;
+
+        for (double eta=-M_PI; eta<M_PI; eta+=step)
         {
-            double step=2*M_PI/vis_points;
+             for (double omega=-M_PI; omega<M_PI;omega+=step)
+             {
+                 co=cos(omega); so=sin(omega);
+                 ce=cos(eta); se=sin(eta);
 
-            for (double eta=-M_PI; eta<M_PI; eta+=step)
-            {
-                 for (double omega=-M_PI; omega<M_PI;omega+=step)
+                 point[0]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(0,0) +
+                            x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3]))* sign(so)*(pow(abs(so),x_toshow[4])) * R(0,1)+
+                                x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(0,2) + x_toshow[5];
+
+                 point[1]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(1,0) +
+                            x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(so)*(pow(abs(so),x_toshow[4])) * R(1,1)+
+                                x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(1,2) + x_toshow[6];
+
+                 point[2]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(2,0) +
+                            x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(so)*(pow(abs(so),x_toshow[4])) * R(2,1)+
+                                x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(2,2) + x_toshow[7];
+
+                 point2D=from3Dto2D(point, H);
+
+                 cv::Point target_point((int)point2D[0],(int)point2D[1]);
+
+                 if ((target_point.x<0) || (target_point.y<0) || (target_point.x>=320) || (target_point.y>=240))
                  {
-                     co=cos(omega); so=sin(omega);
-                     ce=cos(eta); se=sin(eta);
-
-                     point[0]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(0,0) +
-                                x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3]))* sign(so)*(pow(abs(so),x_toshow[4])) * R(0,1)+
-                                    x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(0,2) + x_toshow[5];
-
-                     point[1]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(1,0) +
-                                x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(so)*(pow(abs(so),x_toshow[4])) * R(1,1)+
-                                    x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(1,2) + x_toshow[6];
-
-                     point[2]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(2,0) +
-                                x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(so)*(pow(abs(so),x_toshow[4])) * R(2,1)+
-                                    x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(2,2) + x_toshow[7];
-
-                     point2D=from3Dto2D(point, H);
-
-                     cv::Point target_point((int)point2D[0],(int)point2D[1]);
-
-                     if ((target_point.x<0) || (target_point.y<0) || (target_point.x>=320) || (target_point.y>=240))
-                     {
-                         yWarning("[SuperqVisualization]: Not acceptable pixels!");
-                     }
-                     else
-                        imgOut.pixel(target_point.x, target_point.y)=color;
+                     yWarning("[SuperqVisualization]: Not acceptable pixels!");
                  }
+                 else
+                    imgOut.pixel(target_point.x, target_point.y)=color;
              }
-        }
+         }
     }
 
     portImgOut.write();
@@ -127,11 +119,6 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
 bool SuperqVisualization::showPoints()
 {
     PixelRgb color(Color[0],Color[1],Color[2]);
-    Stamp *stamp=NULL;
-    Vector pos, orient;
-
-    Matrix H;
-    H.resize(4,4);
 
     ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
     imgOut=*imgIn;
@@ -160,8 +147,6 @@ bool SuperqVisualization::showPoints()
         H(3,3)=1;
         H=SE3inv(H);
     }
-    else
-        H.eye();
 
     Vector point(3,0.0);
 
@@ -208,6 +193,8 @@ bool SuperqVisualization::threadInit()
     point.resize(3,0.0);
     point1.resize(3,0.0);
     superq.resize(11,0.0);
+    H.resize(4,4);
+    H.eye();
 
     return true;
 }
@@ -230,6 +217,8 @@ void SuperqVisualization:: threadRelease()
 
     if (!portImgOut.isClosed())
         portImgOut.close();
+    if (!portFrameIn.isClosed())
+        portFrameIn.close();
 }
 
 /***********************************************************************/
@@ -291,23 +280,6 @@ void SuperqVisualization::setPar(const Property &newOptions, bool first_time)
         }
     }
 
-    string cam=newOptions.find("camera").asString();
-    if (newOptions.find("camera").isNull() && (first_time==true))
-    {
-        eye="left";
-    }
-    else if (!newOptions.find("camera").isNull())
-    {
-        if ((cam=="left") || (cam=="right"))
-        {
-             eye=cam;
-        }
-        else
-        {
-            eye="left";
-        }
-    }
-
     string col=newOptions.find("color").asString();
     if (newOptions.find("color").isNull() && (first_time==true))
     {
@@ -347,7 +319,6 @@ Property SuperqVisualization::getPar()
         advOptions.put("color","green");
     else if  (Color[0]==0 && Color[1]==0 &&Color[2]==255)
         advOptions.put("color","blue");
-    advOptions.put("camera",eye);
     advOptions.put("visualized_points_step",vis_step);
     advOptions.put("what_to_plot",what_to_plot);
     return advOptions;

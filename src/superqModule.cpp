@@ -507,7 +507,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
             yError()<<"[SuperqComputation]: Problems in starting the thread!";
     }
 
-    superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color,  K, points, vis_points, vis_step, imgIn);
+    superqVis= new SuperqVisualization(rate_vis, what_to_plot,x, x_filtered, Color,  K, points, vis_points, vis_step, imgIn);
 
     if (visualization_on)
     {
@@ -700,7 +700,6 @@ bool SuperqModule::configViewer(ResourceFinder &rf)
 {
     portImgIn.open("/superquadric-model/img:i");
 
-    eye=rf.check("eye", Value("left")).asString();
     what_to_plot=rf.find("plot").asString().c_str();
     if (rf.find("plot").isNull())
         what_to_plot="superq";
