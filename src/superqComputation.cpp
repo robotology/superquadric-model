@@ -57,9 +57,9 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
             point[0]=data.at<float>(i,0);
             point[1]=data.at<float>(i,1);
             point[2]=data.at<float>(i,2);
-            point[3]=data.at<int>(i,3);
-            point[4]=data.at<int>(i,4);
-            point[5]=data.at<int>(i,5);
+            point[3]=255.0;
+            point[4]=0.0;
+            point[5]=0.0;
             points.push_back(point);
         }
     }
@@ -619,8 +619,7 @@ void SuperqComputation::savePoints(const string &namefile, const Vector &colors)
         fout<<endl;
         for (size_t i=0; i<points.size(); i++)
         {
-            fout<<points[i].subVector(0,2).toString(3,4).c_str()<<" "<<
-                    points[i][3]<<" "<<points[i][4]<<" "<<points[i][5]<<endl;
+            fout<<points[i].toString(3,4).c_str()<<endl;
         }
 
         fout<<endl;
