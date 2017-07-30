@@ -142,7 +142,7 @@ public:
             objname="object";
 
         streaming=(rf.check("streaming", Value("off")).asString()=="on");
-        color=(rf.check("color", Value("off")).asString()=="on");
+        color=(rf.check("color", Value("on")).asString()=="on");
 
         portBlobRpc.open("/testing-module/blob:rpc");
         portOPCrpc.open("/testing-module/OPC:rpc");
@@ -491,13 +491,13 @@ public:
         if (frame_info!=NULL)
         {
             Bottle &pose_b=frame_info->findGroup("depth");
-            cout<<" Bottle pose "<<pose_b.toString();
+            //cout<<" Bottle pose "<<pose_b.toString();
             Bottle *pose=pose_b.get(1).asList();
             x[0]=pose->get(0).asDouble();
             x[1]=pose->get(1).asDouble();
             x[2]=pose->get(2).asDouble();
 
-            cout<<"pose 0 "<<pose->get(0).asDouble()<<endl;
+            //cout<<"pose 0 "<<pose->get(0).asDouble()<<endl;
 
             o[0]=pose->get(3).asDouble();
             o[1]=pose->get(4).asDouble();
@@ -510,12 +510,12 @@ public:
             H.setSubcol(x,0,3);
             H(3,3)=1;
 
-            cout<<"H "<<H.toString()<<endl;
+            //cout<<"H "<<H.toString()<<endl;
             //H=SE3inv(H);
 
-            cout<<"Out from depth "<<frame_info->toString()<<endl;
-            cout<<"x "<<x.toString()<<endl;
-            cout<<"o "<<o.toString()<<endl;
+            //cout<<"Out from depth "<<frame_info->toString()<<endl;
+            //cout<<"x "<<x.toString()<<endl;
+            //cout<<"o "<<o.toString()<<endl;
 
             if (norm(x)!=0.0 && norm(o)!=0.0)
             {
