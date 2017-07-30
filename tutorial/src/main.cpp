@@ -71,19 +71,6 @@ public:
         return this->yarp().attachAsServer(source);
     }
 
-//    /************************************************************************/
-//    Bottle  get_Blob()
-//    {
-//        Bottle blob;
-//        for (size_t i=0; i<blob_points.size(); i++)
-//        {
-//            Bottle &b=blob.addList();
-//            b.addDouble(blob_points[i].x); b.addDouble(blob_points[i].y);
-//        }
-
-//        return blob;
-//    }
-
     /************************************************************************/
     bool  set_streaming_mode(const string &entry)
     {
@@ -209,8 +196,6 @@ public:
                 blob_points.push_back(aux);
             }
         }
-
-        yDebug()<<"blob_points size "<<blob_points.size();
 
         if (blob_points.size()>1)
         {
@@ -421,11 +406,8 @@ public:
 
         cmd.addInt(color);
 
-        yDebug()<<"cmd "<<cmd.toString();
-
         if (portRGBDRpc.write(cmd,reply))
         {
-            yDebug()<<"reply "<<reply.toString();
             count_blob=0;
 
             Bottle *content=reply.get(0).asList();
@@ -491,13 +473,10 @@ public:
         if (frame_info!=NULL)
         {
             Bottle &pose_b=frame_info->findGroup("depth");
-            //cout<<" Bottle pose "<<pose_b.toString();
             Bottle *pose=pose_b.get(1).asList();
             x[0]=pose->get(0).asDouble();
             x[1]=pose->get(1).asDouble();
             x[2]=pose->get(2).asDouble();
-
-            //cout<<"pose 0 "<<pose->get(0).asDouble()<<endl;
 
             o[0]=pose->get(3).asDouble();
             o[1]=pose->get(4).asDouble();
@@ -509,13 +488,6 @@ public:
             H=axis2dcm(o);
             H.setSubcol(x,0,3);
             H(3,3)=1;
-
-            //cout<<"H "<<H.toString()<<endl;
-            //H=SE3inv(H);
-
-            //cout<<"Out from depth "<<frame_info->toString()<<endl;
-            //cout<<"x "<<x.toString()<<endl;
-            //cout<<"o "<<o.toString()<<endl;
 
             if (norm(x)!=0.0 && norm(o)!=0.0)
             {
