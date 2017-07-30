@@ -521,14 +521,17 @@ public:
                 points_rotated.clear();
                 for (size_t i=0; i<points.size(); i++)
                 {
-                    Vector aux;
-                    aux.resize(4,1.0);
-                    aux.setSubvector(0,points[i].subVector(0,2));
+                    if (norm(points[i].subVector(0,2))>0.0)
+                    {
+                        Vector aux;
+                        aux.resize(4,1.0);
+                        aux.setSubvector(0,points[i].subVector(0,2));
 
-                    Vector aux2(6);
-                    aux2.setSubvector(0,(H*aux).subVector(0,2));
-                    aux2[3]=points[i][3]; aux2[4]=points[i][4]; aux2[5]=points[i][5];
-                    points_rotated.push_back(aux2);
+                        Vector aux2(6);
+                        aux2.setSubvector(0,(H*aux).subVector(0,2));
+                        aux2[3]=points[i][3]; aux2[4]=points[i][4]; aux2[5]=points[i][5];
+                        points_rotated.push_back(aux2);
+                    }
                 }
             }
         }
