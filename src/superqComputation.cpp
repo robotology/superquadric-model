@@ -51,12 +51,15 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 
         res[i]=kdtree.radiusSearch(query,indices,dists,radius,maxResults,cv::flann::SearchParams(128));
 
-        Vector point(3,0.0);
+        Vector point(6,0.0);
         if (res[i]>=maxResults)
         {
             point[0]=data.at<float>(i,0);
             point[1]=data.at<float>(i,1);
             point[2]=data.at<float>(i,2);
+            point[3]=data.at<int>(i,3);
+            point[4]=data.at<int>(i,4);
+            point[5]=data.at<int>(i,5);
             points.push_back(point);
         }
     }

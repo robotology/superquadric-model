@@ -107,6 +107,7 @@ public:
         {
             Bottle &b=b1.addList();
             b.addDouble(points_rotated[i][0]); b.addDouble(points_rotated[i][1]); b.addDouble(points_rotated[i][2]);
+            b.addInt(points_rotated[i][3]); b.addInt(points_rotated[i][4]); b.addInt(points_rotated[i][5]);
         }
 
         pointPort.write();
