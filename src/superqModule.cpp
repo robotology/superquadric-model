@@ -740,10 +740,10 @@ bool SuperqModule::configViewer(ResourceFinder &rf)
         if (intr_par->find("principalPointY").isNull())
             return false;*/
 
-        K(0,0)=257.34;
-        K(1,1)=257.34;
-        K(0,2)=160.0;
-        K(1,2)=120.0;
+        K(0,0)=570.0/2.0;
+        K(1,1)=570.0/2.0;
+        K(0,2)=314.5/2.0;
+        K(1,2)=235.0/2.0;
         K(2,2)=1;
 
         R.resize(4,4);
