@@ -581,6 +581,7 @@ void SuperqComputation::getPoints3D()
                     tmp[1]=pp->get(1).asDouble();
                     tmp[2]=pp->get(2).asDouble();
             
+            
                     points.push_back(tmp);
                 }
                 else
@@ -613,8 +614,10 @@ void SuperqComputation::savePoints(const string &namefile, const Vector &colors)
         fout<<endl;
         for (size_t i=0; i<points.size(); i++)
         {
-            fout<<points[i].subVector(0,2).toString(3,4).c_str()<<" "<<
-                    (int)points[i][3]<<" "<<(int)points[i][4]<<" "<<(int)points[i][5]<<endl;
+            int r=points[i][3];
+            int g=points[i][4];
+            int b=points[i][5];
+            fout<<points[i].subVector(0,2).toString(3,3)<<" "<<r<<" "<<g<<" "<<b<<endl;
         }
 
         fout<<endl;
