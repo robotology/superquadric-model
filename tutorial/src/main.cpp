@@ -57,11 +57,8 @@ class AcquireBlob : public RFModule,
     RpcServer portRpc;
 
     BufferedPort<Bottle > pointPort;
-    BufferedPort<ImageOf<PixelRgb> > portImgIn;
 
     Mutex mutex;
-
-    ImageOf<PixelRgb> *ImgIn;
 
 public:
 
@@ -149,7 +146,6 @@ public:
         portRpc.open("/testing-module/rpc");
 
         pointPort.open("/testing-module/point:o");
-        portImgIn.open("/testing-module/img:i");
 
         attach(portRpc);
         return true;
@@ -167,8 +163,6 @@ public:
             portSFMRpc.close();
         if (superqRpc.asPort().isOpen())
             superqRpc.close();
-        if (!portImgIn.isClosed())
-            portImgIn.close();
 
         return true;
     }
@@ -203,11 +197,9 @@ public:
             }
         }
 
-        ImgIn=portImgIn.read();
-
         if (blob_points.size()>1)
         {
-            get3Dpoints(ImgIn);
+            get3Dpoints();
         }
 
         if (points.size()>0 && streaming==true)
@@ -387,7 +379,7 @@ public:
     }
 
     /***********************************************************************/
-    void get3Dpoints(ImageOf<PixelRgb>  *ImgIn)
+    void get3Dpoints()
     {
         Bottle cmd,reply;
         cmd.addString("Points");
