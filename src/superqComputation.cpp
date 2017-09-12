@@ -605,7 +605,10 @@ void SuperqComputation::getPoints3D()
 void SuperqComputation::savePoints(const string &namefile, const Vector &colors)
 {
     ofstream fout;
-    fout.open((homeContextPath+namefile+count_file+".off").c_str());
+    stringstream ss;
+    ss << count_file;
+    string count_file_str=ss.str();
+    fout.open((homeContextPath+namefile+count_file_str+".off").c_str());
 
     if (fout.is_open())
     {
