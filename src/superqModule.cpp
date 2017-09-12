@@ -102,10 +102,7 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
 
     LockGuard lg(mutex);
 
-    if (object_class!="default")
-        superqCom->setPar("object_class", object_class);
-    else
-        superqCom->setPar("object_class", "default");
+    superqCom->setPar("object_class", object_class);
 
     superqCom->setPar("one_shot", "on");
 
@@ -135,10 +132,7 @@ bool SuperqModule::send_point_clouds(const vector<Vector> &p)
 {
     LockGuard lg(mutex);
 
-    if (object_class!="default")
-        superqCom->setPar("object_class", object_class);
-    else
-        superqCom->setPar("object_class", "default");
+    superqCom->setPar("object_class", object_class);
 
     superqCom->setPar("one_shot", "on");
 
@@ -382,10 +376,7 @@ bool SuperqModule::updateModule()
 
     if (mode_online)
     {
-         if (object_class!="default")
-            superqCom->setPar("object_class", object_class);
-        else
-            superqCom->setPar("object_class", "default");
+        superqCom->setPar("object_class", object_class);
 
         Property &x_to_send=portSuperq.prepare();
 
@@ -435,10 +426,7 @@ bool SuperqModule::updateModule()
         superqCom->threadInit();
         superqCom->sendPoints(points_aux);
 
-        if (object_class!="default")
-            superqCom->setPar("object_class", object_class);
-        else
-            superqCom->setPar("object_class", "default");
+        superqCom->setPar("object_class", object_class);
 
         if ((filter_points==true) && (points.size()>0))
         {
