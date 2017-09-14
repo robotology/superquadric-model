@@ -435,7 +435,13 @@ bool SuperqModule::updateModule()
 
         if (points.size()>0)
         {
-            go_on=superqCom->computeSuperq();
+            if (single_superq)
+            {
+                yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
+                go_on=superqCom->computeSuperq();
+            }
+            else
+                superqCom->iterativeModeling();
         }
 
         if ((go_on==false) && (points.size()>0))
@@ -480,7 +486,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
         return false;
 
 
-    superqCom= new SuperqComputation(rate, filter_points, filter_superq, fixed_window, points, imgIn, tag_file,
+    superqCom= new SuperqComputation(rate, filter_points, filter_superq, single_superq, fixed_window, points, imgIn, tag_file,
                                      threshold_median,filter_points_par, x, x_filtered, filter_superq_par, ipopt_par, homeContextPath, save_points, this->rf);
 
     if (mode_online)
@@ -583,6 +589,7 @@ bool SuperqModule::configOnOff(ResourceFinder &rf)
 
     filter_points=(rf.check("filter_points", Value("off")).asString()=="on");
     filter_superq=(rf.check("filter_superq", Value("off")).asString()=="on");
+    single_superq=(rf.check("single_superq", Value("on")).asString()=="on");
 
     yInfo()<<"[SuperqModule]: rate          "<<rate;
     yInfo()<<"[SuperqModule]: filter_points "<<filter_points;
@@ -653,6 +660,9 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     optimizer_points=rf.check("optimizer_points", Value(300)).asInt();
     max_cpu_time=rf.check("max_cpu_time", Value(5.0)).asDouble();
 
+    num_superq=rf.check("num_superq", Value(3)).asInt();
+    f_thres=rf.check("f_thres", Value(1.0)).asInt();
+
     tol=rf.check("tol",Value(1e-5)).asDouble();
     acceptable_iter=rf.check("acceptable_iter",Value(0)).asInt();
     max_iter=rf.check("max_iter",Value(numeric_limits<int>::max())).asInt();
@@ -672,6 +682,7 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     ipopt_par.put("max_iter",max_iter);
     ipopt_par.put("mu_strategy",mu_strategy);
     ipopt_par.put("nlp_scaling_method",nlp_scaling_method);
+    ipopt_par.put("num_superq",num_superq);
 
     yInfo()<<"[Superqcomputation]: optimizer_points      "<<optimizer_points;
     yInfo()<<"[Superqcomputation]: max_cpu_time          "<<max_cpu_time;
@@ -680,6 +691,8 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     yInfo()<<"[Superqcomputation]: max_iter              "<<max_iter;
     yInfo()<<"[Superqcomputation]: mu_strategy           "<<mu_strategy;
     yInfo()<<"[Superqcomputation]: nlp_scaling_method    "<<nlp_scaling_method;
+    yInfo()<<"[Superqcomputation]: num_superq            "<<num_superq;
+    yInfo()<<"[Superqcomputation]: f_thres               "<<f_thres;
 
     return true;
 }

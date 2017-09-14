@@ -22,6 +22,7 @@
 #include <fstream>
 
 #include <yarp/math/Math.h>
+#include <yarp/math/SVD.h>
 
 #include "superqComputation.h"
 
@@ -65,9 +66,9 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 }
 
 /***********************************************************************/
-SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,deque<yarp::sig::Vector> &_points, ImageOf<PixelRgb> *_imgIn, string _tag_file, double _threshold_median,
+SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _single_superq, bool _fixed_window,deque<yarp::sig::Vector> &_points, ImageOf<PixelRgb> *_imgIn, string _tag_file, double _threshold_median,
                                 const Property &_filter_points_par, Vector &_x, Vector &_x_filtered, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points, ResourceFinder *_rf):
-                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window( _fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points), imgIn(_imgIn),
+                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window( _fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points), imgIn(_imgIn), single_superq(_single_superq),
                                 filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate), homeContextPath(_homeContextPath), x(_x), x_filtered(_x_filtered), points(_points), rf(_rf)
 {
 }
@@ -301,6 +302,40 @@ void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
         }
     }
 
+    int nsuperq=newOptions.find("num_superq").asInt();
+    if (newOptions.find("num_superq").isNull() && (first_time==true))
+    {
+        num_superq=2;
+    }
+    else if (!newOptions.find("num_superq").isNull())
+    {
+        if ((nsuperq>=1))
+        {
+            num_superq=nsuperq;
+        }
+        else
+        {
+            num_superq=2;
+        }
+    }
+
+    double fthres=newOptions.find("f_thres").asDouble();
+    if (newOptions.find("f_thres").isNull() && (first_time==true))
+    {
+        f_thresh=0.1;
+    }
+    else if (!newOptions.find("f_thres").isNull())
+    {
+        if ((fthres<=10.0))
+        {
+            f_thresh=fthres;
+        }
+        else
+        {
+            f_thresh=0.1;
+        }
+    }
+
     double maxCpuTime=newOptions.find("max_cpu_time").asDouble();
     if (newOptions.find("max_cpu_time").isNull() && (first_time==true))
     {
@@ -447,7 +482,9 @@ void SuperqComputation::setPar(const string &par_name, const string &value)
     else if (par_name=="one_shot")
         one_shot=(value=="on");
     else if (par_name=="object_class")
-        ob_class=value;
+        ob_class=value;   
+    else if (par_name=="single_superq")
+        single_superq=(value=="on");
 }
 
 /***********************************************************************/
@@ -500,8 +537,13 @@ void SuperqComputation::run()
 
     if (points.size()>0)
     {
-        yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
-        go_on=computeSuperq();
+        if (single_superq)
+        {
+            yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
+            go_on=computeSuperq();
+        }
+        else
+            iterativeModeling();
     }
 
     if ((go_on==false) && (points.size()>0))
@@ -775,6 +817,62 @@ bool SuperqComputation::computeSuperq()
 }
 
 /***********************************************************************/
+Vector SuperqComputation::computeMultipleSuperq(const deque<Vector> &points_splitted)
+{
+    Vector colors(3,0.0);
+    colors[1]=255;
+
+    //savePoints("/3Dpoints-"+tag_file, colors);
+
+    Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
+    app->Options()->SetNumericValue("tol",tol);
+    app->Options()->SetIntegerValue("acceptable_iter",acceptable_iter);
+    app->Options()->SetStringValue("mu_strategy",mu_strategy);
+    app->Options()->SetIntegerValue("max_iter",max_iter);
+    app->Options()->SetNumericValue("max_cpu_time",max_cpu_time);
+    app->Options()->SetStringValue("nlp_scaling_method",nlp_scaling_method);
+    app->Options()->SetStringValue("hessian_approximation","limited-memory");
+    app->Options()->SetIntegerValue("print_level",0);
+    app->Initialize();
+
+    Ipopt::SmartPtr<SuperQuadric_NLP> superQ_nlp= new SuperQuadric_NLP;
+
+    superQ_nlp->init();
+    superQ_nlp->configure(this->rf,bounds_automatic, ob_class);
+
+    superQ_nlp->setPoints(points_splitted, optimizer_points);
+
+    double t0_superq=Time::now();
+
+    yDebug()<<"[SuperqComputation]: Start IPOPT ";
+
+    Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
+
+    yDebug()<<"[SuperqComputation]: Finish IPOPT ";
+
+    double t_s=Time::now()-t0_superq;
+
+    if (status==Ipopt::Solve_Succeeded)
+    {
+        x=superQ_nlp->get_result();
+        yInfo("[SuperqComputation]: Solution of the optimization problem: %s", x.toString(3,3).c_str());
+        yInfo("[SuperqComputation]: Execution time : %f", t_s);
+        return x;
+    }
+    else if(status==Ipopt::Maximum_CpuTime_Exceeded)
+    {
+        x=superQ_nlp->get_result();
+        yWarning("[SuperqComputation]: Solution after maximum time exceeded: %s", x.toString(3,3).c_str());
+        return x;
+    }
+    else
+    {
+        x.resize(11,0.0);
+        return x;
+    }
+}
+
+/***********************************************************************/
 void SuperqComputation::filterSuperq()
 {
     yInfo()<< "[SuperqComputation]: Filtering the last "<< median_order << " superquadrics...";
@@ -873,6 +971,290 @@ void SuperqComputation::sendPoints(const deque<Vector> &p)
         points.push_back(p[i]);
     }
 }
+
+/***********************************************************************/
+void SuperqComputation::iterativeModeling()
+{
+    deque<Vector> superq;
+    points_splitted1.clear();
+    points_splitted2.clear();
+
+    deque<double> f;
+    int count=0;
+
+    splitPoints(0, points);
+    good_superq.clear();
+
+    superq.clear();
+
+    Vector superq1, superq2;
+
+    for (size_t i=0; i<num_superq; i++)
+    {
+        if (points_splitted1.size()>0)
+        {
+            superq1=computeMultipleSuperq(points_splitted1);
+            count++;
+
+            yDebug()<<"count"<<count;
+
+            if ((i!=0) && (points_splitted2.size()>0))
+            {
+                superq2=computeMultipleSuperq(points_splitted2);
+                count++;
+            }
+
+            if ((i!=0) && (points_splitted2.size()>0))
+                superq.push_back(superq2);
+            superq.push_back(superq1);
+
+            yDebug()<<"count"<<count;
+
+            f=evaluateLoss(superq, count);
+            int f_size=f.size();
+
+            cout<<"f_zie "<<f_size<<endl;
+            yDebug()<<"Evaluated loss "<<f[f_size-2]<<f[f_size-1];
+
+            //if (f[0] > f_thresh)
+
+
+            if ((f[f_size-2]<f_thresh) && i==0)
+                i=num_superq;
+            else
+            {
+                if (f[f_size-2] > f[f_size-1])
+                {
+                    splitPoints(i+1, points_splitted1);
+                    //superq.push_back(computeMultipleSuperq(points_splitted1));
+                    good_superq.push_back(superq2);
+                    if (i==num_superq-1)
+                        good_superq.push_back(superq1);
+                }
+                else
+                {
+                    splitPoints(i+1, points_splitted2);
+                    good_superq.push_back(superq1);
+                    if (i==num_superq-1)
+                        good_superq.push_back(superq2);
+                }
+    //            else
+    //            {
+    //                points_splitted1.clear();
+    //                good_superq.push_back(superq[0]);
+    //            }
+
+    //            if (i>0)
+    //            {
+    //                //if (f[1] > f_thresh)
+    //                if (f[1] > f[0])
+    //                {
+    //                    //if (f[0] > f_thresh)
+    //                    //{
+    //                        splitPoints(i+1, points_splitted2);
+
+    //                        superq.push_back(computeMultipleSuperq(points_splitted2));
+    ////                    }
+    ////                    else
+    ////                    {
+    ////                        splitPoints(i+1, points_splitted1);
+
+    ////                        superq.push_back(computeMultipleSuperq(points_splitted1));
+    ////                    }
+    //                }
+    ////                else
+    ////                {
+    ////                    points_splitted2.clear();
+    ////                    good_superq.push_back(superq[1]);
+    ////                }
+    //            }
+
+                for(size_t k=0; k<superq.size(); k++)
+                    yDebug()<<"Computed superq "<<k<<superq[k].toString();
+            }
+        }
+    }
+
+    for(size_t k=0; k<good_superq.size(); k++)
+        yDebug()<<"Selected superq "<<good_superq[k].toString();
+}
+
+/***********************************************************************/
+void SuperqComputation::splitPoints(const int &iter, deque<Vector> &points_splitted)
+{
+    deque<Vector> points_splitted1_tmp, points_splitted2_tmp;
+
+    if (iter==0)
+    {
+        for (size_t i=0; i<points.size(); i++)
+        {
+            points_splitted1.push_back(points_splitted[i]);
+        }
+
+        yDebug()<<" "<<points_splitted1.size();
+    }
+    else
+    {
+        Vector center(3,0.0);
+
+        for (size_t k=0; k<points_splitted.size();k++)
+        {
+            Vector &point=points_splitted[k];
+            center[0]+=point[0];
+            center[1]+=point[1];
+            center[2]+=point[2];
+        }
+
+        center[0]/=points_splitted.size();
+        center[1]/=points_splitted.size();
+        center[2]/=points_splitted.size();
+
+        Matrix M=zeros(3,3);
+        Matrix u(3,3);
+        Matrix v(3,3);
+
+        Vector s(3,0.0);
+        Vector n(3,0.0);
+        Vector o(3,0.0);
+        Vector a(3,0.0);
+
+        for (size_t i=0;i<points_splitted.size(); i++)
+        {
+            Vector &point=points_splitted[i];
+//            M(0,0)= M(0,0) + (point[1]-center[1])*(point[1]-center[1]) + (point[2]-center[2])*(point[2]-center[2]);
+//            M(0,1)= M(0,1) - (point[1]-center[1])*(point[0]-center[0]);
+//            M(0,2)= M(0,2) - (point[2]-center[2])*(point[0]-center[0]);
+//            M(1,1)= M(1,1) + (point[0]-center[0])*(point[0]-center[0]) + (point[2]-center[2])*(point[2]-center[2]);
+//            M(2,2)= M(2,2) + (point[1]-center[1])*(point[1]-center[1]) + (point[0]-center[0])*(point[0]-center[0]);
+//            M(1,2)= M(1,2) - (point[2]-center[2])*(point[1]-center[1]);
+            M(0,0)= M(0,0) + (point[1])*(point[1]) + (point[2])*(point[2]);
+            M(0,1)= M(0,1) - (point[1])*(point[0]);
+            M(0,2)= M(0,2) - (point[2])*(point[0]);
+            M(1,1)= M(1,1) + (point[0])*(point[0]) + (point[2])*(point[2]);
+            M(2,2)= M(2,2) + (point[1])*(point[1]) + (point[0])*(point[0]);
+            M(1,2)= M(1,2) - (point[2])*(point[1]);
+        }
+
+        yDebug()<<"M "<<M.toString();
+
+        M(0,0)= M(0,0)/points_splitted.size();
+        M(0,1)= M(0,1)/points_splitted.size();
+        M(0,2)= M(0,2)/points_splitted.size();
+        M(1,1)= M(1,1)/points_splitted.size();
+        M(2,2)= M(2,2)/points_splitted.size();
+        M(1,2)= M(1,2)/points_splitted.size();
+
+        M(1,0)= M(0,1);
+        M(2,0)= M(0,2);
+        M(2,1)= M(1,2);
+
+        yDebug()<<"M "<<M.toString();
+
+        SVDJacobi(M,u,s,v);
+        n=u.getRow(0);
+        o=u.getRow(1);
+        a=u.getRow(2);
+
+        yDebug()<<"axis "<<u.toString();
+
+        yDebug()<<"values"<<s.toString();
+
+        yDebug()<<"center "<<center.toString();
+
+        Vector plane(4,0.0);
+
+        plane[0]=n[0];
+        plane[1]=n[1];
+        plane[2]=n[2];
+        plane[3]=(plane[0]*center[0]+plane[1]*center[1]+plane[2]*center[2]);
+
+        yDebug()<<"plane "<<plane.toString();
+
+        for (size_t j=0; j<points_splitted.size(); j++)
+        {
+            Vector point=points_splitted[j];
+            if (plane[0]*point[0]+plane[1]*point[1]+plane[2]*point[2]- plane[3] > 0)
+                points_splitted1_tmp.push_back(point);
+            else
+                points_splitted2_tmp.push_back(point);
+        }
+
+        points_splitted1.clear();
+        points_splitted2.clear();
+
+        for(size_t j=0; j<points_splitted1_tmp.size(); j++)
+        {
+            points_splitted1.push_back(points_splitted1_tmp[j]);
+             //cout<<points_splitted1[j].toString()<<endl;
+        }
+
+        for(size_t j=0; j<points_splitted2_tmp.size(); j++)
+        {
+            points_splitted2.push_back(points_splitted2_tmp[j]);
+        }
+
+        yDebug()<<"points_splitted 1 "<<points_splitted1.size();
+        yDebug()<<"points_splitted 2 "<<points_splitted2.size();
+
+    }
+}
+
+/****************************************************************/
+deque<double> SuperqComputation::evaluateLoss(deque<Vector> &superq, int &count)
+{
+    deque<double> v;
+    double value=0.0;
+    Vector x_tmp(11,0.0);
+
+    x_tmp=superq[count-1];
+
+    for(size_t i=0;i<points_splitted1.size();i++)
+    {
+        double tmp=pow(f(x_tmp,points_splitted1[i]),x_tmp[3])-1;
+        value+=tmp*tmp;
+    }
+    value/=points_splitted1.size();
+    v.push_back(value);
+
+    value=0.0;
+
+    yDebug()<<"count"<<count;
+
+    x_tmp=superq[count];
+
+    if (points_splitted2.size()>0)
+    {
+        x_tmp=superq[1];
+
+        for(size_t i=0;i<points_splitted2.size();i++)
+        {
+            double tmp=pow(f(x_tmp,points_splitted2[i]),x_tmp[3])-1;
+            value+=tmp*tmp;
+        }
+        value/=points_splitted2.size();
+    }
+
+    v.push_back(value);
+    return v;
+}
+
+ /****************************************************************/
+double SuperqComputation::f(Vector &x, Vector &point_cloud)
+{
+    Vector euler(3,0.0);
+    euler[0]=x[8];
+    euler[1]=x[9];
+    euler[2]=x[10];
+    Matrix R=euler2dcm(euler);
+
+    double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
+    double num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[5]*R(1,0)-x[6]*R(1,1)-x[7]*R(1,2);
+    double num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[5]*R(2,0)-x[6]*R(2,1)-x[7]*R(2,2);
+    double tmp=pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
+
+    return pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]));
+}
+
 
 
 

@@ -72,6 +72,10 @@ protected:
     std::string mu_strategy,nlp_scaling_method;
     yarp::sig::Vector elem_x;
 
+    bool single_superq;
+    int num_superq;
+    double f_thresh;
+
     double t_superq;
     int count_file;
     std::string ob_class;
@@ -96,10 +100,13 @@ public:
     std::deque<yarp::sig::Vector> &points;
     std::deque<cv::Point> blob_points;
 
+    std::deque<yarp::sig::Vector> points_splitted1, points_splitted2;
+    std::deque<yarp::sig::Vector> good_superq;
+
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
     /***********************************************************************/
-    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, std::deque<yarp::sig::Vector> &_points, yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn,
+    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool single_superq, bool _fixed_window, std::deque<yarp::sig::Vector> &_points, yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn,
                       std::string _tag_file, double _threshold_median, const yarp::os::Property &filters_points_par, yarp::sig::Vector &_x, yarp::sig::Vector &_x_filtered,
                       const yarp::os::Property &filters_superq_par, const yarp::os::Property &optimizer_par, const std::string &_homeContextPath, bool _save_points, yarp::os::ResourceFinder *rf);
 
@@ -155,6 +162,9 @@ public:
     bool computeSuperq();
 
     /***********************************************************************/
+    yarp::sig::Vector computeMultipleSuperq(const std::deque<yarp::sig::Vector> &points);
+
+    /***********************************************************************/
     void filterSuperq();
 
     /***********************************************************************/
@@ -188,7 +198,19 @@ public:
     void getPoints3D();
 
     /***********************************************************************/
-    double getTime();     
+    double getTime();
+
+    /***********************************************************************/
+    void iterativeModeling();
+
+    /***********************************************************************/
+    void splitPoints(const int &iter, std::deque<yarp::sig::Vector> &points_splitted);
+
+    /****************************************************************/
+    std::deque<double> evaluateLoss(std::deque<yarp::sig::Vector> &superq, int &count);
+
+    /****************************************************************/
+   double f(yarp::sig::Vector &x, yarp::sig::Vector &point_cloud);
 };
 
 #endif

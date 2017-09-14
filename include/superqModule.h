@@ -48,6 +48,8 @@ protected:
     std::deque<cv::Point> blob_points;
 
     double radius;
+    double f_thres;
+    int num_superq;
     int nnThreshold;
     int numVertices;
     int median_order;
@@ -57,6 +59,7 @@ protected:
     bool filter_points;
     bool fixed_window;
     bool filter_superq;
+    bool single_superq;
     std::string what_to_plot;
     double threshold_median;
     double min_norm_vel;
