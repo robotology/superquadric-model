@@ -441,7 +441,10 @@ bool SuperqModule::updateModule()
                 go_on=superqCom->computeSuperq();
             }
             else
+            {
                 superqCom->iterativeModeling();
+                superqCom->mergeModeling();
+            }
         }
 
         if ((go_on==false) && (points.size()>0))

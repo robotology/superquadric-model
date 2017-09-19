@@ -103,6 +103,8 @@ public:
     std::deque<yarp::sig::Vector> points_splitted1, points_splitted2;
     std::deque<yarp::sig::Vector> good_superq;
 
+    std::deque<yarp::sig::Vector> planes;
+
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
     /***********************************************************************/
@@ -204,7 +206,10 @@ public:
     void iterativeModeling();
 
     /***********************************************************************/
-    void splitPoints(const int &iter, std::deque<yarp::sig::Vector> &points_splitted);
+    void mergeModeling();
+
+    /***********************************************************************/
+    void splitPoints(const int &iter, std::deque<yarp::sig::Vector> &points_splitted, bool merging);
 
     /****************************************************************/
     std::deque<double> evaluateLoss(std::deque<yarp::sig::Vector> &superq, int &count);
