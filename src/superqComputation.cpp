@@ -1252,33 +1252,47 @@ deque<double> SuperqComputation::evaluateLoss(deque<Vector> &superq, int &count)
     deque<double> v;
     double value=0.0;
     Vector x_tmp(11,0.0);
+    int count_subsample=0.0;
+    int c;
 
     x_tmp=superq[count-1];
 
-    for(size_t i=0;i<points_splitted1.size();i++)
+    c=points_splitted1.size()/optimizer_points;
+
+    for(size_t i=0;i<points_splitted1.size();i+=c)
     {
         double tmp=pow(f(x_tmp,points_splitted1[i]),x_tmp[3])-1;
         value+=tmp*tmp;
+        count_subsample++;
     }
-    value/=points_splitted1.size();
+    //value/=points_splitted1.size();
+
+    yDebug()<<"subsample "<<count_subsample;
+    value/=count_subsample;
     v.push_back(value);
 
     value=0.0;
 
     yDebug()<<"count"<<count;
 
-    x_tmp=superq[count];
+    count_subsample=0.0;
 
     if (points_splitted2.size()>0)
     {
-        x_tmp=superq[1];
+        c=points_splitted2.size()/optimizer_points;
+        x_tmp=superq[count-2];
+        //x_tmp=superq[1];
 
-        for(size_t i=0;i<points_splitted2.size();i++)
+        for(size_t i=0;i<points_splitted2.size();i+=c)
         {
             double tmp=pow(f(x_tmp,points_splitted2[i]),x_tmp[3])-1;
             value+=tmp*tmp;
+            count_subsample++;
         }
-        value/=points_splitted2.size();
+        //value/=points_splitted2.size();
+
+        yDebug()<<"subsample "<<count_subsample;
+        value/=count_subsample;
     }
 
     v.push_back(value);
@@ -1308,30 +1322,44 @@ void SuperqComputation::mergeModeling()
     yDebug()<<"Merging ";
     Vector superq1, superq2;
     double value=0.0;
+    int count_subsample=0.0;
+    int c;
+
     for (size_t i=0; i<num_superq-1;i++)
     {
+        count_subsample=0.0;
         splitPoints(num_superq-i-2,points, true);
         superq1=computeMultipleSuperq(points_splitted1);
 
-        for(size_t i=0;i<points_splitted1.size();i++)
+        c=points_splitted1.size()/optimizer_points;
+        for(size_t i=0;i<points_splitted1.size();i+=c)
         {
             double tmp=pow(f(superq1,points_splitted1[i]),superq1[3])-1;
             value+=tmp*tmp;
+            count_subsample++;
         }
-        value/=points_splitted1.size();
+        value/=count_subsample;
+
+        yDebug()<<"subsample "<<count_subsample;
+
 
         yDebug()<<"evaluate cost merged 1"<<value;
 
         value=0.0;
-
+        count_subsample=0.0;
+        c=0;
         superq2=computeMultipleSuperq(points_splitted2);
+        c=points_splitted2.size()/optimizer_points;
 
-        for(size_t i=0;i<points_splitted2.size();i++)
+        for(size_t i=0;i<points_splitted2.size();i+=c)
         {
             double tmp=pow(f(superq2,points_splitted2[i]),superq2[3])-1;
             value+=tmp*tmp;
+            count_subsample++;
         }
-        value/=points_splitted2.size();
+        value/=count_subsample;
+
+        yDebug()<<"subsample "<<count_subsample;
 
         yDebug()<<"evaluate cost merged 2"<<value;
 
