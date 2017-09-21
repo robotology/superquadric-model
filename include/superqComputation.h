@@ -74,7 +74,7 @@ protected:
 
     bool single_superq;
     int num_superq;
-    double f_thresh;
+    double f_thresh;  
 
     double t_superq;
     int count_file;
@@ -90,7 +90,11 @@ protected:
     yarp::os::Property filter_points_par;
     yarp::os::Property filter_superq_par;
     yarp::os::Property ipopt_par;
+
+    std::deque<yarp::sig::Vector> f_value;
 public:
+
+     bool merge;
 
     int std_median_order;
     int max_median_order;
@@ -102,6 +106,7 @@ public:
 
     std::deque<yarp::sig::Vector> points_splitted1, points_splitted2;
     std::deque<yarp::sig::Vector> good_superq;
+    std::deque<yarp::sig::Vector> points1, points2, points3, points4, points5;
 
     std::deque<yarp::sig::Vector> planes;
 
@@ -212,7 +217,7 @@ public:
     void splitPoints(const int &iter, std::deque<yarp::sig::Vector> &points_splitted, bool merging);
 
     /****************************************************************/
-    std::deque<double> evaluateLoss(std::deque<yarp::sig::Vector> &superq, int &count);
+    yarp::sig::Vector evaluateLoss(std::deque<yarp::sig::Vector> &superq, int &count);
 
     /****************************************************************/
    double f(yarp::sig::Vector &x, yarp::sig::Vector &point_cloud);

@@ -443,7 +443,8 @@ bool SuperqModule::updateModule()
             else
             {
                 superqCom->iterativeModeling();
-                superqCom->mergeModeling();
+                if (superqCom->merge)
+                    superqCom->mergeModeling();
             }
         }
 
