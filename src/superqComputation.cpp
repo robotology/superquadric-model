@@ -1405,7 +1405,9 @@ void SuperqComputation::mergeModeling()
         if ((f_i[0]+f_i[1])/2 < (f_value[planes.size()-1][0]+f_value[planes.size()-1][1])/2)
         {
             yDebug()<<"Better merging";
-            good_superq.clear();
+            good_superq.pop_back();
+            good_superq.pop_back();
+            good_superq.pop_back();
             good_superq.push_back(superq1);
             good_superq.push_back(superq2);
 
