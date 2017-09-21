@@ -442,9 +442,12 @@ bool SuperqModule::updateModule()
             }
             else
             {
+                double t=Time::now();
                 superqCom->iterativeModeling();
                 if (superqCom->merge)
                     superqCom->mergeModeling();
+                t=Time::now()-t;
+                yInfo()<<"             Execution Time           :"<<t;
             }
         }
 

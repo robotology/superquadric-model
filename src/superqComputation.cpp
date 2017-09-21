@@ -1030,7 +1030,7 @@ void SuperqComputation::iterativeModeling()
 
             yDebug()<<"average f "<<average_f<<maxv;
 
-            if ((average_f <= maxv) || (i<=1))
+            if ((average_f<= maxv) || (i<=1))
             {
                 if (f_value[i][0] > f_value[i][1])
                 {
