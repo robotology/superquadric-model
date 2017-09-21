@@ -663,7 +663,7 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     optimizer_points=rf.check("optimizer_points", Value(300)).asInt();
     max_cpu_time=rf.check("max_cpu_time", Value(5.0)).asDouble();
 
-    num_superq=rf.check("num_superq", Value(3)).asInt();
+    num_superq=rf.check("num_superq", Value(5)).asInt();
     f_thres=rf.check("f_thres", Value(1.0)).asInt();
 
     tol=rf.check("tol",Value(1e-5)).asDouble();
