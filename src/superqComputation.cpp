@@ -991,7 +991,7 @@ void SuperqComputation::iterativeModeling()
     int count=0;
     int i_stop=0;
 
-    splitPoints(0, points,false);
+    splitPoints(1, points,false);
     good_superq.clear();
 
     superq.clear();
@@ -1005,7 +1005,8 @@ void SuperqComputation::iterativeModeling()
             superq1=computeMultipleSuperq(points_splitted1);
             count++;
 
-            if ((i!=0) && (points_splitted2.size()>0))
+            //if ((i!=0) && (points_splitted2.size()>0))
+            if ((points_splitted2.size()>0))
             {
                 superq2=computeMultipleSuperq(points_splitted2);
                 count++;
@@ -1030,11 +1031,11 @@ void SuperqComputation::iterativeModeling()
 
             yDebug()<<"average f "<<average_f<<maxv;
 
+            //if ((average_f<= maxv) || (i<=1))
             if ((average_f<= maxv) || (i<=1))
             {
                 if (f_value[i][0] > f_value[i][1])
-                {
-                    splitPoints(i+1, points_splitted1, false);
+                {                    
                     good_superq.push_back(superq2);
                     if (points1.size()==0)
                         points1=points_splitted1;
@@ -1046,6 +1047,8 @@ void SuperqComputation::iterativeModeling()
                         points4=points_splitted1;
                     else if (points5.size()==0)
                         points5=points_splitted1;
+
+                    splitPoints(i+1, points_splitted1, false);
 
                     if (i==num_superq-1)
                     {
@@ -1063,8 +1066,7 @@ void SuperqComputation::iterativeModeling()
                     }
                 }
                 else
-                {
-                    splitPoints(i+1, points_splitted2, false);
+                {                   
                     good_superq.push_back(superq1);
                     if (points1.size()==0)
                         points1=points_splitted2;
@@ -1076,6 +1078,8 @@ void SuperqComputation::iterativeModeling()
                         points4=points_splitted2;
                     else if (points5.size()==0)
                         points5=points_splitted2;
+
+                    splitPoints(i+1, points_splitted2, false);
                     if (i==num_superq-1)
                     {
                         good_superq.push_back(superq2);
@@ -1092,20 +1096,25 @@ void SuperqComputation::iterativeModeling()
                     }
                 }
 
+                yDebug()<<"i "<<i<<"points 1 size "<<points1.size();
+
                 merge=true;
             }
             else
             {
                 if (f_value[i-1][0]<f_value[i-1][1])
-                    good_superq.push_back(superq[(i-1)*2-1]);
-                else
+//                    good_superq.push_back(superq[(i-1)*2-1]);
                     good_superq.push_back(superq[(i-1)*2]);
+                else
+                   // good_superq.push_back(superq[(i-1)*2]);
+                    good_superq.push_back(superq[(i-1)*2+1]);
 
                 i=num_superq;
                 merge=false;
 
                 yDebug()<<"Merging false"<<merge;
             }
+
         }
 
         i_stop=i;
@@ -1242,6 +1251,7 @@ void SuperqComputation::splitPoints(const int &iter, deque<Vector> &points_split
         }
         else
         {
+            yDebug()<<"Plane "<<planes[iter].toString();
             for (size_t j=0; j<points_splitted.size(); j++)
             {
                 Vector point=points_splitted[j];
@@ -1281,7 +1291,13 @@ Vector SuperqComputation::evaluateLoss(deque<Vector> &superq, int &count)
 
     x_tmp=superq[count-1];
 
+    yDebug()<<"in evaluate ";
+
     c=points_splitted1.size()/optimizer_points;
+    if (c==0)
+        c=1;
+
+    yDebug()<<"c "<<c;
 
     for(size_t i=0;i<points_splitted1.size();i+=c)
     {
@@ -1301,6 +1317,8 @@ Vector SuperqComputation::evaluateLoss(deque<Vector> &superq, int &count)
     if (points_splitted2.size()>0)
     {
         c=points_splitted2.size()/optimizer_points;
+        if (c==0)
+            c=1;
         x_tmp=superq[count-2];
 
         for(size_t i=0;i<points_splitted2.size();i+=c)
@@ -1363,6 +1381,7 @@ void SuperqComputation::mergeModeling()
         if (i-1==5)
             points_tmp=points4;
 
+
         splitPoints(i-1,points_tmp, true);
 
 
@@ -1402,7 +1421,11 @@ void SuperqComputation::mergeModeling()
 
         yDebug()<<"Evaluate cost merged "<<f_i.toString();
 
-        if ((f_i[0]+f_i[1])/2 < (f_value[planes.size()-1][0]+f_value[planes.size()-1][1])/2)
+        //if ((f_i[0]+f_i[1])/2 < (f_value[planes.size()-1][0]+f_value[planes.size()-1][1])/2)
+
+        yDebug()<<f_value[i-1][0]<< f_value[i-1][1]<<min(f_value[i-2][0], f_value[i-2][1]);
+        yDebug()<<"Avergae before "<<(f_value[i-1][0]+f_value[i-1][1] + min(f_value[i-2][0], f_value[i-2][1]))/3;
+        if ((f_i[0]+f_i[1])/2 < (f_value[i-1][0]+f_value[i-1][1] + min(f_value[i-2][0], f_value[i-2][1]))/3)
         {
             yDebug()<<"Better merging";
             good_superq.pop_back();
