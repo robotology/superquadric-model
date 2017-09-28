@@ -1421,8 +1421,6 @@ void SuperqComputation::mergeModeling()
 
         yDebug()<<"Evaluate cost merged "<<f_i.toString();
 
-        //if ((f_i[0]+f_i[1])/2 < (f_value[planes.size()-1][0]+f_value[planes.size()-1][1])/2)
-
         yDebug()<<f_value[i-1][0]<< f_value[i-1][1]<<min(f_value[i-2][0], f_value[i-2][1]);
         yDebug()<<"Avergae before "<<(f_value[i-1][0]+f_value[i-1][1] + min(f_value[i-2][0], f_value[i-2][1]))/3;
         if ((f_i[0]+f_i[1])/2 < (f_value[i-1][0]+f_value[i-1][1] + min(f_value[i-2][0], f_value[i-2][1]))/3)
