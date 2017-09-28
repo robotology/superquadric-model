@@ -26,6 +26,7 @@
 #include <iCub/ctrl/adaptWinPolyEstimator.h>
 
 #include "superquadric.h"
+#include "tree.h"
 
 /*******************************************************************************/
 class SpatialDensityFilter
@@ -73,8 +74,7 @@ protected:
     yarp::sig::Vector elem_x;
 
     bool single_superq;
-    int num_superq;
-    double f_thresh;  
+    int tree_splitting;
 
     double t_superq;
     int count_file;
@@ -91,24 +91,19 @@ protected:
     yarp::os::Property filter_superq_par;
     yarp::os::Property ipopt_par;
 
-    std::deque<yarp::sig::Vector> f_value;
+    superqTree *superq_tree;
+
 public:
 
-     bool merge;
+    bool merge;
 
     int std_median_order;
     int max_median_order;
 
     yarp::sig::Vector &x;
     yarp::sig::Vector &x_filtered;
-    std::deque<yarp::sig::Vector> &points;
+    std::deque<yarp::sig::Vector> &points, points_splitted1, points_splitted2;
     std::deque<cv::Point> blob_points;
-
-    std::deque<yarp::sig::Vector> points_splitted1, points_splitted2;
-    std::deque<yarp::sig::Vector> good_superq;
-    std::deque<yarp::sig::Vector> points1, points2, points3, points4, points5;
-
-    std::deque<yarp::sig::Vector> planes;
 
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
@@ -214,13 +209,16 @@ public:
     void mergeModeling();
 
     /***********************************************************************/
-    void splitPoints(const int &iter, std::deque<yarp::sig::Vector> &points_splitted, bool merging);
+    void splitPoints(bool merging, node *leaf);
 
     /****************************************************************/
-    yarp::sig::Vector evaluateLoss(std::deque<yarp::sig::Vector> &superq, int &count);
+    double evaluateLoss(yarp::sig::Vector &superq,std::deque<yarp::sig::Vector> &points_splitted);
 
     /****************************************************************/
    double f(yarp::sig::Vector &x, yarp::sig::Vector &point_cloud);
+
+   /***********************************************************************/
+   void computeNestedSuperq(node *newnode, int &i);
 };
 
 #endif

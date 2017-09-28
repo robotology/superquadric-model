@@ -492,7 +492,6 @@ bool SuperqModule::configure(ResourceFinder &rf)
     if (config_ok==false)
         return false;
 
-
     superqCom= new SuperqComputation(rate, filter_points, filter_superq, single_superq, fixed_window, points, imgIn, tag_file,
                                      threshold_median,filter_points_par, x, x_filtered, filter_superq_par, ipopt_par, homeContextPath, save_points, this->rf);
 
@@ -504,22 +503,23 @@ bool SuperqModule::configure(ResourceFinder &rf)
             yInfo()<<"[SuperqComputation]: Thread started!";
         else
             yError()<<"[SuperqComputation]: Problems in starting the thread!";
-    }
+    //}
 
-    superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K, points, vis_points, vis_step, imgIn);
+        superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K, points, vis_points, vis_step, imgIn);
 
-    if (visualization_on)
-    {
-        bool thread_started=superqVis->start();
+        if (visualization_on)
+        {
+            bool thread_started=superqVis->start();
 
-        if (thread_started)
-            yInfo()<<"[SuperqVisualization]: Thread started!";
+            if (thread_started)
+                yInfo()<<"[SuperqVisualization]: Thread started!";
+            else
+                yError()<<"[SuperqVisualization]: Problems in starting the thread!";
+        }
         else
-            yError()<<"[SuperqVisualization]: Problems in starting the thread!";
-    }
-    else
-    {
-        superqVis->threadInit();
+        {
+            superqVis->threadInit();
+        }
     }
 
     return true;
@@ -545,8 +545,11 @@ bool SuperqModule::close()
     superqCom->stop();
     delete superqCom;
 
-    superqVis->stop();
-    delete superqVis;
+    if (mode_online)
+    {
+        superqVis->stop();
+        delete superqVis;
+    }
 
     if (portRpc.asPort().isOpen())
         portRpc.close();
@@ -667,7 +670,7 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     optimizer_points=rf.check("optimizer_points", Value(300)).asInt();
     max_cpu_time=rf.check("max_cpu_time", Value(5.0)).asDouble();
 
-    num_superq=rf.check("num_superq", Value(8)).asInt();
+    tree_splitting=rf.check("tree_splitting", Value(3)).asInt();
     f_thres=rf.check("f_thres", Value(1.0)).asInt();
 
     tol=rf.check("tol",Value(1e-5)).asDouble();
@@ -689,7 +692,7 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     ipopt_par.put("max_iter",max_iter);
     ipopt_par.put("mu_strategy",mu_strategy);
     ipopt_par.put("nlp_scaling_method",nlp_scaling_method);
-    ipopt_par.put("num_superq",num_superq);
+    ipopt_par.put("tree_splitting",tree_splitting);
 
     yInfo()<<"[Superqcomputation]: optimizer_points      "<<optimizer_points;
     yInfo()<<"[Superqcomputation]: max_cpu_time          "<<max_cpu_time;
@@ -698,7 +701,7 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     yInfo()<<"[Superqcomputation]: max_iter              "<<max_iter;
     yInfo()<<"[Superqcomputation]: mu_strategy           "<<mu_strategy;
     yInfo()<<"[Superqcomputation]: nlp_scaling_method    "<<nlp_scaling_method;
-    yInfo()<<"[Superqcomputation]: num_superq            "<<num_superq;
+    yInfo()<<"[Superqcomputation]: tree_splitting        "<<tree_splitting;
     yInfo()<<"[Superqcomputation]: f_thres               "<<f_thres;
 
     return true;

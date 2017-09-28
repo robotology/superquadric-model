@@ -49,7 +49,7 @@ protected:
 
     double radius;
     double f_thres;
-    int num_superq;
+    int tree_splitting;
     int nnThreshold;
     int numVertices;
     int median_order;

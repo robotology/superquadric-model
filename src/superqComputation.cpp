@@ -302,37 +302,20 @@ void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
         }
     }
 
-    int nsuperq=newOptions.find("num_superq").asInt();
-    if (newOptions.find("num_superq").isNull() && (first_time==true))
+    int ts=newOptions.find("tree_splitting").asInt();
+    if (newOptions.find("tree_splitting").isNull() && (first_time==true))
     {
-        num_superq=2;
+        tree_splitting=2;
     }
-    else if (!newOptions.find("num_superq").isNull())
+    else if (!newOptions.find("tree_splitting").isNull())
     {
-        if ((nsuperq>=1))
+        if ((ts>=1))
         {
-            num_superq=nsuperq;
+            tree_splitting=ts;
         }
         else
         {
-            num_superq=2;
-        }
-    }
-
-    double fthres=newOptions.find("f_thres").asDouble();
-    if (newOptions.find("f_thres").isNull() && (first_time==true))
-    {
-        f_thresh=0.01;
-    }
-    else if (!newOptions.find("f_thres").isNull())
-    {
-        if ((fthres<=10.0))
-        {
-            f_thresh=fthres;
-        }
-        else
-        {
-            f_thresh=0.01;
+            tree_splitting=2;
         }
     }
 
@@ -582,6 +565,9 @@ void SuperqComputation::threadRelease()
 
     if (PolyEst!=NULL)
         delete PolyEst;
+
+    if (superq_tree!=NULL)
+        delete superq_tree;
 }
 
 /***********************************************************************/
@@ -589,11 +575,13 @@ bool SuperqComputation::configFilterSuperq()
 {
     x.resize(11,0.0);
     new_median_order=1;
-    elem_x.resize(max_median_order, 0.0);
+
     std_median_order=5;
     max_median_order=30;
+
     mFilter = new MedianFilter(median_order, x);
     PolyEst =new AWLinEstimator(max_median_order, threshold_median);
+
     return true;
 }
 
@@ -979,361 +967,164 @@ void SuperqComputation::sendPoints(const deque<Vector> &p)
 /***********************************************************************/
 void SuperqComputation::iterativeModeling()
 {
-    deque<Vector> superq;
-    points_splitted1.clear();
-    points_splitted2.clear();
-    points1.clear();
-    points2.clear();
-    points3.clear();
-    points4.clear();
-    points5.clear();
+    Vector f(2,0.0);
 
-    int count=0;
-    int i_stop=0;
+    superq_tree= new superqTree(&points);
 
-    splitPoints(1, points,false);
-    good_superq.clear();
+    node *newnode=superq_tree->root;
 
-    superq.clear();
+    int i=0;
 
-    Vector superq1, superq2;
+    computeNestedSuperq(newnode, i);
 
-    for (size_t i=0; i<num_superq; i++)
-    {
-        if (points_splitted1.size()>0)
-        {
-            superq1=computeMultipleSuperq(points_splitted1);
-            count++;
-
-            //if ((i!=0) && (points_splitted2.size()>0))
-            if ((points_splitted2.size()>0))
-            {
-                superq2=computeMultipleSuperq(points_splitted2);
-                count++;
-                superq.push_back(superq2);
-            }
-
-            superq.push_back(superq1);
-
-            yDebug()<<"count"<<count;
-
-            f_value.push_back(evaluateLoss(superq, count));
-
-            yDebug()<<"Evaluated loss: ";
-            for (size_t j=0; j<f_value.size(); j++)
-                yDebug()<<"               Split "<<j<<f_value[j].toString();
-
-            double average_f=(f_value[i][0] + f_value[i][1])/2;
-            double maxv=0.0;
-
-            if (i>0)
-                maxv=max(f_value[i-1][0], f_value[i-1][1]);
-
-            yDebug()<<"average f "<<average_f<<maxv;
-
-            //if ((average_f<= maxv) || (i<=1))
-            if ((average_f<= maxv) || (i<=1))
-            {
-                if (f_value[i][0] > f_value[i][1])
-                {                    
-                    good_superq.push_back(superq2);
-                    if (points1.size()==0)
-                        points1=points_splitted1;
-                    else if (points2.size()==0)
-                        points2=points_splitted1;
-                    else if (points3.size()==0)
-                        points3=points_splitted1;
-                    else if (points4.size()==0)
-                        points4=points_splitted1;
-                    else if (points5.size()==0)
-                        points5=points_splitted1;
-
-                    splitPoints(i+1, points_splitted1, false);
-
-                    if (i==num_superq-1)
-                    {
-                        good_superq.push_back(superq1);
-                        if (points1.size()==0)
-                            points1=points_splitted2;
-                        else if (points2.size()==0)
-                            points2=points_splitted2;
-                        else if (points3.size()==0)
-                            points3=points_splitted2;
-                        else if (points4.size()==0)
-                            points4=points_splitted2;
-                        else if (points5.size()==0)
-                            points5=points_splitted2;
-                    }
-                }
-                else
-                {                   
-                    good_superq.push_back(superq1);
-                    if (points1.size()==0)
-                        points1=points_splitted2;
-                    else if (points2.size()==0)
-                        points2=points_splitted2;
-                    else if (points3.size()==0)
-                        points3=points_splitted2;
-                    else if (points4.size()==0)
-                        points4=points_splitted2;
-                    else if (points5.size()==0)
-                        points5=points_splitted2;
-
-                    splitPoints(i+1, points_splitted2, false);
-                    if (i==num_superq-1)
-                    {
-                        good_superq.push_back(superq2);
-                        if (points1.size()==0)
-                            points1=points_splitted1;
-                        else if (points2.size()==0)
-                            points2=points_splitted1;
-                        else if (points3.size()==0)
-                            points3=points_splitted1;
-                        else if (points4.size()==0)
-                            points4=points_splitted1;
-                        else if (points5.size()==0)
-                            points5=points_splitted1;
-                    }
-                }
-
-                yDebug()<<"i "<<i<<"points 1 size "<<points1.size();
-
-                merge=true;
-            }
-            else
-            {
-                if (f_value[i-1][0]<f_value[i-1][1])
-//                    good_superq.push_back(superq[(i-1)*2-1]);
-                    good_superq.push_back(superq[(i-1)*2]);
-                else
-                   // good_superq.push_back(superq[(i-1)*2]);
-                    good_superq.push_back(superq[(i-1)*2+1]);
-
-                i=num_superq;
-                merge=false;
-
-                yDebug()<<"Merging false"<<merge;
-            }
-
-        }
-
-        i_stop=i;
-
-        cout<<"i stop "<<i_stop;
-    }
-
-    if ((merge==false) && (i_stop == num_superq))
-        merge=true;
-
-    for(size_t k=0; k<superq.size(); k++)
-        yDebug()<<"Computed superq "<<k<<superq[k].toString();
-
-    for(size_t k=0; k<good_superq.size(); k++)
-    {
-        yDebug()<<"Selected superq "<<good_superq[k].toString();
-    }
-
-    for(size_t k=0; k<planes.size(); k++)
-    {
-        yDebug()<<"Planes "<<planes[k].toString();
-    }
-
-    yDebug()<<"Points size ";
-    yDebug()<<"1"<< points1.size();
-    yDebug()<<"2"<< points2.size();
-    yDebug()<<"3"<< points3.size();
-    yDebug()<<"4"<< points4.size();
-    yDebug()<<"5"<< points5.size();
-
+    superq_tree->printTree(superq_tree->root);
 }
 
 /***********************************************************************/
-void SuperqComputation::splitPoints(const int &iter, deque<Vector> &points_splitted, bool merging)
+void SuperqComputation::computeNestedSuperq(node *newnode, int &i)
 {
-    deque<Vector> points_splitted1_tmp, points_splitted2_tmp;
-
-    if (iter==0 && (merging==false))
+    if ((newnode!=NULL) && (i<tree_splitting))
     {
-        for (size_t i=0; i<points.size(); i++)
-        {
-            points_splitted1.push_back(points_splitted[i]);
-        }
+        Vector superq1(11,0.0);
+        Vector superq2(11,0.0);
 
-        yDebug()<<" "<<points_splitted1.size();
+        nodeContent node_c1;
+        nodeContent node_c2;
+
+        splitPoints(false, newnode);
+
+        superq1=computeMultipleSuperq(points_splitted1);
+        superq2=computeMultipleSuperq(points_splitted2);
+
+        node_c1.f_value=evaluateLoss(superq1, points_splitted1);
+        node_c2.f_value=evaluateLoss(superq2, points_splitted2);
+
+        node_c1.superq=superq1;
+        node_c2.superq=superq2;
+        node_c1.point_cloud= new deque<Vector>;
+        node_c2.point_cloud= new deque<Vector>;
+
+        *node_c1.point_cloud=points_splitted1;
+        *node_c2.point_cloud=points_splitted2;
+
+        superq_tree->insert(node_c1, node_c2, newnode);
+
+        i++;
+        yDebug()<<"compute left";
+        computeNestedSuperq(newnode->left,i);
+        yDebug()<<"compute right";
+        computeNestedSuperq(newnode->right,i);
     }
     else
+        yDebug()<<"Stop";
+}
+
+/***********************************************************************/
+void SuperqComputation::splitPoints(bool merging, node *leaf)
+{
+    deque<Vector> points_splitted;
+
+    points_splitted=*leaf->point_cloud;
+
+    points_splitted1.clear();
+    points_splitted2.clear();
+
+    if (!merging)
     {
-        if (!merging)
+        Vector center(3,0.0);
+
+        for (size_t k=0; k<points_splitted.size();k++)
         {
-            Vector center(3,0.0);
-
-            for (size_t k=0; k<points_splitted.size();k++)
-            {
-                Vector &point=points_splitted[k];
-                center[0]+=point[0];
-                center[1]+=point[1];
-                center[2]+=point[2];
-            }
-
-            center[0]/=points_splitted.size();
-            center[1]/=points_splitted.size();
-            center[2]/=points_splitted.size();
-
-            Matrix M=zeros(3,3);
-            Matrix u(3,3);
-            Matrix v(3,3);
-
-            Vector s(3,0.0);
-            Vector n(3,0.0);
-            Vector o(3,0.0);
-            Vector a(3,0.0);
-
-            for (size_t i=0;i<points_splitted.size(); i++)
-            {
-                Vector &point=points_splitted[i];
-                M(0,0)= M(0,0) + (point[1]-center[1])*(point[1]-center[1]) + (point[2]-center[2])*(point[2]-center[2]);
-                M(0,1)= M(0,1) - (point[1]-center[1])*(point[0]-center[0]);
-                M(0,2)= M(0,2) - (point[2]-center[2])*(point[0]-center[0]);
-                M(1,1)= M(1,1) + (point[0]-center[0])*(point[0]-center[0]) + (point[2]-center[2])*(point[2]-center[2]);
-                M(2,2)= M(2,2) + (point[1]-center[1])*(point[1]-center[1]) + (point[0]-center[0])*(point[0]-center[0]);
-                M(1,2)= M(1,2) - (point[2]-center[2])*(point[1]-center[1]);
-            }
-
-            M(0,0)= M(0,0)/points_splitted.size();
-            M(0,1)= M(0,1)/points_splitted.size();
-            M(0,2)= M(0,2)/points_splitted.size();
-            M(1,1)= M(1,1)/points_splitted.size();
-            M(2,2)= M(2,2)/points_splitted.size();
-            M(1,2)= M(1,2)/points_splitted.size();
-
-            M(1,0)= M(0,1);
-            M(2,0)= M(0,2);
-            M(2,1)= M(1,2);
-
-            SVDJacobi(M,u,s,v);
-            n=u.getCol(2);
-//            o=u.getRow(1);
-//            a=u.getRow(2);
-
-            Vector plane(4,0.0);
-
-            plane[0]=n[0];
-            plane[1]=n[1];
-            plane[2]=n[2];
-            plane[3]=(plane[0]*center[0]+plane[1]*center[1]+plane[2]*center[2]);
-
-            planes.push_back(plane);
-
-            for (size_t j=0; j<points_splitted.size(); j++)
-            {
-                Vector point=points_splitted[j];
-                if (plane[0]*point[0]+plane[1]*point[1]+plane[2]*point[2]- plane[3] > 0)
-                    points_splitted1_tmp.push_back(point);
-                else
-                    points_splitted2_tmp.push_back(point);
-            }
-
-            points_splitted1.clear();
-            points_splitted2.clear();
-
-            for(size_t j=0; j<points_splitted1_tmp.size(); j++)
-            {
-                points_splitted1.push_back(points_splitted1_tmp[j]);
-            }
-
-            for(size_t j=0; j<points_splitted2_tmp.size(); j++)
-            {
-                points_splitted2.push_back(points_splitted2_tmp[j]);
-            }
-
-            yDebug()<<"points_splitted 1 "<<points_splitted1.size();
-            yDebug()<<"points_splitted 2 "<<points_splitted2.size();
+            Vector &point=points_splitted[k];
+            center[0]+=point[0];
+            center[1]+=point[1];
+            center[2]+=point[2];
         }
-        else
+
+        center[0]/=points_splitted.size();
+        center[1]/=points_splitted.size();
+        center[2]/=points_splitted.size();
+
+        Matrix M=zeros(3,3);
+        Matrix u(3,3);
+        Matrix v(3,3);
+
+        Vector s(3,0.0);
+        Vector n(3,0.0);
+        Vector o(3,0.0);
+        Vector a(3,0.0);
+
+        for (size_t i=0;i<points_splitted.size(); i++)
         {
-            yDebug()<<"Plane "<<planes[iter].toString();
-            for (size_t j=0; j<points_splitted.size(); j++)
-            {
-                Vector point=points_splitted[j];
-                if (planes[iter][0]*point[0]+planes[iter][1]*point[1]+planes[iter][2]*point[2]- planes[iter][3] > 0)
-                    points_splitted1_tmp.push_back(point);
-                else
-                    points_splitted2_tmp.push_back(point);
-            }
-
-            points_splitted1.clear();
-            points_splitted2.clear();
-
-            for(size_t j=0; j<points_splitted1_tmp.size(); j++)
-            {
-                points_splitted1.push_back(points_splitted1_tmp[j]);
-            }
-
-            for(size_t j=0; j<points_splitted2_tmp.size(); j++)
-            {
-                points_splitted2.push_back(points_splitted2_tmp[j]);
-            }
-
-            yDebug()<<"points_splitted 1 "<<points_splitted1.size();
-            yDebug()<<"points_splitted 2 "<<points_splitted2.size();
+            Vector &point=points_splitted[i];
+            M(0,0)= M(0,0) + (point[1]-center[1])*(point[1]-center[1]) + (point[2]-center[2])*(point[2]-center[2]);
+            M(0,1)= M(0,1) - (point[1]-center[1])*(point[0]-center[0]);
+            M(0,2)= M(0,2) - (point[2]-center[2])*(point[0]-center[0]);
+            M(1,1)= M(1,1) + (point[0]-center[0])*(point[0]-center[0]) + (point[2]-center[2])*(point[2]-center[2]);
+            M(2,2)= M(2,2) + (point[1]-center[1])*(point[1]-center[1]) + (point[0]-center[0])*(point[0]-center[0]);
+            M(1,2)= M(1,2) - (point[2]-center[2])*(point[1]-center[1]);
         }
+
+        M(0,0)= M(0,0)/points_splitted.size();
+        M(0,1)= M(0,1)/points_splitted.size();
+        M(0,2)= M(0,2)/points_splitted.size();
+        M(1,1)= M(1,1)/points_splitted.size();
+        M(2,2)= M(2,2)/points_splitted.size();
+        M(1,2)= M(1,2)/points_splitted.size();
+
+        M(1,0)= M(0,1);
+        M(2,0)= M(0,2);
+        M(2,1)= M(1,2);
+
+        SVDJacobi(M,u,s,v);
+        n=u.getCol(2);
+
+        Vector plane(4,0.0);
+
+        plane[0]=n[0];
+        plane[1]=n[1];
+        plane[2]=n[2];
+        plane[3]=(plane[0]*center[0]+plane[1]*center[1]+plane[2]*center[2]);
+
+
+        leaf->plane=plane;
+
+
+        for (size_t j=0; j<points_splitted.size(); j++)
+        {
+            Vector point=points_splitted[j];
+            if (plane[0]*point[0]+plane[1]*point[1]+plane[2]*point[2]- plane[3] > 0)
+                points_splitted1.push_back(point);
+            else
+                points_splitted2.push_back(point);
+        }
+
+        yDebug()<<"points_splitted 1 "<<points_splitted1.size();
+        yDebug()<<"points_splitted 2 "<<points_splitted2.size();
     }
 }
 
 /****************************************************************/
-Vector SuperqComputation::evaluateLoss(deque<Vector> &superq, int &count)
+double SuperqComputation::evaluateLoss(Vector &superq, deque<Vector> &points_splitted)
 {
-    Vector v(2,0.0);
     double value=0.0;
-    Vector x_tmp(11,0.0);
     int count_subsample=0.0;
     int c;
 
-    x_tmp=superq[count-1];
+    c=points_splitted.size()/optimizer_points;
 
-    yDebug()<<"in evaluate ";
-
-    c=points_splitted1.size()/optimizer_points;
     if (c==0)
         c=1;
 
-    yDebug()<<"c "<<c;
-
-    for(size_t i=0;i<points_splitted1.size();i+=c)
+    for(size_t i=0;i<points_splitted.size();i+=c)
     {
-        double tmp=pow(f(x_tmp,points_splitted1[i]),x_tmp[3])-1;
+        double tmp=pow(f(superq,points_splitted[i]),superq[3])-1;
         value+=tmp*tmp;
         count_subsample++;
     }
-    //value/=points_splitted1.size();
 
     value/=count_subsample;
-    v[0]=value;
-
-    value=0.0;
-
-    count_subsample=0.0;
-
-    if (points_splitted2.size()>0)
-    {
-        c=points_splitted2.size()/optimizer_points;
-        if (c==0)
-            c=1;
-        x_tmp=superq[count-2];
-
-        for(size_t i=0;i<points_splitted2.size();i+=c)
-        {
-            double tmp=pow(f(x_tmp,points_splitted2[i]),x_tmp[3])-1;
-            value+=tmp*tmp;
-            count_subsample++;
-        }
-        //value/=points_splitted2.size();
-
-        value/=count_subsample;
-    }
-
-    v[1]=value;
-    return v;
+    return value;
 }
 
 /****************************************************************/
@@ -1356,91 +1147,7 @@ double SuperqComputation::f(Vector &x, Vector &point_cloud)
 /****************************************************************/
 void SuperqComputation::mergeModeling()
 {
-    yDebug()<<"Merging ";
-    Vector superq1, superq2;
-    double value=0.0;
-    int count_subsample=0.0;
-    int c;
-    deque<Vector> points_tmp;
-    deque<Vector> f_merge;
 
-    Vector f_i(2,0.0);
-
-    for (size_t i=planes.size()-1; i>1;i--)
-    {
-        cout<<"i "<<i<<endl;
-        count_subsample=0.0;
-        if (i-1==1)
-            points_tmp=points;
-        if (i-1==2)
-            points_tmp=points1;
-        if (i-1==3)
-            points_tmp=points2;
-        if (i-1==4)
-            points_tmp=points3;
-        if (i-1==5)
-            points_tmp=points4;
-
-
-        splitPoints(i-1,points_tmp, true);
-
-
-        superq1=computeMultipleSuperq(points_splitted1);
-
-        c=points_splitted1.size()/optimizer_points;
-        for(size_t i=0;i<points_splitted1.size();i+=c)
-        {
-            double tmp=pow(f(superq1,points_splitted1[i]),superq1[3])-1;
-            value+=tmp*tmp;
-            count_subsample++;
-        }
-        value/=count_subsample;
-        f_i[0]=value;
-
-        yDebug()<<"subsample "<<count_subsample;
-
-
-        value=0.0;
-        count_subsample=0.0;
-        c=0;
-        superq2=computeMultipleSuperq(points_splitted2);
-        c=points_splitted2.size()/optimizer_points;
-
-        for(size_t i=0;i<points_splitted2.size();i+=c)
-        {
-            double tmp=pow(f(superq2,points_splitted2[i]),superq2[3])-1;
-            value+=tmp*tmp;
-            count_subsample++;
-        }
-        value/=count_subsample;
-        f_i[1]=value;
-
-        f_merge.push_back(f_i);
-
-        yDebug()<<"subsample "<<count_subsample;
-
-        yDebug()<<"Evaluate cost merged "<<f_i.toString();
-
-        yDebug()<<f_value[i-1][0]<< f_value[i-1][1]<<min(f_value[i-2][0], f_value[i-2][1]);
-        yDebug()<<"Avergae before "<<(f_value[i-1][0]+f_value[i-1][1] + min(f_value[i-2][0], f_value[i-2][1]))/3;
-        if ((f_i[0]+f_i[1])/2 < (f_value[i-1][0]+f_value[i-1][1] + min(f_value[i-2][0], f_value[i-2][1]))/3)
-        {
-            yDebug()<<"Better merging";
-            good_superq.pop_back();
-            good_superq.pop_back();
-            good_superq.pop_back();
-            good_superq.push_back(superq1);
-            good_superq.push_back(superq2);
-
-            yDebug()<<"Selected superq "<<superq1.toString();
-            yDebug()<<"Selected superq "<<superq2.toString();
-        }
-        else
-        {
-            yDebug()<<"Computed superq "<<superq1.toString();
-            yDebug()<<"Computed superq "<<superq2.toString();
-        }
-    }
 
 }
 
