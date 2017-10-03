@@ -218,7 +218,7 @@ public:
    double f(yarp::sig::Vector &x, yarp::sig::Vector &point_cloud);
 
    /***********************************************************************/
-   void computeNestedSuperq(node *newnode, int &i);
+   void computeNestedSuperq(node *newnode, int &i,int &j, bool first_time, int &count, bool final, int &count2);
 };
 
 #endif

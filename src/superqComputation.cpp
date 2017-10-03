@@ -968,23 +968,30 @@ void SuperqComputation::sendPoints(const deque<Vector> &p)
 void SuperqComputation::iterativeModeling()
 {
     Vector f(2,0.0);
+    bool first_time=true;
 
     superq_tree= new superqTree(&points);
 
     node *newnode=superq_tree->root;
 
     int i=0;
+    int j=tree_splitting;
+    int count=0;
+    int count2=0;
+    bool final=false;
 
-    computeNestedSuperq(newnode, i);
+    computeNestedSuperq(newnode, i,j, first_time, count, final, count2);
 
     superq_tree->printTree(superq_tree->root);
 }
 
 /***********************************************************************/
-void SuperqComputation::computeNestedSuperq(node *newnode, int &i)
+
+void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool first_time,int &count, bool final, int &count2)
 {
     if ((newnode!=NULL) && (i<tree_splitting))
     {
+        cout<<endl;
         Vector superq1(11,0.0);
         Vector superq2(11,0.0);
 
@@ -1010,13 +1017,171 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i)
         superq_tree->insert(node_c1, node_c2, newnode);
 
         i++;
-        yDebug()<<"compute left";
-        computeNestedSuperq(newnode->left,i);
-        yDebug()<<"compute right";
-        computeNestedSuperq(newnode->right,i);
+        first_time=true;
+
+        computeNestedSuperq(newnode->left,i,j, first_time, count, final, count2);
+
+        first_time=true;
     }
-    else
-        yDebug()<<"Stop";
+    else if ((i==tree_splitting))
+    {
+        yDebug()<<"Completing Tree..";
+
+        if (first_time==true)
+        {
+            cout<<endl;
+
+            newnode=superq_tree->root;
+            yDebug()<<newnode->right->point_cloud->size();
+
+            first_time=false;
+            j=0;
+
+            computeNestedSuperq(newnode->right,i,j, first_time, count, final, count2);
+
+            first_time=false;
+            cout<<endl;
+
+        }
+        else if ((newnode!=NULL) && (j<tree_splitting-1))
+        {
+
+            j++;
+            Vector superq1(11,0.0);
+            Vector superq2(11,0.0);
+
+            nodeContent node_c1;
+            nodeContent node_c2;
+
+            splitPoints(false, newnode);
+
+            superq1=computeMultipleSuperq(points_splitted1);
+            superq2=computeMultipleSuperq(points_splitted2);
+
+            node_c1.f_value=evaluateLoss(superq1, points_splitted1);
+            node_c2.f_value=evaluateLoss(superq2, points_splitted2);
+
+            node_c1.superq=superq1;
+            node_c2.superq=superq2;
+            node_c1.point_cloud= new deque<Vector>;
+            node_c2.point_cloud= new deque<Vector>;
+
+            *node_c1.point_cloud=points_splitted1;
+            *node_c2.point_cloud=points_splitted2;
+
+
+            superq_tree->insert(node_c1, node_c2, newnode);
+
+            computeNestedSuperq(newnode->right,i,j, first_time, count, final, count2);
+
+        }
+
+        if ((j==tree_splitting-1) && (count<tree_splitting))
+        {
+            if (count==0)
+            {
+                count++;
+                newnode=superq_tree->root;
+                yDebug()<<newnode->right->point_cloud->size();
+
+                first_time=false;
+
+                computeNestedSuperq(newnode->right,i,j, first_time, count, final, count2);
+            }
+            else if ((newnode!=NULL) && (count<tree_splitting))
+            {
+                Vector superq1(11,0.0);
+                Vector superq2(11,0.0);
+
+                nodeContent node_c1;
+                nodeContent node_c2;
+
+                splitPoints(false, newnode);
+
+                superq1=computeMultipleSuperq(points_splitted1);
+                superq2=computeMultipleSuperq(points_splitted2);
+
+                node_c1.f_value=evaluateLoss(superq1, points_splitted1);
+                node_c2.f_value=evaluateLoss(superq2, points_splitted2);
+
+                node_c1.superq=superq1;
+                node_c2.superq=superq2;
+                node_c1.point_cloud= new deque<Vector>;
+                node_c2.point_cloud= new deque<Vector>;
+
+                *node_c1.point_cloud=points_splitted1;
+                *node_c2.point_cloud=points_splitted2;
+
+
+                superq_tree->insert(node_c1, node_c2, newnode);
+
+                if (count %2 !=0)
+                {
+                    count++;
+                    computeNestedSuperq(newnode->left,i,j, first_time, count, final, count2);
+                }
+                else
+                {
+                    count++;
+                    computeNestedSuperq(newnode->right,i,j, first_time, count, final, count2);
+                }
+            }
+        }
+        else if ((count==tree_splitting) && (count2<tree_splitting))
+        {
+            if (count2==0)
+            {
+                count2++;
+                newnode=superq_tree->root;
+                yDebug()<<newnode->right->point_cloud->size();
+
+                first_time=false;
+
+                computeNestedSuperq(newnode->left,i,j, first_time, count, final, count2);
+            }
+            else if ((newnode!=NULL) && (count2<tree_splitting))
+            {
+                Vector superq1(11,0.0);
+                Vector superq2(11,0.0);
+
+                nodeContent node_c1;
+                nodeContent node_c2;
+
+                splitPoints(false, newnode);
+
+                superq1=computeMultipleSuperq(points_splitted1);
+                superq2=computeMultipleSuperq(points_splitted2);
+
+                node_c1.f_value=evaluateLoss(superq1, points_splitted1);
+                node_c2.f_value=evaluateLoss(superq2, points_splitted2);
+
+                node_c1.superq=superq1;
+                node_c2.superq=superq2;
+                node_c1.point_cloud= new deque<Vector>;
+                node_c2.point_cloud= new deque<Vector>;
+
+                *node_c1.point_cloud=points_splitted1;
+                *node_c2.point_cloud=points_splitted2;
+
+
+                superq_tree->insert(node_c1, node_c2, newnode);
+
+                if (count2 %2 !=0)
+                {
+                    count2++;
+                    computeNestedSuperq(newnode->right,i,j, first_time, count, final, count2);
+                }
+                else
+                {
+                    count2++;
+                    computeNestedSuperq(newnode->left,i,j, first_time, count, final, count2);
+                }
+            }
+        }
+        else
+            yDebug()<<"stop";
+    }
+
 }
 
 /***********************************************************************/
