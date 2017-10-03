@@ -64,6 +64,7 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
         leaf->right->point_cloud=node_content1.point_cloud;
         leaf->right->left=NULL;
         leaf->right->right=NULL;
+        leaf->right->father=leaf;
 
         if (leaf->left==NULL)
             leaf->left=new node;
@@ -74,6 +75,8 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
         leaf->left->point_cloud=node_content2.point_cloud;
         leaf->left->left=NULL;
         leaf->left->right=NULL;
+        leaf->left->father=leaf;
+
 
         yDebug()<<"First case";
     }
@@ -88,6 +91,7 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
         leaf->left->point_cloud=node_content1.point_cloud;
         leaf->left->left=NULL;
         leaf->left->right=NULL;
+        leaf->left->father=leaf;
 
 
         if (leaf->right==NULL)
@@ -99,6 +103,7 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
         leaf->right->point_cloud=node_content2.point_cloud;
         leaf->right->left=NULL;
         leaf->right->right=NULL;
+        leaf->right->father=leaf;
 
         yDebug()<<"Second case";
     }
@@ -139,9 +144,12 @@ void superqTree::printNode(node *leaf)
         yInfo()<<"plane           :"<<leaf->plane.toString();
         yInfo()<<"f value         :"<<leaf->f_value;
         yDebug()<<"print right";
-        printNode(leaf->right);
+        if (leaf->right!=NULL)
+            printNode(leaf->right);
+
         yDebug()<<"print left";
-        printNode(leaf->left);
+        if (leaf->left!=NULL)
+            printNode(leaf->left);
     }
     else
         yDebug()<<"Finished";

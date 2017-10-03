@@ -528,8 +528,8 @@ void SuperqComputation::run()
         else
         {
             iterativeModeling();
-            if(merge)
-                mergeModeling();
+            //if(merge)
+            mergeModeling(superq_tree->root, true);
         }
     }
 
@@ -982,7 +982,7 @@ void SuperqComputation::iterativeModeling()
 
     computeNestedSuperq(newnode, i,j, first_time, count, final, count2);
 
-    superq_tree->printTree(superq_tree->root);
+    //superq_tree->printTree(superq_tree->root);
 }
 
 /***********************************************************************/
@@ -1310,10 +1310,133 @@ double SuperqComputation::f(Vector &x, Vector &point_cloud)
 }
 
 /****************************************************************/
-void SuperqComputation::mergeModeling()
+void SuperqComputation::mergeModeling(node *node, bool go_on)
 {
+    if (node->f_value==0)
+    {
+        yDebug()<<"That's root!";
+        double cost_right_2=(node->right->right->f_value +
+                             node->right->left->f_value)/2.0;
+
+        yDebug()<<"cost right "<<cost_right_2;
+        yDebug()<<"node right f value"<<node->right->f_value;
+        if (cost_right_2 < node->right->f_value)
+        {
+            mergeModeling(node->right, go_on);
+        }
+        else
+        {
+            node->right->right=NULL;
+            node->right->left=NULL;
+        }
+
+        double cost_left_2=(node->left->right->f_value +
+                             node->left->left->f_value)/2.0;
+
+        yDebug()<<"cost left "<<cost_left_2;
+        yDebug()<<"node left f value"<<node->left->f_value;
+
+        if (cost_left_2 < node->left->f_value)
+            mergeModeling(node->left, go_on);
+        else
+        {
+            node->left->right=NULL;
+            node->left->left=NULL;
+        }
+    }
+    else if (node->right!=NULL && node->left!=NULL)
+    {
+        cout<<endl;
+
+        double cost_2=(node->right->f_value +
+                             node->left->f_value)/2.0;
+        yDebug()<<"cost "<<cost_2;
+        yDebug()<<"f_value "<<node->f_value;
+
+        if (((node->right->right!=NULL && node->right->left!=NULL)||
+             (node->left->right!=NULL && node->left->left!=NULL)) && go_on==true)
+        {
+            mergeModeling(node->right, go_on);
+            mergeModeling(node->left, go_on);
+
+        }
+        else if ((cost_2<node->f_value))
+        {
+            /***************************************/
+
+            yDebug()<<"point cloud father size"<<node->father->point_cloud->size();
+            points_splitted1.clear();
+            points_splitted2.clear();
+
+            for (size_t j=0; j<node->father->point_cloud->size(); j++)
+            {
+                deque<Vector> p_tmp=*node->father->point_cloud;
+                Vector point=p_tmp[j];
+                if (node->plane[0]*point[0]+node->plane[1]*point[1]+node->plane[2]*point[2]- node->plane[3] > 0)
+                    points_splitted1.push_back(point);
+                else
+                    points_splitted2.push_back(point);
+            }
+
+            yDebug()<<"points_splitted 1 "<<points_splitted1.size();
+            yDebug()<<"points_splitted 2 "<<points_splitted2.size();
+            /***************************************/
+
+            Vector superq1(11,0.0);
+            Vector superq2(11,0.0);
+
+            nodeContent node_c1;
+            nodeContent node_c2;
 
 
+            superq1=computeMultipleSuperq(points_splitted1);
+            superq2=computeMultipleSuperq(points_splitted2);
+
+            node_c1.f_value=evaluateLoss(superq1, points_splitted1);
+            node_c2.f_value=evaluateLoss(superq2, points_splitted2);
+
+            double cost_merged=(node_c1.f_value + node_c2.f_value)/2.0;
+            double cost_old;
+            if (node->father->right !=node)
+                cost_old = (cost_2*2 +node->father->right->f_value)/3.0;
+            else
+                cost_old = (cost_2*2 +node->father->left->f_value)/3.0;
+
+            yDebug()<<"cost merged "<<cost_merged;
+            yDebug()<<"cost old "<<cost_old;
+
+            if(cost_merged + 0.01 < cost_old)
+            {
+                node_c1.superq=superq1;
+                node_c2.superq=superq2;
+                node_c1.point_cloud= new deque<Vector>;
+                node_c2.point_cloud= new deque<Vector>;
+
+                *node_c1.point_cloud=points_splitted1;
+                *node_c2.point_cloud=points_splitted2;
+
+                node->father->right=NULL;
+                node->father->left=NULL;
+                superq_tree->insert(node_c1, node_c2, node->father);
+
+            }
+
+            if (node->father !=superq_tree->root)
+                mergeModeling(node->father, false);
+            else
+                yDebug()<<"stop 1";
+        }
+        else
+        {
+            node->right=NULL;
+            node->left=NULL;
+            if (node->father !=superq_tree->root)
+                mergeModeling(node->father, false);
+            else
+                yDebug()<<"stop 2";
+        }
+        yDebug()<<"stop fuori";
+    }
 }
 
 

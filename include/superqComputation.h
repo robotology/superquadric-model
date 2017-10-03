@@ -91,9 +91,11 @@ protected:
     yarp::os::Property filter_superq_par;
     yarp::os::Property ipopt_par;
 
-    superqTree *superq_tree;
+
 
 public:
+
+    superqTree *superq_tree;
 
     bool merge;
 
@@ -206,7 +208,7 @@ public:
     void iterativeModeling();
 
     /***********************************************************************/
-    void mergeModeling();
+    void mergeModeling(node *node, bool go_on);
 
     /***********************************************************************/
     void splitPoints(bool merging, node *leaf);

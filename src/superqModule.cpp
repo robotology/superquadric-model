@@ -444,9 +444,10 @@ bool SuperqModule::updateModule()
             {
                 double t=Time::now();
                 superqCom->iterativeModeling();
-                if (superqCom->merge)
-                    superqCom->mergeModeling();
+                //if (superqCom->merge)
+                superqCom->mergeModeling(superqCom->superq_tree->root, true);
                 t=Time::now()-t;
+                superqCom->superq_tree->printTree(superqCom->superq_tree->root);
                 yInfo()<<"             Execution Time           :"<<t;
             }
         }

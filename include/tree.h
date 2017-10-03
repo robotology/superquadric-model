@@ -16,6 +16,7 @@ struct node
     double f_value;
     node *left;
     node *right;
+    node *father;
 };
 
 struct nodeContent
