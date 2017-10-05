@@ -109,3 +109,34 @@ yarp rpc /testing-module/rpc
 ```
 
 Enjoy! :smiley:
+
+## Setting up the setup
+In order to achieve the desired performance, it is recommended to solve the following practical issues:
+#### Calibrate the stereo vision through the [SFM module](https://github.com/robotology/stereo-vision).
+The calibration consists of: 
+- Launching `SFM` and two yarpviews with [this xml](https://github.com/robotology/stereo-vision/tree/master/app/scripts). 
+The viewers show the disparity map and the features matching between the cameras.
+- Set the `eye_vergence=5.0`.
+- Showing to the iCub a no-flat scene;
+- Through the proper `RcpPort`, asking `SFM` to perform calibration, until `ACK` reply is received
+```
+yarp rpc /SFM/rpc
+>> calibrate
+[Ack]
+>> save
+[Ack]
+```
+If a error message is received instead of `Ack`, show a more cluttered and no-flat scene.
+
+#### Teach object name
+The only step to be performed with [IOL](https://github.com/robotology/iol/blob/master/app/scripts/iol.xml.template) before running the superquadric-model is to teach the robot the object name.
+- Launch [IOL](https://github.com/robotology/iol/blob/master/app/scripts/iol.xml.template).
+- Click on the object of interest in the `/iolViewer/manager/localizer ` viewer.
+- Through the proper `RpcPort`:
+```
+yarp rpc /iolStateMachineHandler/human:rpc
+>>this <object_name> click
+[ok]
+```
+
+
