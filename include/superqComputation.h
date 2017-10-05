@@ -27,6 +27,9 @@
 
 #include "superquadric.h"
 
+/**
+  * This class filters the point cloud according to its density
+  */
 /*******************************************************************************/
 class SpatialDensityFilter
 {
@@ -36,6 +39,11 @@ public:
     static std::vector<int>  filter(const cv::Mat &data,const double radius, const int maxResults, std::deque<yarp::sig::Vector> &points);
 };
 
+/**
+  * This class provides a thread for computing in real time the superquadric,
+  * filtering the point cloud and the superquadric.
+  * The optimization problem for estimating the superquadric is solved with Ipopt software package.
+  */
 /*******************************************************************************/
 class SuperqComputation : public yarp::os::RateThread
 {

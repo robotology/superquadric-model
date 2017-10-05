@@ -29,6 +29,10 @@
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
 
+/**
+  * This class solves the optimization problem with the Ipopt software package
+  * and returns the estiamted superquadric, better fitting a given point cloud.
+  */
 class  SuperQuadric_NLP : public Ipopt::TNLP
 {
 

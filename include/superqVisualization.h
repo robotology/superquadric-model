@@ -28,6 +28,10 @@
 
 #include <opencv2/opencv.hpp>
 
+/**
+  * This class shows the point cloud used for modeling or the estimated
+  * superquadric overlapped on the camera image and in real time.
+  */
 /*******************************************************************************/
 class SuperqVisualization : public yarp::os::RateThread
 {

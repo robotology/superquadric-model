@@ -29,6 +29,13 @@
 
 #include "src/superquadricModel_IDL.h"
 
+/**
+  * The SuperqModule class handle the superquadric computation and
+  * visualization, the point cloud and superquadric filtering and the
+  * interaction with the user.
+  * It is used to set all the parameters (offline and online) and to launch
+  * all the thread for superquadric computation and visualization.
+  */
 /*******************************************************************************/
 class SuperqModule : public yarp::os::RFModule,
                      public superquadricModel_IDL
