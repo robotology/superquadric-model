@@ -855,13 +855,6 @@ Vector SuperqComputation::getSolution(bool filtered_superq)
 }
 
 /***********************************************************************/
-void SuperqComputation::setContour(cv::Point p)
-{
-    LockGuard lg(mutex);
-    contour.push_back(p);
-}
-
-/***********************************************************************/
 void SuperqComputation::sendPoints(const deque<Vector> &p)
 {
     LockGuard lg(mutex);

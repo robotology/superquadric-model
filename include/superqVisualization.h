@@ -32,30 +32,35 @@
 class SuperqVisualization : public yarp::os::RateThread
 {
 protected:
-    int r,g,b;
-    double t_vis;
-    std::string what_to_plot;
+    // Output image
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > portImgOut;
 
-    int vis_points;
+    // Parameters for visualization
+    int r,g,b;
+    double t_vis;
     int vis_step;
-    std::string eye;
-    yarp::sig::Matrix R,H,K;
+    int vis_points;   
+    std::string what_to_plot;
+
     yarp::sig::Vector point,point1;
     yarp::sig::Vector point2D;
     std::deque<int> Color;
 
+    // Variables for gaze
+    std::string eye;
+    yarp::sig::Matrix R,H,K;
     yarp::dev::IGazeControl *igaze;
 
     yarp::os::Mutex mutex;
 
 public:
 
+    // Shared variables
     yarp::sig::Vector &superq;
     yarp::sig::Vector &superq_filtered;
-
     std::deque<yarp::sig::Vector> &points;
 
+    //Input image
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *&imgIn;
 
     /***********************************************************************/
@@ -63,51 +68,51 @@ public:
                         std::deque<int> &_Color, yarp::dev::IGazeControl *_igaze, const yarp::sig::Matrix _K, std::deque<yarp::sig::Vector> &_points,
                         const int &_vis_points, const int &_vis_step, yarp::sig::ImageOf<yarp::sig::PixelRgb> *&imgIn);
 
-    /***********************************************************************/
-    bool readPointCloud();
-
+    /* Show point cloud on the image */
     /***********************************************************************/
     bool showPoints();
 
+    /* Show reconstructed superquadric on the image */
     /***********************************************************************/
     bool showSuperq(yarp::sig::Vector &x_to_show);
 
+    /* Compute 2D pixels from 3D points */
     /***********************************************************************/
     yarp::sig::Vector from3Dto2D(const yarp::sig::Vector &point3D);
 
+    /* Init function of RateThread */
     /***********************************************************************/
     virtual bool threadInit();
 
+    /* Run function of RateThread */
     /***********************************************************************/
     virtual void run();
 
+    /* Release function of RateThread */
     /***********************************************************************/
     virtual void threadRelease();
 
-    /***********************************************************************/
-    void sendImg(yarp::sig::ImageOf<yarp::sig::PixelRgb> *Img);
-
-    /***********************************************************************/
-    void sendSuperq(yarp::sig::Vector &x);
-
-    /***********************************************************************/
-    void sendPoints(std::deque<yarp::sig::Vector> &points);
-
+    /* Set a given parameter equal to a string */
     /***********************************************************************/
     void setPar(const std::string &par_name, const std::string &value);
 
+    /* Set a given parameter equal to a desired value */
     /***********************************************************************/
     void setPar(const std::string &par_name, const int &value);
 
+    /* Set color for visualization  */
     /***********************************************************************/
     void setColor (const int &r, const int &g, const int &b);
 
+    /* Set parameters for visualization */
     /***********************************************************************/    
     void setPar(const yarp::os::Property &newOptions, bool first_time);
 
+    /* Get parameters for visualization */
     /***********************************************************************/
     yarp::os::Property getPar();
 
+    /* Get time required for visualization */
     /***********************************************************************/
     double getTime();
 };
