@@ -110,7 +110,7 @@ yarp rpc /testing-module/rpc
 
 Enjoy! :smiley:
 
-## Setting up the setup
+## Setting up 
 In order to achieve the desired performance, it is recommended to solve the following practical issues:
 #### Calibrate the stereo vision through the [SFM module](https://github.com/robotology/stereo-vision).
 The calibration consists of: 
