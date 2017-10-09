@@ -132,128 +132,177 @@ protected:
     /************************************************************************/
     bool attach(yarp::os::RpcServer &source);
 
-    /* Set a tag name for saving the superquadric */
+    /** Set a tag name for saving the superquadric
+    * @param tag_file is the name of the file where to save the superquadric
+    * @return true
+    */
     /************************************************************************/
     bool set_tag_file(const std::string &tag_file);
 
-     /* Get the tag name used for saving the superquadric */
+     /** Get the tag name used for saving the superquadric
+     * @return the currect name of the file used for saving
+     */
     /************************************************************************/
     std::string get_tag_file();
 
-     /* Return if visualization is on or off */
+     /** Return if visualization is on or off
+    * @return  "on" or "off"
+    */
     /**********************************************************************/
     std::string get_visualization();
 
-    /* Set if visualization is on or off */
+    /** Set if visualization is on or off
+    * @param e can be "on" or "off"
+    * @return true/false on success/failure
+    */
     /**********************************************************************/
     bool set_visualization(const std::string &e);
 
-    /* Return the computed superquadric, given the  2D blob of the object */
+    /** Return the computed superquadric, given the  2D blob of the object
+    * @param  blob is the 2D blob of the object
+    * @return  a property with the estimated superquadric
+    */
     /**********************************************************************/
     yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> &blob);
 
-    /* Get the point cloud for computing the superquadric */
+    /** Get the point cloud for computing the superquadric
+    * @param p is the point cloud to be acquired
+    * @return true
+    */
     /**********************************************************************/
     bool send_point_clouds(const std::vector<yarp::sig::Vector> &p);
 
-    /* Reset median filter for improving superquadric estimation */
+    /** Reset median filter for improving superquadric estimation
+    * @return true
+    */
     /**********************************************************************/
     bool reset_filter();
 
-    /* Return the filtered superquadric */
+    /** Return the filtered superquadric
+    * @return a property with the filtered superquadric
+    */
     /**********************************************************************/
     yarp::os::Property get_superq_filtered();
 
-    /* Property fill the property with the superquadric solution */
+    /** Property fill the property with the superquadric solution
+    * @param sol is a Vector of the computed superquadric
+    * @return a Property with the solution
+    */
     /**********************************************************************/
     yarp::os::Property fillProperty(const yarp::sig::Vector &sol);
 
-    /* Set if to filter or not the point cloud */
+    /** Set if to filter or not the point cloud
+    * @param entre can be "on" or "off"
+    * @return true/false on success/failure
+    */
     /**********************************************************************/
     bool set_points_filtering(const std::string &entry);
 
-    /* Get if the point cloud is filtered or not */
+    /** Get if the point cloud is filtered or not
+    * @return "on" or "off"
+    */
     /**********************************************************************/
     std::string get_points_filtering();
 
-    /* Set if to filter or not the superquadric */
+    /** Set if to filter or not the superquadric
+    * @param entry can be "on" or "off"
+    * @return true/false on success/failure
+    */
     /**********************************************************************/
     bool set_superq_filtering(const std::string &entry);
 
-    /* Get if the superquadric is filtered or not */
+    /** Get if the superquadric is filtered or not
+    * @return "on" or "off"
+    */
     /**********************************************************************/
     std::string get_superq_filtering();
 
-    /* Get options of a given field: visualization, optimization, filtering */
+    /** Get options of a given field: visualization, optimization, filtering
+    * @param field is one of the field of options
+    * @return property with the options of interested
+    */
     /**********************************************************************/
     yarp::os::Property get_options(const std::string &field);
 
-    /* Set options of specified field: visualization, optimization, filtering */
+    /** Set options of specified field: visualization, optimization, filtering
+    * @param newOptions is a property with the options to be set
+    * @param field is the field of the options to be set
+    * @return true/false on success/failure
+    */
     /**********************************************************************/
     bool set_options(const yarp::os::Property &newOptions, const std::string &field);
 
-    /* Set object class for improving superquadric estimation */
+    /** Set object class for improving superquadric estimation
+    * @param objclass is the object class (according to the shape)
+    * @return true/false on success/failure
+    */
     /**********************************************************************/
     bool set_object_class(const std::string &objclass);
 
 public:
-    /* Get period function of RF module */
+    /** Get period function of RF module
+    * @return the period
+    * /
     /***********************************************************************/
     double getPeriod();
 
-    /* updateModule function of RF module */
+    /** updateModule function of RF module */
     /***********************************************************************/
     bool updateModule();
 
-    /* configure function of RF module */
+    /** configure function of RF module */
     /***********************************************************************/
     bool configure(yarp::os::ResourceFinder &rf);
 
-    /* interrupt module function of RF module */
+    /** interrupt module function of RF module */
     /***********************************************************************/
     bool interruptModule();
 
-    /* close function of RF module */
+    /** close function of RF module */
     /***********************************************************************/
     bool close();
 
-    /* Configure all on/off options */
+    /** Configure all on/off options */
     /***********************************************************************/
     bool configOnOff(yarp::os::ResourceFinder &rf);
 
-    /* Configure point cloud filter options */
+    /** Configure point cloud filter options */
     /***********************************************************************/
     bool configFilter(yarp::os::ResourceFinder &rf);
 
-    /* Configure superquadric filter options */
+    /** Configure superquadric filter options */
     /***********************************************************************/
     bool configFilterSuperq(yarp::os::ResourceFinder &rf);
 
-    /* Open ports for communication */
+    /** Open ports for communication */
     /***********************************************************************/
     bool configServices(yarp::os::ResourceFinder &rf);
 
-    /* Configure superquadric computation otpions */
+    /** Configure superquadric computation otpions */
     /***********************************************************************/
     bool configSuperq(yarp::os::ResourceFinder &rf);
 
-    /* Configure visualization options */
+    /** Configure visualization options */
     /***********************************************************************/
     bool configViewer(yarp::os::ResourceFinder &rf);
 
-    /* Save computed superquadric */
+    /** Save computed superquadric */
     /***********************************************************************/
     void saveSuperq();
 
-    /* Set if to save or not the used point cloud */
+    /** Set if to save or not the used point cloud
+    * @param entry can be "on" or "off"
+    */
     /***********************************************************************/
     bool set_save_points(const std::string &entry);
 
-     /* Get if the used point cloud is saved or not */
+     /** Get if the used point cloud is saved or not
+    * @return "on" or "off"
+    */
     /***********************************************************************/
     std::string get_save_points();
 
-     /* In offline mode, read the point cloud from a txt file */
+     /** In offline mode, read the point cloud from a txt file */
     /***********************************************************************/
     bool readPointCloud();
 };

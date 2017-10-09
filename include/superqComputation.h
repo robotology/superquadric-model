@@ -102,17 +102,21 @@ protected:
     yarp::os::Property ipopt_par;
 public:
 
-    // Median order parameters
+    /** median order width*/
     int std_median_order;
+    /** max median order width*/
     int max_median_order;
 
-    // Shared variables
+    /** Object superquadric*/
     yarp::sig::Vector &x;
+    /** Filtered object superquadric*/
     yarp::sig::Vector &x_filtered;
+    /** Object point cloud*/
     std::deque<yarp::sig::Vector> &points;
+    /** Object  2D blob*/
     std::deque<cv::Point> blob_points;
 
-    // Input image
+    /** Input image*/
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
     /***********************************************************************/
@@ -120,95 +124,125 @@ public:
                       std::string _tag_file, double _threshold_median, const yarp::os::Property &filters_points_par, yarp::sig::Vector &_x, yarp::sig::Vector &_x_filtered,
                       const yarp::os::Property &filters_superq_par, const yarp::os::Property &optimizer_par, const std::string &_homeContextPath, bool _save_points, yarp::os::ResourceFinder *rf);
 
-    /* Set options for filtering the point cloud */
+    /** Set options for filtering the point cloud
+    * @param newOptions is a Property with the new options to set
+    * @param first_time takes into account if the options have already been set or not
+    */
     /***********************************************************************/
     void setPointsFilterPar(const yarp::os::Property &newOptions, bool first_time);
 
-    /* Set options for filtering the superquadric */
+    /** Set options for filtering the superquadric
+    * @param newOptions is a Property with the new options to set
+    * @param first_time takes into account if the options have already been set or not
+    */
     /***********************************************************************/
     void setSuperqFilterPar(const yarp::os::Property &newOptions, bool first_time);
 
-    /* Set options for the optimization problem solved by Ipopt */
+    /** Set options for the optimization problem solved by Ipopt
+    * @param newOptions is a Property with the new options to set
+    * @param first_time takes into account if the options have already been set or not
+    */
     /***********************************************************************/
     void setIpoptPar(const yarp::os::Property &newOptions, bool first_time);
 
-    /* Get options used for filtering the point cloud */
+    /** Get options used for filtering the point cloud
+    * @return a property with the options on the points filtering
+    */
     /***********************************************************************/
     yarp::os::Property getPointsFilterPar();
 
-    /* Get options used for filtering the superquadric */
+    /** Get options used for filtering the superquadric
+    * @return a property with the options on superquadric filtering
+    * /
     /***********************************************************************/
     yarp::os::Property getSuperqFilterPar();
 
-    /* Get options used for solving the optimization problem with Ipopt */
+    /** Get options used for solving the optimization problem with Ipopt
+    * @return a property with the options on ipopt
+    * /
     /***********************************************************************/
     yarp::os::Property getIpoptPar();
 
-    /* Set a parameter equal to a value */
+    /** Set a parameter equal to a value
+    * @param par_name is the name of the variable we want to change
+    * @param value is the new balue
+    */
     /***********************************************************************/
     void setPar(const std::string &par_name, const std::string &value);
 
-    /* Init function of RateThread class */
+    /** Init function of RateThread class */
     /***********************************************************************/
     virtual bool threadInit();
 
-    /* Run function of RateThread class */
+    /** Run function of RateThread class */
     /***********************************************************************/
     virtual void run();
 
-    /* Release function of RateThread class */
+    /** Release function of RateThread class */
     /***********************************************************************/
     virtual void threadRelease();
 
-    /* Save point cloud used for reconstructing the superquadric */
+    /** Save point cloud used for reconstructing the superquadric
+    * @param namefile is the name of the file where to save the superquadric
+    * @param colors is a Vector with the color to be used for saving the point cloud
+    */
     /***********************************************************************/
     void savePoints(const std::string &namefile, const yarp::sig::Vector &colors);
 
-    /* Read the object point cloud from txt for offline tests */
+    /** Read the object point cloud from txt for offline tests */
     /***********************************************************************/
     bool readPointCloud();
 
-    /* Filter the received point cloud */
+    /** Filter the received point cloud */
     /***********************************************************************/
     void filter();
 
-    /* Compute the superquadric modeling the object */
+    /** Compute the superquadric modeling the object
+    * @return true/false on success/failure
+    */
     /***********************************************************************/
     bool computeSuperq();
 
-    /* Filter the superquadri with the median filter */
+    /** Filter the superquadri with the median filter */
     /***********************************************************************/
     void filterSuperq();
 
-    /* Reset median filter */
+    /** Reset median filter */
     /***********************************************************************/
     void resetMedianFilter();
 
-    /* Compute window size according to the object velocity */
+    /** Compute window size according to the object velocity */
     /***********************************************************************/
     int adaptWindComputation();
 
-    /* Configure superquadric filter */
+    /** Configure superquadric filter */
     /***********************************************************************/
     bool configFilterSuperq();
 
-    /* Configure point cloud filter */
+    /** Configure point cloud filter */
     /***********************************************************************/
     bool config3Dpoints();
 
-    /* Return the computed superquadric */
+    /** Return the computed superquadric
+    * @param filtered_or_not can be "on" or "off"
+    * @return the estimated superquadric filtered or not
+    */
     /***********************************************************************/
     yarp::sig::Vector getSolution(bool filtered_or_not);
 
-    /* Get the point cloud for computing the superquadric */
+    /** Get the point cloud for computing the superquadric
+    * @param p is the object point cloud
+    */
     /***********************************************************************/
     void sendPoints(const std::deque<yarp::sig::Vector> &p);
 
-    /* Get the point cloud for computing the superquadric */
+    /** Get the point cloud for computing the superquadric */
     /***********************************************************************/
     void getPoints3D();
 
-    /* Return the computation time for estimating the superquadric*/
+    /** Return the computation time for estimating the superquadric
+    * @return the period value
+    */
     /***********************************************************************/
     double getTime();     
 };

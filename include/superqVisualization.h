@@ -59,12 +59,14 @@ protected:
 
 public:
 
-    // Shared variables
+    /** Estimated superquadric */
     yarp::sig::Vector &superq;
+    /** Filtered superquadric */
     yarp::sig::Vector &superq_filtered;
+    /** Object point cloud */
     std::deque<yarp::sig::Vector> &points;
 
-    //Input image
+    /** Input image */
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *&imgIn;
 
     /***********************************************************************/
@@ -72,51 +74,76 @@ public:
                         std::deque<int> &_Color, yarp::dev::IGazeControl *_igaze, const yarp::sig::Matrix _K, std::deque<yarp::sig::Vector> &_points,
                         const int &_vis_points, const int &_vis_step, yarp::sig::ImageOf<yarp::sig::PixelRgb> *&imgIn);
 
-    /* Show point cloud on the image */
+    /** Show point cloud on the image
+    * @return true
+    */
     /***********************************************************************/
     bool showPoints();
 
-    /* Show reconstructed superquadric on the image */
+    /** Show reconstructed superquadric on the image
+    * @param x_to_show is the superquadric to be shown
+    * @return true/false on success/failure
+    */
     /***********************************************************************/
     bool showSuperq(yarp::sig::Vector &x_to_show);
 
-    /* Compute 2D pixels from 3D points */
+    /** Compute 2D pixels from 3D points
+    * @param point3D is the 3D point to be converted
+    * @return a 2D vector representing the corresponding pixel
+    */
     /***********************************************************************/
     yarp::sig::Vector from3Dto2D(const yarp::sig::Vector &point3D);
 
-    /* Init function of RateThread */
+    /** Init function of RateThread */
     /***********************************************************************/
     virtual bool threadInit();
 
-    /* Run function of RateThread */
+    /** Run function of RateThread */
     /***********************************************************************/
     virtual void run();
 
-    /* Release function of RateThread */
+    /** Release function of RateThread */
     /***********************************************************************/
     virtual void threadRelease();
 
-    /* Set a given parameter equal to a string */
+    /** Set a given parameter equal to a string
+    * @param par_name is the name of the parameter to be changed
+    * @param value is the new value
+    */
     /***********************************************************************/
     void setPar(const std::string &par_name, const std::string &value);
 
-    /* Set a given parameter equal to a desired value */
+    /** Set a given parameter equal to a desired value
+    * @param par_name is the name of the parameter to be changed
+    * @param value is the new value
+    * /
     /***********************************************************************/
     void setPar(const std::string &par_name, const int &value);
 
-    /* Set color for visualization  */
+    /** Set color for visualization
+    * @param r is the red component
+    * @param g is the green component
+    * @param b is the blue component
+    */
     /***********************************************************************/
     void setColor (const int &r, const int &g, const int &b);
 
-    /* Set parameters for visualization */
+    /** Set parameters for visualization
+    * @param newOptions is a Property with the new options to set
+    * @param first_time takes into account if the options have already been set or not
+    */
     /***********************************************************************/    
     void setPar(const yarp::os::Property &newOptions, bool first_time);
 
-    /* Get parameters for visualization */
+    /** Get parameters for visualization
+    * @return a property with all the visualization options
+    */
     /***********************************************************************/
     yarp::os::Property getPar();
 
-    /* Get time required for visualization */
+    /** Get time required for visualization
+    * @return the visualization time
+    */
     /***********************************************************************/
     double getTime();
 };
