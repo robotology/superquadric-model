@@ -116,7 +116,7 @@ public:
     /** Set a given parameter equal to a desired value
     * @param par_name is the name of the parameter to be changed
     * @param value is the new value
-    * /
+    */
     /***********************************************************************/
     void setPar(const std::string &par_name, const int &value);
 
