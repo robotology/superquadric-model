@@ -242,7 +242,7 @@ protected:
 public:
     /** Get period function of RF module
     * @return the period
-    * /
+    */
     /***********************************************************************/
     double getPeriod();
 
