@@ -154,3 +154,8 @@ yarp rpc /iolStateMachineHandler/human:rpc
 
 
 [`Go to the top`](#superquadric-model-tutorial)
+
+## How to run the superquadric-model and superquadric-grasp module together
+This module is designed in order to be executed together the [`superquadric-grasp module`](https://github.com/robotology/superquadric-grasp). A **complete tutorial** on how to execute them together and perform on the robot a **complete modeling and grasping task** is provided in [`this repository`](https://github.com/robotology/superquadric-grasp-example).
+
+[`Go to the top`](#superquadric-model-tutorial)
