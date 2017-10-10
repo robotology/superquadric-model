@@ -52,7 +52,7 @@ compensated by the multiplication with the term _&lambda;1, &lambda;2, &lambda;3
 ## How to compile
 
 In `Linux systems` code can be compiled as follows:
-```
+```sh
 git clone https://github.com/robotology/superquadric-model.git
 cd superquadric-model
 mkdir build; cd build
