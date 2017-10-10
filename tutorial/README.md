@@ -4,7 +4,7 @@ Overview:
 - [How to communicate with the superquadric-model](#how-to-communicate-with-the-superquadric-model)
 - [How to run the `superquadric-model` + `tutorial`](#how-to-run-the-superquadric-model--tutorial)
 - [Setting up before running](#setting-up-before-running)
-- [How to run the superquadric-model and superquadric-grasp module together](#how-to-run-the-superquadric-model-and-superquadric-grasp-module-together)
+- [How to run the overall pipeline](#how-to-run-the-overall-pipeline)
 ## Dependency
 This example module relies on
 
@@ -156,7 +156,7 @@ yarp rpc /iolStateMachineHandler/human:rpc
 
 [`Go to the top`](#superquadric-model-tutorial)
 
-## How to run the superquadric-model and superquadric-grasp module together
+## How to run the overall pipeline
 This module is designed in order to be executed together the [`superquadric-grasp module`](https://github.com/robotology/superquadric-grasp). A **complete tutorial** on how to execute them together and perform on the robot a **complete modeling and grasping task** is provided in [`this repository`](https://github.com/robotology/superquadric-grasp-example).
 
 [`Go to the top`](#superquadric-model-tutorial)
