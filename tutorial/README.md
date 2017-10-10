@@ -13,7 +13,7 @@ This example module relies on
 for  the blob extraction process.
 
 ## How to compile
-```
+```sh
 mkdir build; cd build
 ccmake ..
 make install
@@ -40,11 +40,11 @@ The user can provide the 3D point cloud (a set of points in the 3D space represe
   pointPort.write();
 ```
 connecting to the  corresponding buffered port of the superquadric-model:
-```
+```sh
 yarp connect /testing-module/point:o /superquadric-model/point:i
 ```
 The estimated superquadric can be read from another buffered port
-```
+```sh
 yarp connect /superquadric-model/superq:o /testing-module/superq:i
 ```
 in the format:
@@ -58,7 +58,7 @@ where:
  - **orientation** is the axis-angle orientation (derived from the Euler angles: x8, x9, x10 mentioned before).
 
 **One-shot**: In this mode, the user can ask a simple query to the superquadric-model just sending a specific 2D blob and asking for the corresponding estimated superquadric. In this case, the port to use in the `rpc` port:
-```
+```sh
 yarp connect /testing-module/superq:rpc /superquadric-model/rpc
 ```
 An example of code is the following:
@@ -81,7 +81,7 @@ cmd.addInt(0);
 ```
 :warning: The `get_superquadric` service can also deal with an extra parameter for resetting the median filter
 used for improving the superquadric estimation:
-```
+```cpp
 //1 is for resetting the superquadric, 0 for keeping using the previous computed superquadrics.
 // Usually, the filter needs to be reset when the object or its pose change.
 // If nothing is specified, the filter is never reset.
@@ -111,12 +111,12 @@ If you want to test the `superquadric-model` code without writing your own code,
 
 You can now play with the `/testing-module/rpc` port:
 - setting the name of the object you want to model
-```
+```sh
 yarp rpc /testing-module/rpc
 >>set_object_name object
 ```
 - setting if you want the streaming mode or not
-```
+```sh
 >>set_streaming_mode on
 ```
 
@@ -133,7 +133,7 @@ The viewers show the disparity map and the features matching between the cameras
 - Set the `eye_vergence=5.0`.
 - Showing to the iCub a no-flat scene;
 - Through the proper `RcpPort`, asking `SFM` to perform calibration, until `ACK` reply is received
-```
+```sh
 yarp rpc /SFM/rpc
 >> calibrate
 [Ack]
@@ -147,7 +147,7 @@ The only step to be performed with [IOL](https://github.com/robotology/iol/blob/
 - Launch [IOL](https://github.com/robotology/iol/blob/master/app/scripts/iol.xml.template).
 - Click on the object of interest in the `/iolViewer/manager/localizer ` viewer.
 - Through the proper `RpcPort`:
-```
+```sh
 yarp rpc /iolStateMachineHandler/human:rpc
 >>this <object_name> click
 [ok]
