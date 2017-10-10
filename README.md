@@ -1,6 +1,7 @@
 # superquadric-model
 Framework for modeling, detecting and visualizing objects through superquadric functions.
-Overview:
+
+#### Overview:
 - [Theoretical background](#theoretical-background)
 - [Dendenciens & how to compile](#dependencies)
 - [Module structure](#module-structure)
