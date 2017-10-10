@@ -1,4 +1,9 @@
 # superquadric-model tutorial
+Overview:
+-[Dependency & how to compile the tutorial](#dependencies)
+-[How to communicate with the superquadric-model](#how-to-communicate-with-the-superquadric-model)
+-[How to run the `superquadric-model` + `tutorial`](#how-to-run-the-superquadric-model--tutorial)
+-[Setting up for running on the robot](#setting-up)
 ## Dependency
 This example module relies on
 
@@ -22,7 +27,7 @@ The user can provide the 3D point cloud (a set of points in the 3D space represe
 ```cpp
   pointPort.open("/testing-module/point:o");
   Bottle &b1=point.addList();
-        
+
   for (size_t i=0; i<points.size(); i++)
   {
       Bottle &b=b1.addList();
@@ -35,7 +40,7 @@ connecting to the  corresponding buffered port of the superquadric-model:
 ```
 yarp connect /testing-module/point:o /superquadric-model/point:i
 ```
-The estimated superquadric can be read from another buffered port 
+The estimated superquadric can be read from another buffered port
 ```
 yarp connect /superquadric-model/superq:o /testing-module/superq:i
 ```
@@ -48,7 +53,7 @@ where:
  - **exponents** are the responsible for the superquadric shape;
  - **center** are the coordinates of center of the superquadric;
  - **orientation** is the axis-angle orientation (derived from the Euler angles: x8, x9, x10 mentioned before).
- 
+
 **One-shot**: In this mode, the user can ask a simple query to the superquadric-model just sending a specific 2D blob and asking for the corresponding estimated superquadric. In this case, the port to use in the `rpc` port:
 ```
 yarp connect /testing-module/superq:rpc /superquadric-model/rpc
@@ -92,7 +97,7 @@ If you need to handle it, use it as a `Bottle` in this format, rather than a `Pr
 If you want to test the `superquadric-model` code without writing your own code, you can use the this `tutorial`, following the following steps:
 
 1. Launch the basic modules of the iCub (`yarprobotinterface`, `iKinGazeCtrl`, `iKinCartesianSolver` - both for right and left arm-, `wholeBodyDynamics`, `gravityCompensator`, `imuFilter`) and the cameras.
-2. Launch the [IOL](https://github.com/robotology/iol) modules. [This xml file](https://github.com/robotology/iol/blob/master/app/scripts/iol.xml.template) contains all the required modules. 
+2. Launch the [IOL](https://github.com/robotology/iol) modules. [This xml file](https://github.com/robotology/iol/blob/master/app/scripts/iol.xml.template) contains all the required modules.
 3. Launch the `superquadric-model` and a `yarpviewer`. You can use [this xml file](https://github.com/robotology/superquadric-model/blob/master/app/scripts/superquadric-model.xml.template).
 4. Launch the `tutorial` code with [this xml](https://github.com/robotology/superquadric-model/blob/master/tutorial/app/script/testing-module.xml.template).
 5. Connect everything.
@@ -110,11 +115,11 @@ yarp rpc /testing-module/rpc
 
 Enjoy! :smiley:
 
-## Setting up 
+## Setting up
 In order to achieve the desired performance, it is recommended to solve the following practical issues:
 #### Calibrate the stereo vision through the [SFM module](https://github.com/robotology/stereo-vision).
-The calibration consists of: 
-- Launching `SFM` and two yarpviews with [this xml](https://github.com/robotology/stereo-vision/tree/master/app/scripts). 
+The calibration consists of:
+- Launching `SFM` and two yarpviews with [this xml](https://github.com/robotology/stereo-vision/tree/master/app/scripts).
 The viewers show the disparity map and the features matching between the cameras.
 - Set the `eye_vergence=5.0`.
 - Showing to the iCub a no-flat scene;
@@ -138,5 +143,3 @@ yarp rpc /iolStateMachineHandler/human:rpc
 >>this <object_name> click
 [ok]
 ```
-
-

@@ -1,5 +1,12 @@
 # superquadric-model
 Framework for modeling, detecting and visualizing objects through superquadric functions.
+Overview:
+- [Theoretical background](#theoretical-background)
+- [Dendenciens & how to compile](#dependencies)
+- [Module structure](#module-structure)
+- [Use case & results](#use-case)
+- [Documentaion & more](#more-information)
+
 
 ## Theoretical background
 The **superquadric-model** framework is based on the idea that _low-dimensional_, _compact_, _mathematical_ representation of objects
@@ -51,7 +58,7 @@ mkdir build; cd build
 ccmake ..
 make install
 ```
-  
+
 
 ## Module structure
 The module structure is outlined in the following picture:
@@ -94,7 +101,7 @@ This [video](https://www.youtube.com/watch?v=MViX4Ppo4WQ&feature=youtu.be) shows
 
 
 ### More information
-You can find an overview of the entire pipeline `superquadric-model module + example code` in the following pdf: [superquadric-model.pdf](https://github.com/robotology/superquadric-model/blob/master/misc/superquadric-model.pdf). 
+You can find an overview of the entire pipeline `superquadric-model module + example code` in the following pdf: [superquadric-model.pdf](https://github.com/robotology/superquadric-model/blob/master/misc/superquadric-model.pdf).
 If you want to _browse_ the prezi version of the presentation, you can have a look at the link: [superquadric-model-prezi](https://prezi.com/zlx2l4ekonuc/superquadric-model/).
 
 ## Documentation
