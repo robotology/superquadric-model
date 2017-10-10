@@ -4,6 +4,7 @@ Overview:
 - [How to communicate with the superquadric-model](#how-to-communicate-with-the-superquadric-model)
 - [How to run the `superquadric-model` + `tutorial`](#how-to-run-the-superquadric-model--tutorial)
 - [Setting up before running](#setting-up-before-running)
+- [How to run the superquadric-model and superquadric-grasp module together](#how-to-run-the-superquadric-model-and-superquadric-grasp-module-together)
 ## Dependency
 This example module relies on
 
