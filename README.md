@@ -40,7 +40,7 @@ The problem can be solved by minimizing the following quantity:
 The _F_ function is raised to the power of _&epsilon;1_ in order to make the error metric independent from the shape of the superquadric and provide faster convergence. This change causes a bias towards larger superquadrics. This effect is
 compensated by the multiplication with the term _&lambda;1, &lambda;2, &lambda;3_ which is proportional to the volume of the superquadric.
 
-[Go to the top](#superquadric-model)
+[`Go to the top`](#superquadric-model)
 
 ## Dependencies
 - [YARP](https://github.com/robotology/yarp)
@@ -59,7 +59,7 @@ mkdir build; cd build
 ccmake ..
 make install
 ```
-[Go to the top](#superquadric-model)
+[`Go to the top`](#superquadric-model)
 
 ## Module structure
 The module structure is outlined in the following picture:
@@ -82,7 +82,7 @@ In order to improve the superquadric modeling, the `SuperqComputation` thread pr
 The former is a **density filter**, discarding noisy queues of the point cloud, that can arise from the noise of the disparity map.
 The latter is a **median filter with an adaptive moving window**. Each filtered superquadric is obtained by applying a median filter on the last _m_ estimated superquadrics. The value of _m_ depends on the estimated velocity of the object. If the object is moving the window width is low in order to correctly track the object (e.g.` _m_=1`), otherwise _m_ is incrementally increased up to a maximum value.
 
-[Go to the top](#superquadric-model)
+[`Go to the top`](#superquadric-model)
 
 ## Use case
 The superquadric-model module requires the 3D point cloud of the object we want to model with a superquadric function.
@@ -102,7 +102,7 @@ The execution times are respectively:
 
 This [video](https://www.youtube.com/watch?v=MViX4Ppo4WQ&feature=youtu.be) shows the superquadric modeling of several objects.
 
-[Go to the top](#superquadric-model)
+[`Go to the top`](#superquadric-model)
 
 ### More information
 You can find an overview of the entire pipeline `superquadric-model module + example code` in the following pdf: [superquadric-model.pdf](https://github.com/robotology/superquadric-model/blob/master/misc/superquadric-model.pdf).
@@ -111,7 +111,7 @@ If you want to _browse_ the prezi version of the presentation, you can have a lo
 ## Documentation
 Online documentation is available here:  [http://robotology.github.com/superquadric-model](http://robotology.github.com/superquadric-model).
 
-[Go to the top](#superquadric-model)
+[`Go to the top`](#superquadric-model)
 ## License
 Material included here is Copyright of _iCub Facility - Istituto Italiano di Tecnologia_
 and is released under the terms of the GPL v2.0 or later. See the file LICENSE for details.
