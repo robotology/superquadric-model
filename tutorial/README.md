@@ -1,9 +1,9 @@
 # superquadric-model tutorial
 Overview:
--[Dependency & how to compile the tutorial](#dependencies)
--[How to communicate with the superquadric-model](#how-to-communicate-with-the-superquadric-model)
--[How to run the `superquadric-model` + `tutorial`](#how-to-run-the-superquadric-model--tutorial)
--[Setting up for running on the robot](#setting-up)
+- [Dependency & how to compile the tutorial](#dependency)
+- [How to communicate with the superquadric-model](#how-to-communicate-with-the-superquadric-model)
+- [How to run the `superquadric-model` + `tutorial`](#how-to-run-the-superquadric-model--tutorial)
+- [Setting up before running](#setting-up)
 ## Dependency
 This example module relies on
 
