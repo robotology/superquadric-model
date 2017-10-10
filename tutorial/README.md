@@ -3,7 +3,7 @@ Overview:
 - [Dependency & how to compile the tutorial](#dependency)
 - [How to communicate with the superquadric-model](#how-to-communicate-with-the-superquadric-model)
 - [How to run the `superquadric-model` + `tutorial`](#how-to-run-the-superquadric-model--tutorial)
-- [Setting up before running](#setting-up)
+- [Setting up before running](#setting-up-before-running)
 ## Dependency
 This example module relies on
 
@@ -115,7 +115,7 @@ yarp rpc /testing-module/rpc
 
 Enjoy! :smiley:
 
-## Setting up
+## Setting up before running
 In order to achieve the desired performance, it is recommended to solve the following practical issues:
 #### Calibrate the stereo vision through the [SFM module](https://github.com/robotology/stereo-vision).
 The calibration consists of:
