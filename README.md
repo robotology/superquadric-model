@@ -40,6 +40,8 @@ The problem can be solved by minimizing the following quantity:
 The _F_ function is raised to the power of _&epsilon;1_ in order to make the error metric independent from the shape of the superquadric and provide faster convergence. This change causes a bias towards larger superquadrics. This effect is
 compensated by the multiplication with the term _&lambda;1, &lambda;2, &lambda;3_ which is proportional to the volume of the superquadric.
 
+More information are available in [our ICRA paper [1]](#references).
+
 [`Go to the top`](#superquadric-model)
 
 ## Dependencies
@@ -115,5 +117,9 @@ Online documentation is available here:  [http://robotology.github.com/superquad
 ## License
 Material included here is Copyright of _iCub Facility - Istituto Italiano di Tecnologia_
 and is released under the terms of the GPL v2.0 or later. See the file LICENSE for details.
+
+
+## References
+[1] G. Vezzani, U. Pattacini and L. Natale, "A grasping approach based on superquadric models", _IEEE-RAS International Conference on Robotics and Automation 2017_, pp 1579-1586. 
 
 [![DOI](https://zenodo.org/badge/54477564.svg)](https://zenodo.org/badge/latestdoi/54477564)
