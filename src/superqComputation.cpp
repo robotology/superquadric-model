@@ -1039,6 +1039,7 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
 
             computeNestedSuperq(newnode->right,i,j, first_time, count, final, count2);
 
+
             first_time=false;
             cout<<endl;
 
@@ -1053,24 +1054,32 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
             nodeContent node_c1;
             nodeContent node_c2;
 
-            splitPoints(false, newnode);
+            if ((!newnode->right) && (!newnode->left))
+            {
+                //if ((norm(newnode->right->superq)==0) && (norm(newnode->left->superq)==0))
+                //{
+                yDebug()<<"Computing right and left";
+                    splitPoints(false, newnode);
+                    superq1=computeMultipleSuperq(points_splitted1);
+                    superq2=computeMultipleSuperq(points_splitted2);
 
-            superq1=computeMultipleSuperq(points_splitted1);
-            superq2=computeMultipleSuperq(points_splitted2);
+                    node_c1.f_value=evaluateLoss(superq1, points_splitted1);
+                    node_c2.f_value=evaluateLoss(superq2, points_splitted2);
 
-            node_c1.f_value=evaluateLoss(superq1, points_splitted1);
-            node_c2.f_value=evaluateLoss(superq2, points_splitted2);
+                    node_c1.superq=superq1;
+                    node_c2.superq=superq2;
+                    node_c1.point_cloud= new deque<Vector>;
+                    node_c2.point_cloud= new deque<Vector>;
 
-            node_c1.superq=superq1;
-            node_c2.superq=superq2;
-            node_c1.point_cloud= new deque<Vector>;
-            node_c2.point_cloud= new deque<Vector>;
-
-            *node_c1.point_cloud=points_splitted1;
-            *node_c2.point_cloud=points_splitted2;
+                    *node_c1.point_cloud=points_splitted1;
+                    *node_c2.point_cloud=points_splitted2;
 
 
-            superq_tree->insert(node_c1, node_c2, newnode);
+                    superq_tree->insert(node_c1, node_c2, newnode);
+               // }
+            }
+            else
+                yDebug()<<"Skipping computation because already computed";
 
             computeNestedSuperq(newnode->right,i,j, first_time, count, final, count2);
 
@@ -1096,24 +1105,33 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
                 nodeContent node_c1;
                 nodeContent node_c2;
 
-                splitPoints(false, newnode);
+                if ((!newnode->right) && (!newnode->left))
+                {
+                    yDebug()<<"Computing right and left";
+                    //if ((norm(newnode->right->superq)==0) && (norm(newnode->left->superq)==0))
+                    //{
+                        splitPoints(false, newnode);
 
-                superq1=computeMultipleSuperq(points_splitted1);
-                superq2=computeMultipleSuperq(points_splitted2);
+                        superq1=computeMultipleSuperq(points_splitted1);
+                        superq2=computeMultipleSuperq(points_splitted2);
 
-                node_c1.f_value=evaluateLoss(superq1, points_splitted1);
-                node_c2.f_value=evaluateLoss(superq2, points_splitted2);
+                        node_c1.f_value=evaluateLoss(superq1, points_splitted1);
+                        node_c2.f_value=evaluateLoss(superq2, points_splitted2);
 
-                node_c1.superq=superq1;
-                node_c2.superq=superq2;
-                node_c1.point_cloud= new deque<Vector>;
-                node_c2.point_cloud= new deque<Vector>;
+                        node_c1.superq=superq1;
+                        node_c2.superq=superq2;
+                        node_c1.point_cloud= new deque<Vector>;
+                        node_c2.point_cloud= new deque<Vector>;
 
-                *node_c1.point_cloud=points_splitted1;
-                *node_c2.point_cloud=points_splitted2;
+                        *node_c1.point_cloud=points_splitted1;
+                        *node_c2.point_cloud=points_splitted2;
 
 
-                superq_tree->insert(node_c1, node_c2, newnode);
+                        superq_tree->insert(node_c1, node_c2, newnode);
+                    //}
+                }
+                else
+                    yDebug()<<"Skipping computation because already computed";
 
                 if (count %2 !=0)
                 {
@@ -1147,24 +1165,33 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
                 nodeContent node_c1;
                 nodeContent node_c2;
 
-                splitPoints(false, newnode);
+                if ((!newnode->right) && (!newnode->left))
+                {
+                    yDebug()<<"Computing right and left";
+                    //if ((norm(newnode->right->superq)==0) && (norm(newnode->left->superq)==0))
+                    //{
+                        splitPoints(false, newnode);
 
-                superq1=computeMultipleSuperq(points_splitted1);
-                superq2=computeMultipleSuperq(points_splitted2);
+                        superq1=computeMultipleSuperq(points_splitted1);
+                        superq2=computeMultipleSuperq(points_splitted2);
 
-                node_c1.f_value=evaluateLoss(superq1, points_splitted1);
-                node_c2.f_value=evaluateLoss(superq2, points_splitted2);
+                        node_c1.f_value=evaluateLoss(superq1, points_splitted1);
+                        node_c2.f_value=evaluateLoss(superq2, points_splitted2);
 
-                node_c1.superq=superq1;
-                node_c2.superq=superq2;
-                node_c1.point_cloud= new deque<Vector>;
-                node_c2.point_cloud= new deque<Vector>;
+                        node_c1.superq=superq1;
+                        node_c2.superq=superq2;
+                        node_c1.point_cloud= new deque<Vector>;
+                        node_c2.point_cloud= new deque<Vector>;
 
-                *node_c1.point_cloud=points_splitted1;
-                *node_c2.point_cloud=points_splitted2;
+                        *node_c1.point_cloud=points_splitted1;
+                        *node_c2.point_cloud=points_splitted2;
 
 
-                superq_tree->insert(node_c1, node_c2, newnode);
+                        superq_tree->insert(node_c1, node_c2, newnode);
+                    //}
+                }
+                else
+                    yDebug()<<"Skipping computation because already computed";
 
                 if (count2 %2 !=0)
                 {
@@ -1320,6 +1347,7 @@ void SuperqComputation::mergeModeling(node *node, bool go_on)
 
         yDebug()<<"cost right "<<cost_right_2;
         yDebug()<<"node right f value"<<node->right->f_value;
+
         if (cost_right_2 < node->right->f_value)
         {
             mergeModeling(node->right, go_on);
