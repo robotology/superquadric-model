@@ -67,9 +67,9 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 
 /***********************************************************************/
 SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _single_superq, bool _fixed_window,deque<yarp::sig::Vector> &_points, ImageOf<PixelRgb> *_imgIn, string _tag_file, double _threshold_median,
-                                const Property &_filter_points_par, Vector &_x, Vector &_x_filtered, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points, ResourceFinder *_rf):
+                                const Property &_filter_points_par, Vector &_x, Vector &_x_filtered, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points, ResourceFinder *_rf, superqTree *_superq_tree):
                                 filter_points(_filter_points), filter_superq(_filter_superq), fixed_window( _fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points), imgIn(_imgIn), single_superq(_single_superq),
-                                filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate), homeContextPath(_homeContextPath), x(_x), x_filtered(_x_filtered), points(_points), rf(_rf)
+                                filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate), homeContextPath(_homeContextPath), x(_x), x_filtered(_x_filtered), points(_points), rf(_rf), superq_tree(_superq_tree)
 {
 }
 
@@ -970,7 +970,7 @@ void SuperqComputation::iterativeModeling()
     Vector f(2,0.0);
     bool first_time=true;
 
-    superq_tree= new superqTree(&points);
+    superq_tree->setPoints(&points);
 
     node *newnode=superq_tree->root;
 
@@ -1059,23 +1059,23 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
                 //if ((norm(newnode->right->superq)==0) && (norm(newnode->left->superq)==0))
                 //{
                 yDebug()<<"Computing right and left";
-                    splitPoints(false, newnode);
-                    superq1=computeMultipleSuperq(points_splitted1);
-                    superq2=computeMultipleSuperq(points_splitted2);
+                splitPoints(false, newnode);
+                superq1=computeMultipleSuperq(points_splitted1);
+                superq2=computeMultipleSuperq(points_splitted2);
 
-                    node_c1.f_value=evaluateLoss(superq1, points_splitted1);
-                    node_c2.f_value=evaluateLoss(superq2, points_splitted2);
+                node_c1.f_value=evaluateLoss(superq1, points_splitted1);
+                node_c2.f_value=evaluateLoss(superq2, points_splitted2);
 
-                    node_c1.superq=superq1;
-                    node_c2.superq=superq2;
-                    node_c1.point_cloud= new deque<Vector>;
-                    node_c2.point_cloud= new deque<Vector>;
+                node_c1.superq=superq1;
+                node_c2.superq=superq2;
+                node_c1.point_cloud= new deque<Vector>;
+                node_c2.point_cloud= new deque<Vector>;
 
-                    *node_c1.point_cloud=points_splitted1;
-                    *node_c2.point_cloud=points_splitted2;
+                *node_c1.point_cloud=points_splitted1;
+                *node_c2.point_cloud=points_splitted2;
 
 
-                    superq_tree->insert(node_c1, node_c2, newnode);
+                superq_tree->insert(node_c1, node_c2, newnode);
                // }
             }
             else

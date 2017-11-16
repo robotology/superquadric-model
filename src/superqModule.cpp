@@ -445,9 +445,9 @@ bool SuperqModule::updateModule()
                 double t=Time::now();
                 superqCom->iterativeModeling();
                 //if (superqCom->merge)
-                superqCom->mergeModeling(superqCom->superq_tree->root, true);
+                superqCom->mergeModeling(superq_tree->root, true);
                 t=Time::now()-t;
-                superqCom->superq_tree->printTree(superqCom->superq_tree->root);
+                superq_tree->printTree(superq_tree->root);
                 yInfo()<<"             Execution Time           :"<<t;
             }
         }
@@ -493,8 +493,10 @@ bool SuperqModule::configure(ResourceFinder &rf)
     if (config_ok==false)
         return false;
 
+    superq_tree= new superqTree();
+
     superqCom= new SuperqComputation(rate, filter_points, filter_superq, single_superq, fixed_window, points, imgIn, tag_file,
-                                     threshold_median,filter_points_par, x, x_filtered, filter_superq_par, ipopt_par, homeContextPath, save_points, this->rf);
+                                     threshold_median,filter_points_par, x, x_filtered, filter_superq_par, ipopt_par, homeContextPath, save_points, this->rf, superq_tree);
 
     if (mode_online)
     {
@@ -506,7 +508,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
             yError()<<"[SuperqComputation]: Problems in starting the thread!";
     //}
 
-        superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K, points, vis_points, vis_step, imgIn);
+        superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K, points, vis_points, vis_step, imgIn, superq_tree, single_superq);
 
         if (visualization_on)
         {
@@ -715,6 +717,7 @@ bool SuperqModule::configViewer(ResourceFinder &rf)
 
     eye=rf.check("eye", Value("left")).asString();
     what_to_plot=rf.find("plot").asString().c_str();
+
     if (rf.find("plot").isNull())
         what_to_plot="superq";
 

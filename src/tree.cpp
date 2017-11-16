@@ -12,10 +12,10 @@ using namespace yarp::dev;
 using namespace yarp::sig;
 
 /***********************************************************************/
-superqTree::superqTree(deque<Vector> *point_cloud)
+superqTree::superqTree()
 {
     root= new node;
-    root->point_cloud=point_cloud;
+    //root->point_cloud->clear();
     root->superq.resize(11,0.0);
     root->plane.resize(4,0.0);
     root->f_value=0;
@@ -28,6 +28,12 @@ superqTree::superqTree(deque<Vector> *point_cloud)
 superqTree::~superqTree()
 {
     destroy_tree();
+}
+
+/***********************************************************************/
+void superqTree::setPoints(deque<Vector> *point_cloud)
+{
+    root->point_cloud=point_cloud;
 }
 
 /***********************************************************************/

@@ -111,6 +111,8 @@ protected:
     yarp::os::Property filter_superq_par;
     yarp::os::Property ipopt_par;
 
+    superqTree *superq_tree;
+
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
     /************************************************************************/

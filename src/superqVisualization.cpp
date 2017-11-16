@@ -28,9 +28,9 @@ using namespace yarp::math;
 /***********************************************************************/
 SuperqVisualization::SuperqVisualization(int _rate,const string &_eye, const string &_what_to_plot, Vector &_x, Vector &_x_filtered,
                                          deque<int> &_Color,IGazeControl *_igaze, const Matrix _K, deque<Vector> &_points,
-                                         const int &_vis_points, const int &_vis_step, ImageOf<PixelRgb> *&_imgIn):
-                                         RateThread(_rate), eye(_eye), what_to_plot(_what_to_plot), Color(_Color), igaze(_igaze), K(_K),
-                                         vis_points(_vis_points), vis_step(_vis_step), superq(_x), superq_filtered(_x_filtered), points(_points), imgIn(_imgIn)
+                                         const int &_vis_points, const int &_vis_step, ImageOf<PixelRgb> *&_imgIn, superqTree *&_superq_tree, bool &_single_superq):
+                                         RateThread(_rate), eye(_eye), what_to_plot(_what_to_plot), Color(_Color), igaze(_igaze), K(_K), single_superq(_single_superq),
+                                         vis_points(_vis_points), vis_step(_vis_step), superq(_x), superq_filtered(_x_filtered), points(_points), imgIn(_imgIn), superq_tree(_superq_tree)
 {
 
 }
@@ -111,6 +111,34 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
 
     return true;
 }
+
+/***********************************************************************/
+bool SuperqVisualization::showMultipleSuperqs(superqTree *&superq_tree)
+{
+    yDebug()<<"in vis "<<superq_tree->root->superq.toString();
+    if (superq_tree!=NULL)
+        showTree(superq_tree->root);
+
+    return true;
+}
+
+/***********************************************************************/
+bool SuperqVisualization::showTree(node *leaf)
+{
+    if(leaf!=NULL)
+    {
+        showSuperq(leaf->superq);
+        if (leaf->right!=NULL)
+            showTree(leaf->right);
+
+        yDebug()<<"print left";
+        if (leaf->left!=NULL)
+            showTree(leaf->left);
+    }
+    else
+        yDebug()<<"Finished";
+}
+
 
 /***********************************************************************/
 bool SuperqVisualization::showPoints()
@@ -194,8 +222,10 @@ bool SuperqVisualization::threadInit()
 void SuperqVisualization::run()
 {
     double t0=Time::now();
-    if (what_to_plot=="superq" && imgIn!=NULL)
+    if (what_to_plot=="superq" && imgIn!=NULL && single_superq==true)
         showSuperq(superq_filtered);
+    if (what_to_plot=="superq" && imgIn!=NULL && single_superq==false)
+        showMultipleSuperqs(superq_tree);
     else if (what_to_plot=="points" && points.size()>0)
         showPoints();    
     t_vis=Time::now()-t0;

@@ -26,6 +26,8 @@
 #include <yarp/sig/all.h>
 #include <yarp/dev/all.h>
 
+#include <tree.h>
+
 #include <opencv2/opencv.hpp>
 
 /*******************************************************************************/
@@ -49,7 +51,11 @@ protected:
 
     yarp::os::Mutex mutex;
 
+    superqTree *&superq_tree;
+
 public:
+
+    bool &single_superq;
 
     yarp::sig::Vector &superq;
     yarp::sig::Vector &superq_filtered;
@@ -61,7 +67,7 @@ public:
     /***********************************************************************/
     SuperqVisualization(int rate, const std::string &_eye, const std::string &_what_to_plot, yarp::sig::Vector &x, yarp::sig::Vector &x_filtered,
                         std::deque<int> &_Color, yarp::dev::IGazeControl *_igaze, const yarp::sig::Matrix _K, std::deque<yarp::sig::Vector> &_points,
-                        const int &_vis_points, const int &_vis_step, yarp::sig::ImageOf<yarp::sig::PixelRgb> *&imgIn);
+                        const int &_vis_points, const int &_vis_step, yarp::sig::ImageOf<yarp::sig::PixelRgb> *&imgIn, superqTree *&superq_tree, bool &single_superq);
 
     /***********************************************************************/
     bool readPointCloud();
@@ -71,6 +77,12 @@ public:
 
     /***********************************************************************/
     bool showSuperq(yarp::sig::Vector &x_to_show);
+
+    /***********************************************************************/
+    bool showMultipleSuperqs(superqTree *&superq_tree);
+
+    /***********************************************************************/
+    bool showTree(node *leaf);
 
     /***********************************************************************/
     yarp::sig::Vector from3Dto2D(const yarp::sig::Vector &point3D);

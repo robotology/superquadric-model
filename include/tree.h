@@ -43,7 +43,10 @@ public:
     node *root;
 
     /***********************************************************************/
-    superqTree(std::deque<yarp::sig::Vector> *point_cloud);
+    superqTree();
+
+    /***********************************************************************/
+    void setPoints(std::deque<yarp::sig::Vector> *point_cloud);
 
     /***********************************************************************/
     ~superqTree();
