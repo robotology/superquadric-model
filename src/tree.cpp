@@ -4,12 +4,15 @@
 #include <set>
 #include <fstream>
 
+#include <yarp/math/Math.h>
+
 #include "tree.h"
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::sig;
+using namespace yarp::math;
 
 /***********************************************************************/
 superqTree::superqTree()
@@ -177,7 +180,8 @@ void superqTree::saveNode(ofstream &fout, node *leaf)
     if(leaf!=NULL)
     {
         fout<<"Superquadric "<<endl;
-        fout<<" "<<leaf->superq.toString(3,3)<<endl;
+        fout<<" "<<leaf->superq.subVector(0,7).toString(3,3);
+        fout<<dcm2axis(euler2dcm(leaf->superq.subVector(8,10))).toString()<<endl;
         fout<<"Point cloud size "<<endl;
         fout<<" "<<leaf->point_cloud->size()<<endl;
         fout<<"Plane"<<endl;
