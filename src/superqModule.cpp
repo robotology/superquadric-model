@@ -116,13 +116,17 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
     superqCom->step();
 
     Vector sol(11,0.0);
-    sol=superqCom->getSolution(0);
+    if (single_superq)
+    {
+        sol=superqCom->getSolution(0);
+        superq=fillProperty(sol);
+    }
+    else
+        superq=fillMultipleSolutions(superq_tree->root);
 
     superqCom->setPar("one_shot", "off");
     p_aux.clear();
     superqCom->sendPoints(p_aux);
-
-    superq=fillProperty(sol);
 
     return superq;
 }
@@ -196,6 +200,59 @@ Property SuperqModule::fillProperty(const Vector &sol)
     b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
     superq.put("orientation", bottle.get(3));
     return superq;
+}
+
+
+/**********************************************************************/
+Property SuperqModule::fillMultipleSolutions(node *leaf)
+{
+    int count=0;
+    Property sup;
+
+    addSuperqInProp(leaf, count, sup);
+
+    return sup;
+}
+
+/**********************************************************************/
+void SuperqModule::addSuperqInProp(node *leaf, int count, Property &superq_pr)
+{
+    Vector sup(11,0.0);
+
+    if (leaf!=NULL)
+    {
+        if (norm(leaf->superq.subVector(0,2))>0.0)
+        {
+            count++;
+            stringstream ss;
+            ss<<count;
+            string count_str=ss.str();
+
+            sup.setSubvector(0,leaf->superq.subVector(0,7));
+            sup.setSubvector(8,dcm2axis(euler2dcm(leaf->superq.subVector(8,10))));
+
+            Bottle bottle;
+            Bottle &b1=bottle.addList();
+            b1.addDouble(sup[0]); b1.addDouble(sup[1]); b1.addDouble(sup[2]);
+            superq_pr.put("dimensions_"+count_str, bottle.get(0));
+
+            Bottle &b2=bottle.addList();
+            b2.addDouble(sup[3]); b2.addDouble(sup[4]);
+            superq_pr.put("exponent_"+count_str, bottle.get(1));
+
+            Bottle &b3=bottle.addList();
+            b3.addDouble(sup[5]); b3.addDouble(sup[6]); b3.addDouble(sup[7]);
+            superq_pr.put("center_"+count_str, bottle.get(2));
+
+            Bottle &b4=bottle.addList();
+            Vector orient=dcm2axis(euler2dcm(sup.subVector(8,10)));
+            b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
+            superq_pr.put("orientation_"+count_str, bottle.get(3));
+
+        }
+    }
+    else
+        yDebug()<<"Finished!";
 }
 
 /**********************************************************************/
@@ -358,6 +415,10 @@ bool SuperqModule::set_options(const Property &newOptions, const string &field)
 bool SuperqModule::set_object_class(const string &objclass)
 {
     object_class=objclass;
+    if (object_class=="box" || object_class=="sphere" || object_class=="cylinder")
+        single_superq=true;
+    else
+        single_superq=false;
 
     return true;
 }

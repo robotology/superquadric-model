@@ -24,6 +24,7 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "tree.h"
 #include "superqComputation.h"
 #include "superqVisualization.h"
 
@@ -144,6 +145,12 @@ protected:
 
     /**********************************************************************/
     yarp::os::Property fillProperty(const yarp::sig::Vector &sol);
+
+    /**********************************************************************/
+    yarp::os::Property fillMultipleSolutions(node *leaf);
+
+    /**********************************************************************/
+    void addSuperqInProp(node *leaf, int count, yarp::os::Property &superq_pr);
 
     /**********************************************************************/
     bool set_points_filtering(const std::string &entry);
