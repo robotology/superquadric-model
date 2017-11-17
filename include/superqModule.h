@@ -98,7 +98,7 @@ protected:
     std::deque<int> Color;
 
     yarp::os::ResourceFinder *rf;
-    double t,t0;
+    double t,t0, t_mult;
     std::deque<std::string> advanced_params;
     yarp::os::Mutex mutex;
 

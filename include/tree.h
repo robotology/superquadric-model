@@ -5,6 +5,7 @@
 #include <string>
 #include <deque>
 #include <map>
+#include <fstream>
 
 #include <yarp/dev/all.h>
 
@@ -62,6 +63,12 @@ public:
 
     /***********************************************************************/
     void printTree(node *leaf);
+
+    /***********************************************************************/
+    void saveNode(std::ofstream &fout,node *leaf);
+
+    /***********************************************************************/
+    void saveTree(std::ofstream &fout, node *leaf);
 
     /***********************************************************************/
     void insert(nodeContent &node_content1, nodeContent &node_content2, node *leaf);

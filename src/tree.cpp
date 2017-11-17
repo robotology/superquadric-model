@@ -170,3 +170,38 @@ void superqTree::printTree(node *leaf)
 
 }
 
+
+/***********************************************************************/
+void superqTree::saveNode(ofstream &fout, node *leaf)
+{
+    if(leaf!=NULL)
+    {
+        fout<<"Superquadric "<<endl;
+        fout<<" "<<leaf->superq.toString(3,3)<<endl;
+        fout<<"Point cloud size "<<endl;
+        fout<<" "<<leaf->point_cloud->size()<<endl;
+        fout<<"Plane"<<endl;
+        fout<<" "<<leaf->plane.toString(3,3)<<endl;
+        fout<<"Finale value"<<endl;
+        fout<<" "<<leaf->f_value<<endl;
+        fout<<endl;
+
+        if (leaf->right!=NULL)
+            saveNode(fout, leaf->right);
+
+        if (leaf->left!=NULL)
+            saveNode(fout, leaf->left);
+    }
+    else
+        yDebug()<<"Finished";
+}
+
+/***********************************************************************/
+void superqTree::saveTree(ofstream &fout, node *leaf)
+{
+    yDebug()<<"Save tree...";
+
+    saveNode(fout, leaf);
+
+}
+

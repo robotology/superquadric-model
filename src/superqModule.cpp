@@ -442,13 +442,13 @@ bool SuperqModule::updateModule()
             }
             else
             {
-                double t=Time::now();
+                t_mult=Time::now();
                 superqCom->iterativeModeling();
                 //if (superqCom->merge)
                 superqCom->mergeModeling(superq_tree->root, true);
-                t=Time::now()-t;
+                t_mult=Time::now()-t_mult;
                 superq_tree->printTree(superq_tree->root);
-                yInfo()<<"             Execution Time           :"<<t;
+                yInfo()<<"             Execution Time           :"<<t_mult;
             }
         }
 
@@ -790,7 +790,7 @@ void SuperqModule::saveSuperq()
 {
     ofstream fout;
     fout.open(outputFileName.c_str());
-    if (fout.is_open())
+    if (fout.is_open() && single_superq==true)
     {
         fout<<"*****Result*****"<<endl;
         fout<<"Computed superquadric: "<<endl;
@@ -808,6 +808,17 @@ void SuperqModule::saveSuperq()
         fout<<"Tolerance :"<<tol<<endl;
         fout<<"Nlp scaling method: "<<nlp_scaling_method<<endl;
         fout<<"Mu strategy: "<<mu_strategy<<endl;
+    }
+    else if (fout.is_open() && single_superq==false)
+    {
+        fout<<"*****Result*****"<<endl;
+        fout<<"Computed superquadric: "<<endl;
+        superq_tree->saveTree(fout, superq_tree->root);
+        fout<<endl;
+
+        fout<<"Execution time: "<<endl;
+        fout<<" "<<t_mult<<endl;
+
     }
     fout.close();
 }
