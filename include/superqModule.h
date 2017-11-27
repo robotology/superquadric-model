@@ -114,6 +114,7 @@ protected:
     double t,t0;
     std::deque<std::string> advanced_params;
     yarp::os::Mutex mutex;
+    yarp::os::Mutex mutex_shared;
 
     std::string object_class;
 

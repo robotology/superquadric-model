@@ -101,6 +101,7 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
     Property superq;
 
     LockGuard lg(mutex);
+    //LockGuard lg(mutex_shared);
 
     superqCom->setPar("object_class", object_class);
 
@@ -113,7 +114,8 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
 
     superqCom->sendPoints(p_aux);
 
-    superqCom->step();
+    //superqCom->step();
+    superqCom->run();
 
     Vector sol(11,0.0);
     sol=superqCom->getSolution(0);
@@ -131,6 +133,8 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
 bool SuperqModule::send_point_clouds(const vector<Vector> &p)
 {
     //LockGuard lg(mutex);
+
+    //LockGuard lg_shared(mutex_shared);
 
     double t, t_fin;  
     
@@ -172,6 +176,7 @@ bool SuperqModule::reset_filter()
 /**********************************************************************/
 Property SuperqModule::get_superq_filtered()
 {
+    //LockGuard lg(mutex);
     Property superq;
     Vector sol(11,0.0);
     sol=superqCom->getSolution(1);
@@ -387,13 +392,19 @@ bool SuperqModule::updateModule()
     t0=Time::now();
     LockGuard lg(mutex);
 
+    yDebug()<<"[Module ] module 1";
+
     if (mode_online)
     {
         superqCom->setPar("object_class", object_class);
+         yDebug()<<"[Module ] module 2";
 
-        Property &x_to_send=portSuperq.prepare();
+        //Property &x_to_send=portSuperq.prepare();
+        yDebug()<<"[Module ] module 3";
 
         imgIn=portImgIn.read();
+
+ yDebug()<<"[Module ] module 4";
 
         if (times_superq.size()<10)
             times_superq.push_back(superqCom->getTime());
@@ -408,13 +419,19 @@ bool SuperqModule::updateModule()
         }
         else
             times_superq.clear();
-        
-        if (!filter_superq)
-            x_to_send=fillProperty(x);
-        else
-            x_to_send=fillProperty(x_filtered);
 
-        portSuperq.write();
+    yDebug()<<"[Module ] module 5";
+        
+        //if (!filter_superq)
+        //    x_to_send=fillProperty(x);
+        //else
+        //    x_to_send=fillProperty(x_filtered);
+
+    yDebug()<<"[Module ] module 6";
+
+        //portSuperq.write();
+
+    yDebug()<<"[Module ] module 7";
 
         if (visualization_on)
         {
@@ -432,6 +449,8 @@ bool SuperqModule::updateModule()
         else
             times_vis.clear();
         }
+
+         yDebug()<<"[Module ] module 8";
     }
     else
     {
@@ -467,6 +486,7 @@ bool SuperqModule::updateModule()
         return false;
     }
 
+
     t=Time::now()-t0;
     return true;
 }
@@ -493,7 +513,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
         return false;
 
 
-    superqCom= new SuperqComputation(rate, filter_points, filter_superq, fixed_window, points, imgIn, tag_file,
+    superqCom= new SuperqComputation(mutex_shared,rate, filter_points, filter_superq, fixed_window, points, imgIn, tag_file,
                                      threshold_median,filter_points_par, x, x_filtered, filter_superq_par, ipopt_par, homeContextPath, save_points, this->rf);
 
     if (mode_online)
@@ -507,6 +527,8 @@ bool SuperqModule::configure(ResourceFinder &rf)
     }
 
     superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K, points, vis_points, vis_step, imgIn);
+
+    //superqVis= new SuperqVisualization(mutex_shared, rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K,points, vis_points, vis_step, imgIn);
 
     if (visualization_on)
     {
@@ -530,8 +552,11 @@ bool SuperqModule::interruptModule()
 {
     yInfo()<<"[SuperqModule]: Interruping ... ";
 
-    portImgIn.interrupt();
+    yDebug()<<"1 close ";
+    portImgIn.interrupt();      
+    yDebug()<<"2 close ";
     portSuperq.interrupt();
+    yDebug()<<"3 close ";
 
     return true;
 }

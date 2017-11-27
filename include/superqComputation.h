@@ -45,7 +45,7 @@ public:
   * The optimization problem for estimating the superquadric is solved with Ipopt software package.
   */
 /*******************************************************************************/
-class SuperqComputation : public yarp::os::RateThread
+class SuperqComputation : public yarp::os::Thread
 {
 protected:
 
@@ -91,6 +91,7 @@ protected:
     yarp::os::ResourceFinder *rf;
     double t,t0;
     yarp::os::Mutex mutex;
+    yarp::os::Mutex &mutex_shared;
 
     // Classes uses for filtering the superquadric
     iCub::ctrl::MedianFilter *mFilter;
@@ -120,7 +121,7 @@ public:
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
     /***********************************************************************/
-    SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, std::deque<yarp::sig::Vector> &_points, yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn,
+    SuperqComputation(yarp::os::Mutex &mutex_shared, int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window, std::deque<yarp::sig::Vector> &_points, yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn,
                       std::string _tag_file, double _threshold_median, const yarp::os::Property &filters_points_par, yarp::sig::Vector &_x, yarp::sig::Vector &_x_filtered,
                       const yarp::os::Property &filters_superq_par, const yarp::os::Property &optimizer_par, const std::string &_homeContextPath, bool _save_points, yarp::os::ResourceFinder *rf);
 
@@ -170,15 +171,15 @@ public:
     /***********************************************************************/
     void setPar(const std::string &par_name, const std::string &value);
 
-    /** Init function of RateThread class */
+    /** Init function of Thread class */
     /***********************************************************************/
     virtual bool threadInit();
 
-    /** Run function of RateThread class */
+    /** Run function of Thread class */
     /***********************************************************************/
     virtual void run();
 
-    /** Release function of RateThread class */
+    /** Release function of Thread class */
     /***********************************************************************/
     virtual void threadRelease();
 

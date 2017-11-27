@@ -65,10 +65,10 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 }
 
 /***********************************************************************/
-SuperqComputation::SuperqComputation(int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,deque<yarp::sig::Vector> &_points, ImageOf<PixelRgb> *_imgIn, string _tag_file, double _threshold_median,
+SuperqComputation::SuperqComputation(Mutex &_mutex_shared, int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,deque<yarp::sig::Vector> &_points, ImageOf<PixelRgb> *_imgIn, string _tag_file, double _threshold_median,
                                 const Property &_filter_points_par, Vector &_x, Vector &_x_filtered, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points, ResourceFinder *_rf):
-                                filter_points(_filter_points), filter_superq(_filter_superq), fixed_window( _fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points), imgIn(_imgIn),
-                                filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), RateThread(_rate), homeContextPath(_homeContextPath), x(_x), x_filtered(_x_filtered), points(_points), rf(_rf)
+                                mutex_shared(_mutex_shared), filter_points(_filter_points), filter_superq(_filter_superq), fixed_window( _fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points), imgIn(_imgIn),
+                                filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), Thread(), homeContextPath(_homeContextPath), x(_x), x_filtered(_x_filtered), points(_points), rf(_rf)
 {
 }
 
@@ -487,42 +487,58 @@ bool SuperqComputation::threadInit()
 /***********************************************************************/
 void SuperqComputation::run()
 {
-    t0=Time::now();
-    LockGuard lg(mutex);
-
-    if (one_shot==false)
-        getPoints3D();
-
-    if ((filter_points==true) && (points.size()>0))
+    yDebug()<<"is stopping "<<isStopping();
+    while (!isStopping())
     {
-        filter();
-    }
+        t0=Time::now();
 
-    if (points.size()>0)
-    {
-        yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
-        go_on=computeSuperq();
-    }
+        yDebug()<<"points size "<<points.size();
 
-    if ((go_on==false) && (points.size()>0))
-    {
-        yError("[SuperqComputation]: Not found a suitable superquadric! ");
-    }
-    else if (go_on==true && norm(x)>0.0 && (points.size()>0))
-    {
-        if (filter_superq)
-            filterSuperq();
+        if (points.size()>0)
+        {
+            if (one_shot==false)
+                getPoints3D();
+
+            mutex.lock();
+
+            if ((filter_points==true) && (points.size()>0))
+            {
+                filter();
+            }
+
+            if (points.size()>0)
+            {                
+                yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
+                go_on=computeSuperq();
+            }
+
+            if ((go_on==false) && (points.size()>0))
+            {
+                yError("[SuperqComputation]: Not found a suitable superquadric! ");
+            }
+            else if (go_on==true && norm(x)>0.0 && (points.size()>0))
+            {
+                if (filter_superq)
+                    filterSuperq();
+                else
+                    x_filtered=x;
+            }
+            else
+            {
+                x_filtered.resize(11,0.0);
+            }
+
+            mutex.unlock();
+        }
         else
-            x_filtered=x;
-    }
-    else
-    {
-        x_filtered.resize(11,0.0);
-    }
+        {
+            x_filtered.resize(11,0.0);
 
-    t_superq=Time::now() - t0;
+            Time::delay(0.15);
+        }
 
-    yDebug()<<"[SuperqComputation]: time of run: "<<t_superq << " est period" << getEstPeriod();
+        t_superq=Time::now() - t0;
+    }
 }
 
 /***********************************************************************/
@@ -859,7 +875,9 @@ Vector SuperqComputation::getSolution(bool filtered_superq)
 /***********************************************************************/
 void SuperqComputation::sendPoints(const deque<Vector> &p)
 {
+    //LockGuard lg_shared(mutex_shared);
     LockGuard lg(mutex);
+    //mutex_shared.lock();
 
     points.clear();
 
@@ -867,6 +885,8 @@ void SuperqComputation::sendPoints(const deque<Vector> &p)
     {
         points.push_back(p[i]);
     }
+
+   // mutex_shared.unlock();
 }
 
 
