@@ -130,11 +130,19 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
 /**********************************************************************/
 bool SuperqModule::send_point_clouds(const vector<Vector> &p)
 {
-    LockGuard lg(mutex);
+    //LockGuard lg(mutex);
+
+    double t, t_fin;  
+    
+    t=Time::now();
 
     superqCom->setPar("object_class", object_class);
 
+    yDebug()<<"Time operations  after set par 1"<<Time::now() - t;
+
     superqCom->setPar("one_shot", "on");
+
+    yDebug()<<"Time operations after set par 2"<<Time::now() - t;
 
     deque<Vector> p_aux;
 
@@ -142,8 +150,13 @@ bool SuperqModule::send_point_clouds(const vector<Vector> &p)
         p_aux.push_back(p[i]);
 
     superqCom->sendPoints(p_aux);
+    yDebug()<<"Time operations send points "<<Time::now() - t;
 
-    superqCom->step();
+    //superqCom->step();
+
+    t_fin= Time::now() - t;
+
+    yDebug()<<"Time operations  final"<<t_fin;
 
     return true;
 }

@@ -435,7 +435,7 @@ Property SuperqComputation::getIpoptPar()
 /***********************************************************************/
 void SuperqComputation::setPar(const string &par_name, const string &value)
 {
-    LockGuard lg(mutex);
+    //LockGuard lg(mutex);
     if (par_name=="tag_file")
         tag_file=value;
     else if (par_name=="filter_points")
@@ -521,6 +521,8 @@ void SuperqComputation::run()
     }
 
     t_superq=Time::now() - t0;
+
+    yDebug()<<"[SuperqComputation]: time of run: "<<t_superq << " est period" << getEstPeriod();
 }
 
 /***********************************************************************/
