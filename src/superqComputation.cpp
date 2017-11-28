@@ -476,8 +476,10 @@ bool SuperqComputation::threadInit()
     bounds_automatic=true;
     one_shot=false;
     
+    yDebug()<<"[SuperqComputation]: Resize of x";
     x.resize(11,0.00);
     x_filtered.resize(11,0.0);
+    yDebug()<<"[SuperqComputation]: After resize of x";
 
     count_file=0;
 
@@ -532,7 +534,7 @@ void SuperqComputation::run()
         }
         else
         {
-            x_filtered.resize(11,0.0);
+            //x_filtered.resize(11,0.0);
 
             Time::delay(0.15);
         }
@@ -877,7 +879,6 @@ void SuperqComputation::sendPoints(const deque<Vector> &p)
 {
     //LockGuard lg_shared(mutex_shared);
     LockGuard lg(mutex);
-    //mutex_shared.lock();
 
     points.clear();
 
@@ -885,8 +886,6 @@ void SuperqComputation::sendPoints(const deque<Vector> &p)
     {
         points.push_back(p[i]);
     }
-
-   // mutex_shared.unlock();
 }
 
 

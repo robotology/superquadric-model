@@ -187,7 +187,7 @@ bool SuperqVisualization::threadInit()
     point2D.resize(2,0.0);
     point.resize(3,0.0);
     point1.resize(3,0.0);
-    superq.resize(11,0.0);
+    //superq.resize(11,0.0);
 
     return true;
 }
