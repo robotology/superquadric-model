@@ -399,12 +399,12 @@ bool SuperqModule::updateModule()
         superqCom->setPar("object_class", object_class);
          yDebug()<<"[Module ] module 2";
 
-        //Property &x_to_send=portSuperq.prepare();
+        Property &x_to_send=portSuperq.prepare();
         yDebug()<<"[Module ] module 3";
 
         imgIn=portImgIn.read();
 
- yDebug()<<"[Module ] module 4";
+        yDebug()<<"[Module ] module 4";
 
         if (times_superq.size()<10)
             times_superq.push_back(superqCom->getTime());
@@ -420,18 +420,18 @@ bool SuperqModule::updateModule()
         else
             times_superq.clear();
 
-    yDebug()<<"[Module ] module 5";
+        yDebug()<<"[Module ] module 5";
         
-        //if (!filter_superq)
-        //    x_to_send=fillProperty(x);
-        //else
-        //    x_to_send=fillProperty(x_filtered);
+        if (!filter_superq)
+            x_to_send=fillProperty(x);
+        else
+            x_to_send=fillProperty(x_filtered);
 
-    yDebug()<<"[Module ] module 6";
+        yDebug()<<"[Module ] module 6";
 
-        //portSuperq.write();
+        portSuperq.write();
 
-    yDebug()<<"[Module ] module 7";
+        yDebug()<<"[Module ] module 7";
 
         if (visualization_on)
         {
@@ -512,6 +512,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
     if (config_ok==false)
         return false;
 
+    imgIn=portImgIn.read();
 
     superqCom= new SuperqComputation(mutex_shared,rate, filter_points, filter_superq, fixed_window, points, imgIn, tag_file,
                                      threshold_median,filter_points_par, x, x_filtered, filter_superq_par, ipopt_par, homeContextPath, save_points, this->rf);

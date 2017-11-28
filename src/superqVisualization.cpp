@@ -48,10 +48,10 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
     ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
     imgOut=*imgIn;
 
-    //R=euler2dcm(x_toshow.subVector(8,10));
-    //R=R.transposed();
+    R=euler2dcm(x_toshow.subVector(8,10));
+    R=R.transposed();
 
-    /*if ((norm(x_toshow)>0.0))
+    if ((norm(x_toshow)>0.0))
     {
         if (eye=="left")
         {
@@ -72,7 +72,7 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
             }
         }
 
-        /*double step=2*M_PI/vis_points;
+        double step=2*M_PI/vis_points;
 
         for (double eta=-M_PI; eta<M_PI; eta+=step)
         {
@@ -106,7 +106,6 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
              }
          }
     }
-*/
 
     portImgOut.write();
 

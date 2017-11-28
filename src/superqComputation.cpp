@@ -534,7 +534,7 @@ void SuperqComputation::run()
         }
         else
         {
-            //x_filtered.resize(11,0.0);
+            x_filtered.resize(11,0.0);
 
             Time::delay(0.15);
         }
