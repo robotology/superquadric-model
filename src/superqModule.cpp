@@ -96,7 +96,8 @@ bool SuperqModule::set_visualization(const string &e)
 }
 
 /**********************************************************************/
-Property SuperqModule::get_superq(const vector<Vector> &p)
+//Property SuperqModule::get_superq(const vector<Vector> &p)
+Property SuperqModule::get_superq()
 {
     Property superq;
 
@@ -105,21 +106,26 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
 
     yDebug()<<"in get superq";
 
-    superqCom->setPar("object_class", object_class);
+    //superqCom->setPar("object_class", object_class);
 
-    superqCom->setPar("one_shot", "on");
+    //superqCom->setPar("one_shot", "on");
 
-    deque<Vector> p_aux;
+    //deque<Vector> p_aux;
 
-    for (size_t i=0; i<p.size(); i++)
-        p_aux.push_back(p[i]);
+    //for (size_t i=0; i<p.size(); i++)
+    //    p_aux.push_back(p[i]);
 
-    superqCom->sendPoints(p_aux);
+    //superqCom->superq_computed=false;
+
+    //superqCom->sendPoints(p_aux);
 
     //superqCom->step();
     //superqCom->run();
 
-    Time::delay(5.0);
+    //while (!superqCom->superq_computed)
+    //{
+    //    Time::delay(0.01);
+    //}
 
     Vector sol(11,0.0);
     if (single_superq)
@@ -128,11 +134,23 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
         superq=fillProperty(sol);
     }
     else
-        superq=fillMultipleSolutions(superq_tree->root);
+    {
+        yDebug()<<"superq comp "<<superqCom->superq_computed;
+        while (!superqCom->superq_computed)
+        {
+            Time::delay(0.1);
+        }
 
-    superqCom->setPar("one_shot", "off");
-    p_aux.clear();
-    superqCom->sendPoints(p_aux);
+        deque<Vector> p_aux;
+        p_aux.clear();
+        superqCom->sendPoints(p_aux);
+
+        superq=fillMultipleSolutions(superq_tree->root);
+    }
+
+    //superqCom->setPar("one_shot", "off");
+    //p_aux.clear();
+    //superqCom->sendPoints(p_aux);
 
     return superq;
 }
@@ -155,6 +173,8 @@ bool SuperqModule::send_point_clouds(const vector<Vector> &p)
     superqCom->setPar("one_shot", "on");
 
     yDebug()<<"Time operations after set par 2"<<Time::now() - t;
+
+    superqCom->superq_computed=false;
 
     deque<Vector> p_aux;
 
@@ -231,6 +251,9 @@ Property SuperqModule::fillMultipleSolutions(node *leaf)
     int count=0;
     Property sup;
 
+    cout<<endl<<endl<<endl;
+    yDebug()<<"FILLING REPLY ";
+
     addSuperqInProp(leaf, count, sup);
 
     return sup;
@@ -245,13 +268,22 @@ void SuperqModule::addSuperqInProp(node *leaf, int count, Property &superq_pr)
     {
         if (norm(leaf->superq.subVector(0,2))>0.0)
         {
-            count++;
+            yDebug()<<"count "<<count;
+            //count++;
             stringstream ss;
             ss<<count;
             string count_str=ss.str();
 
-            sup.setSubvector(0,leaf->superq.subVector(0,7));
-            sup.setSubvector(8,dcm2axis(euler2dcm(leaf->superq.subVector(8,10))));
+            cout<<count_str;
+
+            sup=leaf->superq;
+
+            if (leaf->right!=NULL)
+                addSuperqInProp(leaf->right, count, superq_pr);
+
+            if (leaf->left!=NULL)
+                addSuperqInProp(leaf->left, count, superq_pr);
+            //sup.setSubvector(8,dcm2axis(euler2dcm(leaf->superq.subVector(8,10))));
 
             Bottle bottle;
             Bottle &b1=bottle.addList();
@@ -271,7 +303,19 @@ void SuperqModule::addSuperqInProp(node *leaf, int count, Property &superq_pr)
             b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
             superq_pr.put("orientation_"+count_str, bottle.get(3));
 
+            yDebug()<<"Property "<<superq_pr.toString();
         }
+
+        else
+        {
+            count++;
+            if (leaf->right!=NULL)
+                addSuperqInProp(leaf->right, count, superq_pr);
+            count++;
+            if (leaf->left!=NULL)
+                addSuperqInProp(leaf->left, count, superq_pr);
+        }
+
     }
     else
         yDebug()<<"Finished!";

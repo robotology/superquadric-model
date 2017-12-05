@@ -110,6 +110,7 @@ protected:
 public:
 
     bool single_superq;
+    bool superq_computed;
 
     superqTree *superq_tree;
 

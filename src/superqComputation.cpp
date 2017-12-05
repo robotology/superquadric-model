@@ -496,6 +496,8 @@ bool SuperqComputation::threadInit()
     bounds_automatic=true;
     one_shot=false;
 
+    superq_computed=false;
+
     yDebug()<<"[SuperqComputation]: Resize of x";
     x.resize(11,0.00);
     x_filtered.resize(11,0.0);
@@ -541,6 +543,8 @@ void SuperqComputation::run()
                     iterativeModeling();
                     //if(merge)
                     mergeModeling(superq_tree->root, true);
+                    Time::delay(1.5);
+                    superq_computed=true;
                 }
             }
 
