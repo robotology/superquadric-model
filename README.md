@@ -1,6 +1,14 @@
 # superquadric-model
 Framework for modeling, detecting and visualizing objects through superquadric functions.
 
+#### Overview:
+- [Theoretical background](#theoretical-background)
+- [Dendenciens & how to compile](#dependencies)
+- [Module structure](#module-structure)
+- [Use case & results](#use-case)
+- [Documentaion & more](#more-information)
+
+
 ## Theoretical background
 The **superquadric-model** framework is based on the idea that _low-dimensional_, _compact_, _mathematical_ representation of objects
 can provide computational and theoretical advantages in hard problems trackled in robotics, such as trajectory planning for exploration, grasping and approaching towards objects.
@@ -32,7 +40,9 @@ The problem can be solved by minimizing the following quantity:
 The _F_ function is raised to the power of _&epsilon;1_ in order to make the error metric independent from the shape of the superquadric and provide faster convergence. This change causes a bias towards larger superquadrics. This effect is
 compensated by the multiplication with the term _&lambda;1, &lambda;2, &lambda;3_ which is proportional to the volume of the superquadric.
 
+More information are available in [our ICRA paper [1]](#references).
 
+[`Go to the top`](#superquadric-model)
 
 ## Dependencies
 - [YARP](https://github.com/robotology/yarp)
@@ -44,14 +54,14 @@ compensated by the multiplication with the term _&lambda;1, &lambda;2, &lambda;3
 ## How to compile
 
 In `Linux systems` code can be compiled as follows:
-```
+```sh
 git clone https://github.com/robotology/superquadric-model.git
 cd superquadric-model
 mkdir build; cd build
 ccmake ..
 make install
 ```
-  
+[`Go to the top`](#superquadric-model)
 
 ## Module structure
 The module structure is outlined in the following picture:
@@ -74,6 +84,8 @@ In order to improve the superquadric modeling, the `SuperqComputation` thread pr
 The former is a **density filter**, discarding noisy queues of the point cloud, that can arise from the noise of the disparity map.
 The latter is a **median filter with an adaptive moving window**. Each filtered superquadric is obtained by applying a median filter on the last _m_ estimated superquadrics. The value of _m_ depends on the estimated velocity of the object. If the object is moving the window width is low in order to correctly track the object (e.g.` _m_=1`), otherwise _m_ is incrementally increased up to a maximum value.
 
+[`Go to the top`](#superquadric-model)
+
 ## Use case
 The superquadric-model module requires the 3D point cloud of the object we want to model with a superquadric function.
 An example code for retriving this information, together with a tutorial, is provided in the folder [`tutorial`](https://github.com/robotology/superquadric-model/tree/master/tutorial) in this repository.
@@ -92,17 +104,22 @@ The execution times are respectively:
 
 This [video](https://www.youtube.com/watch?v=MViX4Ppo4WQ&feature=youtu.be) shows the superquadric modeling of several objects.
 
+[`Go to the top`](#superquadric-model)
 
 ### More information
-You can find an overview of the entire pipeline `superquadric-model module + example code` in the following pdf: [superquadric-model.pdf](https://github.com/robotology/superquadric-model/blob/master/misc/superquadric-model.pdf). 
+You can find an overview of the entire pipeline `superquadric-model module + example code` in the following pdf: [superquadric-model.pdf](https://github.com/robotology/superquadric-model/blob/master/misc/superquadric-model.pdf).
 If you want to _browse_ the prezi version of the presentation, you can have a look at the link: [superquadric-model-prezi](https://prezi.com/zlx2l4ekonuc/superquadric-model/).
 
 ## Documentation
 Online documentation is available here:  [http://robotology.github.com/superquadric-model](http://robotology.github.com/superquadric-model).
 
-
+[`Go to the top`](#superquadric-model)
 ## License
 Material included here is Copyright of _iCub Facility - Istituto Italiano di Tecnologia_
 and is released under the terms of the GPL v2.0 or later. See the file LICENSE for details.
+
+
+## References
+[1] G. Vezzani, U. Pattacini and L. Natale, "A grasping approach based on superquadric models", _IEEE-RAS International Conference on Robotics and Automation 2017_, pp 1579-1586. 
 
 [![DOI](https://zenodo.org/badge/54477564.svg)](https://zenodo.org/badge/latestdoi/54477564)
