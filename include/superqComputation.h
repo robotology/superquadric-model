@@ -85,7 +85,6 @@ protected:
     std::string mu_strategy,nlp_scaling_method;
     yarp::sig::Vector elem_x;
 
-    bool single_superq;
     int tree_splitting;
 
     double t_superq;
@@ -109,6 +108,8 @@ protected:
 
 
 public:
+
+    bool single_superq;
 
     superqTree *superq_tree;
 

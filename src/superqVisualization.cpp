@@ -114,30 +114,115 @@ bool SuperqVisualization::showSuperq(Vector &x_toshow)
 }
 
 /***********************************************************************/
+bool SuperqVisualization::addSuperq(Vector &x_toshow, ImageOf<PixelRgb> &imgOut)
+{
+    LockGuard lg(mutex);
+
+    PixelRgb color(Color[0],Color[1],Color[2]);
+    Vector pos, orient;
+    double co,so,ce,se;
+    Stamp *stamp=NULL;
+
+    //ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
+    //imgOut=*imgIn;
+
+    R=euler2dcm(x_toshow.subVector(8,10));
+    R=R.transposed();
+
+    if ((norm(x_toshow)>0.0))
+    {
+        if (eye=="left")
+        {
+            if (igaze->getLeftEyePose(pos,orient,stamp))
+            {
+                H=axis2dcm(orient);
+                H.setSubcol(pos,0,3);
+                H=SE3inv(H);
+            }
+        }
+        else
+        {
+            if (igaze->getRightEyePose(pos,orient,stamp))
+            {
+                H=axis2dcm(orient);
+                H.setSubcol(pos,0,3);
+                H=SE3inv(H);
+            }
+        }
+
+        double step=2*M_PI/vis_points;
+
+        for (double eta=-M_PI; eta<M_PI; eta+=step)
+        {
+             for (double omega=-M_PI; omega<M_PI;omega+=step)
+             {
+                 co=cos(omega); so=sin(omega);
+                 ce=cos(eta); se=sin(eta);
+
+                 point[0]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(0,0) +
+                            x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3]))* sign(so)*(pow(abs(so),x_toshow[4])) * R(0,1)+
+                                x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(0,2) + x_toshow[5];
+
+                 point[1]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(1,0) +
+                            x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(so)*(pow(abs(so),x_toshow[4])) * R(1,1)+
+                                x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(1,2) + x_toshow[6];
+
+                 point[2]=x_toshow[0] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(co)*(pow(abs(co),x_toshow[4])) * R(2,0) +
+                            x_toshow[1] * sign(ce)*(pow(abs(ce),x_toshow[3])) * sign(so)*(pow(abs(so),x_toshow[4])) * R(2,1)+
+                                x_toshow[2] * sign(se)*(pow(abs(se),x_toshow[3])) * R(2,2) + x_toshow[7];
+
+                 point2D=from3Dto2D(point);
+
+                 cv::Point target_point((int)point2D[0],(int)point2D[1]);
+
+                 if ((target_point.x<0) || (target_point.y<0) || (target_point.x>=320) || (target_point.y>=240))
+                 {
+                     yWarning("[SuperqVisualization]: Not acceptable pixels!");
+                 }
+                 else
+                    imgOut.pixel(target_point.x, target_point.y)=color;
+             }
+         }
+    }
+
+    //portImgOut.write();
+
+    return true;
+
+}
+
+/***********************************************************************/
 bool SuperqVisualization::showMultipleSuperqs(superqTree *&superq_tree)
 {
-    yDebug()<<"in vis "<<superq_tree->root->superq.toString();
+    ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
+    imgOut=*imgIn;
     if (superq_tree!=NULL)
-        showTree(superq_tree->root);
+        showTree(superq_tree->root, imgOut);
 
+    portImgOut.write();
     return true;
 }
 
 /***********************************************************************/
-bool SuperqVisualization::showTree(node *leaf)
-{
+bool SuperqVisualization::showTree(node *leaf, ImageOf<PixelRgb> &imgOut)
+{    
     if(leaf!=NULL)
     {
-        showSuperq(leaf->superq);
+        addSuperq(leaf->superq, imgOut);
         if (leaf->right!=NULL)
-            showTree(leaf->right);
+            showTree(leaf->right, imgOut);
 
-        yDebug()<<"print left";
         if (leaf->left!=NULL)
-            showTree(leaf->left);
+            showTree(leaf->left, imgOut);
     }
     else
+    {
+
         yDebug()<<"Finished";
+    }
+
+    //if ((leaf->right==NULL) || leaf->left==NULL)
+    //    portImgOut.write();
 }
 
 

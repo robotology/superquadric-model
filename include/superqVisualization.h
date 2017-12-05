@@ -92,6 +92,13 @@ public:
     /***********************************************************************/
     bool showSuperq(yarp::sig::Vector &x_to_show);
 
+    /** Show reconstructed superquadric on the image
+    * @param x_to_show is the superquadric to be shown
+    * @return true/false on success/failure
+    */
+    /***********************************************************************/
+    bool addSuperq(yarp::sig::Vector &x_to_show, yarp::sig::ImageOf<yarp::sig::PixelRgb> &imgOut);
+
     /** Compute 2D pixels from 3D points
     * @param point3D is the 3D point to be converted
     * @return a 2D vector representing the corresponding pixel
@@ -100,7 +107,7 @@ public:
     bool showMultipleSuperqs(superqTree *&superq_tree);
 
     /***********************************************************************/
-    bool showTree(node *leaf);
+    bool showTree(node *leaf, yarp::sig::ImageOf<yarp::sig::PixelRgb> &imgOut);
 
     /***********************************************************************/
     yarp::sig::Vector from3Dto2D(const yarp::sig::Vector &point3D);
