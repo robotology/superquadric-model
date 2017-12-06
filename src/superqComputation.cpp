@@ -543,7 +543,7 @@ void SuperqComputation::run()
                     iterativeModeling();
                     //if(merge)
                     mergeModeling(superq_tree->root, true);
-                    Time::delay(1.5);
+                    //Time::delay(1.5);
                     superq_computed=true;
                 }
             }
