@@ -141,16 +141,17 @@ Property SuperqModule::get_superq()
             Time::delay(0.1);
         }
 
-        deque<Vector> p_aux;
-        p_aux.clear();
-        superqCom->sendPoints(p_aux);
+        //deque<Vector> p_aux;
+        //p_aux.clear();
+        //superqCom->sendPoints(p_aux);
 
         superq=fillMultipleSolutions(superq_tree->root);
     }
 
+    deque<Vector> p_aux;
     //superqCom->setPar("one_shot", "off");
-    //p_aux.clear();
-    //superqCom->sendPoints(p_aux);
+    p_aux.clear();
+    superqCom->sendPoints(p_aux);
 
     return superq;
 }
