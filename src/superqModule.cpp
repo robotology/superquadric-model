@@ -252,9 +252,6 @@ Property SuperqModule::fillMultipleSolutions(node *leaf)
     int count=0;
     Property sup;
 
-    cout<<endl<<endl<<endl;
-    yDebug()<<"FILLING REPLY ";
-
     addSuperqInProp(leaf, count, sup);
 
     return sup;

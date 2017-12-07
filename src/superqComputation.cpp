@@ -545,10 +545,10 @@ void SuperqComputation::run()
                     mergeModeling(superq_tree->root, true);
                     //Time::delay(1.5);
                     superq_computed=true;
+                    if (superq_tree->root!=NULL)
+                        superq_tree->printTree(superq_tree->root);
                 }
             }
-
-            yDebug()<<__LINE__;
 
             if ((go_on==false) && (points.size()>0))
             {
@@ -1413,7 +1413,7 @@ void SuperqComputation::mergeModeling(node *node, bool go_on)
                 mergeModeling(node->left, go_on);
 
             }
-            else if ((cost_2<node->f_value))
+            else if ((cost_2<node->f_value) && (node->father->point_cloud->size()>0))
             {
                 /***************************************/
 

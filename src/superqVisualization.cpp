@@ -220,9 +220,6 @@ bool SuperqVisualization::showTree(node *leaf, ImageOf<PixelRgb> &imgOut)
 
         yDebug()<<"Finished";
     }
-
-    //if ((leaf->right==NULL) || leaf->left==NULL)
-    //    portImgOut.write();
 }
 
 
