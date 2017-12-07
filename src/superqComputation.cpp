@@ -544,9 +544,12 @@ void SuperqComputation::run()
                     //if(merge)
                     mergeModeling(superq_tree->root, true);
                     //Time::delay(1.5);
-                    superq_computed=true;
+                    //superq_computed=true;
                     if (superq_tree->root!=NULL)
                         superq_tree->printTree(superq_tree->root);
+
+                    yDebug()<<"COMPUTED";
+                    superq_computed=true;
                 }
             }
 
