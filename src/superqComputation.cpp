@@ -516,8 +516,6 @@ void SuperqComputation::run()
     {
         t0=Time::now();
 
-        //yDebug()<<"points size "<<points.size();
-
         if (points.size()>0)
         {
             if (one_shot==false)
@@ -541,14 +539,11 @@ void SuperqComputation::run()
                 else
                 {
                     iterativeModeling();
-                    //if(merge)
                     mergeModeling(superq_tree->root, true);
-                    //Time::delay(1.5);
-                    //superq_computed=true;
+
                     if (superq_tree->root!=NULL)
                         superq_tree->printTree(superq_tree->root);
 
-                    yDebug()<<"COMPUTED";
                     superq_computed=true;
                 }
             }
@@ -977,10 +972,7 @@ Vector SuperqComputation::getSolution(bool filtered_superq)
 /***********************************************************************/
 void SuperqComputation::sendPoints(const deque<Vector> &p)
 {
-    //LockGuard lg_shared(mutex_shared);
     LockGuard lg(mutex);
-
-    yDebug()<<"points size p"<<p.size();
 
     points.clear();
 
@@ -1007,8 +999,6 @@ void SuperqComputation::iterativeModeling()
     bool final=false;
 
     computeNestedSuperq(newnode, i,j, first_time, count, final, count2);
-
-    //superq_tree->printTree(superq_tree->root);
 }
 
 /***********************************************************************/
@@ -1051,7 +1041,7 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
     }
     else if ((i==tree_splitting))
     {
-        yDebug()<<"Completing Tree..";
+        yInfo()<<"[SuperqComputation] Completing Tree..";
 
         if (first_time==true)
         {
@@ -1084,7 +1074,7 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
             {
                 //if ((norm(newnode->right->superq)==0) && (norm(newnode->left->superq)==0))
                 //{
-                yDebug()<<"Computing right and left";
+                yDebug()<<"[SuperqComputation] Computing right and left";
                 splitPoints(false, newnode);
                 superq1=computeMultipleSuperq(points_splitted1);
                 superq2=computeMultipleSuperq(points_splitted2);
@@ -1105,7 +1095,7 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
                // }
             }
             else
-                yDebug()<<"Skipping computation because already computed";
+                yInfo()<<"[SuperqComputation] Skipping computation because already computed";
 
             computeNestedSuperq(newnode->right,i,j, first_time, count, final, count2);
 
@@ -1133,7 +1123,7 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
 
                 if ((!newnode->right) && (!newnode->left))
                 {
-                    yDebug()<<"Computing right and left";
+                    yDebug()<<"[SuperqComputation] Computing right and left";
                     //if ((norm(newnode->right->superq)==0) && (norm(newnode->left->superq)==0))
                     //{
                         splitPoints(false, newnode);
@@ -1157,7 +1147,7 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
                     //}
                 }
                 else
-                    yDebug()<<"Skipping computation because already computed";
+                    yInfo()<<"[SuperqComputation] Skipping computation because already computed";
 
                 if (count %2 !=0)
                 {
@@ -1193,7 +1183,7 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
 
                 if ((!newnode->right) && (!newnode->left))
                 {
-                    yDebug()<<"Computing right and left";
+                    yDebug()<<"[SuperqComputation] Computing right and left";
                     //if ((norm(newnode->right->superq)==0) && (norm(newnode->left->superq)==0))
                     //{
                         splitPoints(false, newnode);
@@ -1217,7 +1207,7 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
                     //}
                 }
                 else
-                    yDebug()<<"Skipping computation because already computed";
+                    yInfo()<<"[SuperqComputation] Skipping computation because already computed";
 
                 if (count2 %2 !=0)
                 {
@@ -1317,8 +1307,8 @@ void SuperqComputation::splitPoints(bool merging, node *leaf)
                 points_splitted2.push_back(point);
         }
 
-        yDebug()<<"points_splitted 1 "<<points_splitted1.size();
-        yDebug()<<"points_splitted 2 "<<points_splitted2.size();
+        yDebug()<<"[SuperqComputation] points_splitted 1 "<<points_splitted1.size();
+        yDebug()<<"[SuperqComputation] points_splitted 2 "<<points_splitted2.size();
     }
 }
 
@@ -1369,12 +1359,12 @@ void SuperqComputation::mergeModeling(node *node, bool go_on)
     {
         if (node->f_value==0)
         {
-            yDebug()<<"That's root!";
+            yDebug()<<"[SuperqComputation] That's root!";
             double cost_right_2=(node->right->right->f_value +
                                  node->right->left->f_value)/2.0;
 
-            yDebug()<<"cost right "<<cost_right_2;
-            yDebug()<<"node right f value"<<node->right->f_value;
+            yDebug()<<"[SuperqComputation] cost right "<<cost_right_2;
+            yDebug()<<"[SuperqComputation] node right f value"<<node->right->f_value;
 
             if (cost_right_2 < node->right->f_value)
             {
@@ -1389,8 +1379,8 @@ void SuperqComputation::mergeModeling(node *node, bool go_on)
             double cost_left_2=(node->left->right->f_value +
                                  node->left->left->f_value)/2.0;
 
-            yDebug()<<"cost left "<<cost_left_2;
-            yDebug()<<"node left f value"<<node->left->f_value;
+            yDebug()<<"[SuperqComputation] cost left "<<cost_left_2;
+            yDebug()<<"[SuperqComputation] node left f value"<<node->left->f_value;
 
             if (cost_left_2 < node->left->f_value)
                 mergeModeling(node->left, go_on);
@@ -1406,8 +1396,8 @@ void SuperqComputation::mergeModeling(node *node, bool go_on)
 
             double cost_2=(node->right->f_value +
                                  node->left->f_value)/2.0;
-            yDebug()<<"cost "<<cost_2;
-            yDebug()<<"f_value "<<node->f_value;
+            yDebug()<<"[SuperqComputation] cost "<<cost_2;
+            yDebug()<<"[SuperqComputation] f_value "<<node->f_value;
 
             if (((node->right->right!=NULL && node->right->left!=NULL)||
                  (node->left->right!=NULL && node->left->left!=NULL)) && go_on==true)
@@ -1417,10 +1407,8 @@ void SuperqComputation::mergeModeling(node *node, bool go_on)
 
             }
             else if ((cost_2<node->f_value) && (node->father->point_cloud->size()>0))
-            {
-                /***************************************/
-
-                yDebug()<<"point cloud father size"<<node->father->point_cloud->size();
+            {              
+                yDebug()<<"[SuperqComputation] point cloud father size"<<node->father->point_cloud->size();
                 points_splitted1.clear();
                 points_splitted2.clear();
 
@@ -1434,9 +1422,8 @@ void SuperqComputation::mergeModeling(node *node, bool go_on)
                         points_splitted2.push_back(point);
                 }
 
-                yDebug()<<"points_splitted 1 "<<points_splitted1.size();
-                yDebug()<<"points_splitted 2 "<<points_splitted2.size();
-                /***************************************/
+                yDebug()<<"[SuperqComputation] points_splitted 1 "<<points_splitted1.size();
+                yDebug()<<"[SuperqComputation] points_splitted 2 "<<points_splitted2.size();
 
                 Vector superq1(11,0.0);
                 Vector superq2(11,0.0);
@@ -1458,8 +1445,8 @@ void SuperqComputation::mergeModeling(node *node, bool go_on)
                 else
                     cost_old = (cost_2*2 +node->father->left->f_value)/3.0;
 
-                yDebug()<<"cost merged "<<cost_merged;
-                yDebug()<<"cost old "<<cost_old;
+                yDebug()<<"[SuperqComputation] cost merged "<<cost_merged;
+                yDebug()<<"[SuperqComputation] cost old "<<cost_old;
 
                 if(cost_merged + 0.01 < cost_old)
                 {
@@ -1480,7 +1467,7 @@ void SuperqComputation::mergeModeling(node *node, bool go_on)
                 if (node->father !=superq_tree->root)
                     mergeModeling(node->father, false);
                 else
-                    yDebug()<<"stop 1";
+                    yDebug()<<"[SuperqComputation]stop 1";
             }
             else
             {
@@ -1489,11 +1476,9 @@ void SuperqComputation::mergeModeling(node *node, bool go_on)
                 if (node->father !=superq_tree->root)
                     mergeModeling(node->father, false);
                 else
-                    yDebug()<<"stop 2";
+                    yDebug()<<"[SuperqComputation] stop 2";
             }
-            yDebug()<<"stop fuori";
+            yDebug()<<"[SuperqComputation] stop fuori";
         }
     }
-
-    yDebug()<<__LINE__;
 }

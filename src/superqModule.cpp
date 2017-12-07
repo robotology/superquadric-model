@@ -96,36 +96,9 @@ bool SuperqModule::set_visualization(const string &e)
 }
 
 /**********************************************************************/
-//Property SuperqModule::get_superq(const vector<Vector> &p)
 Property SuperqModule::get_superq()
 {
     Property superq;
-
-    //LockGuard lg(mutex);
-    //LockGuard lg(mutex_shared);
-
-    yDebug()<<"in get superq";
-
-    //superqCom->setPar("object_class", object_class);
-
-    //superqCom->setPar("one_shot", "on");
-
-    //deque<Vector> p_aux;
-
-    //for (size_t i=0; i<p.size(); i++)
-    //    p_aux.push_back(p[i]);
-
-    //superqCom->superq_computed=false;
-
-    //superqCom->sendPoints(p_aux);
-
-    //superqCom->step();
-    //superqCom->run();
-
-    //while (!superqCom->superq_computed)
-    //{
-    //    Time::delay(0.01);
-    //}
 
     Vector sol(11,0.0);
     if (single_superq)
@@ -141,15 +114,10 @@ Property SuperqModule::get_superq()
             Time::delay(0.1);
         }
 
-        //deque<Vector> p_aux;
-        //p_aux.clear();
-        //superqCom->sendPoints(p_aux);
-
         superq=fillMultipleSolutions(superq_tree->root);
     }
 
     deque<Vector> p_aux;
-    //superqCom->setPar("one_shot", "off");
     p_aux.clear();
     superqCom->sendPoints(p_aux);
 
@@ -159,10 +127,6 @@ Property SuperqModule::get_superq()
 /**********************************************************************/
 bool SuperqModule::send_point_clouds(const vector<Vector> &p)
 {
-    //LockGuard lg(mutex);
-
-    //LockGuard lg_shared(mutex_shared);
-
     double t, t_fin;
 
     t=Time::now();
@@ -185,8 +149,6 @@ bool SuperqModule::send_point_clouds(const vector<Vector> &p)
     superqCom->sendPoints(p_aux);
     yDebug()<<"Time operations send points "<<Time::now() - t;
 
-    //superqCom->step();
-
     t_fin= Time::now() - t;
 
     yDebug()<<"Time operations  final"<<t_fin;
@@ -205,7 +167,6 @@ bool SuperqModule::reset_filter()
 /**********************************************************************/
 Property SuperqModule::get_superq_filtered()
 {
-    //LockGuard lg(mutex);
     Property superq;
     Vector sol(11,0.0);
     sol=superqCom->getSolution(1);
@@ -281,7 +242,6 @@ void SuperqModule::addSuperqInProp(node *leaf, int count, Property &superq_pr)
 
             if (leaf->left!=NULL)
                 addSuperqInProp(leaf->left, count, superq_pr);
-            //sup.setSubvector(8,dcm2axis(euler2dcm(leaf->superq.subVector(8,10))));
 
             Bottle bottle;
             Bottle &b1=bottle.addList();
@@ -573,7 +533,6 @@ bool SuperqModule::updateModule()
             {
                 t_mult=Time::now();
                 superqCom->iterativeModeling();
-                //if (superqCom->merge)
                 superqCom->mergeModeling(superq_tree->root, true);
                 t_mult=Time::now()-t_mult;
                 superq_tree->printTree(superq_tree->root);
@@ -638,11 +597,8 @@ bool SuperqModule::configure(ResourceFinder &rf)
             yInfo()<<"[SuperqComputation]: Thread started!";
         else
             yError()<<"[SuperqComputation]: Problems in starting the thread!";
-    //}
 
         superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K, points, vis_points, vis_step, imgIn, superq_tree, single_superq);
-
-    //superqVis= new SuperqVisualization(mutex_shared, rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K,points, vis_points, vis_step, imgIn);
 
     if (visualization_on)
     {

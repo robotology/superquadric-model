@@ -123,9 +123,6 @@ bool SuperqVisualization::addSuperq(Vector &x_toshow, ImageOf<PixelRgb> &imgOut)
     double co,so,ce,se;
     Stamp *stamp=NULL;
 
-    //ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
-    //imgOut=*imgIn;
-
     R=euler2dcm(x_toshow.subVector(8,10));
     R=R.transposed();
 
@@ -184,8 +181,6 @@ bool SuperqVisualization::addSuperq(Vector &x_toshow, ImageOf<PixelRgb> &imgOut)
              }
          }
     }
-
-    //portImgOut.write();
 
     return true;
 
@@ -296,7 +291,6 @@ bool SuperqVisualization::threadInit()
     point2D.resize(2,0.0);
     point.resize(3,0.0);
     point1.resize(3,0.0);
-    //superq.resize(11,0.0);
 
     return true;
 }
