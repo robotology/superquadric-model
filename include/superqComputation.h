@@ -264,7 +264,7 @@ public:
     void iterativeModeling();
 
     /***********************************************************************/
-    void mergeModeling(node *node, bool go_on);
+    bool mergeModeling(node *node, bool go_on);
 
     /***********************************************************************/
     void splitPoints(bool merging, node *leaf);

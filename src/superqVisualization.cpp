@@ -191,6 +191,7 @@ bool SuperqVisualization::showMultipleSuperqs(superqTree *&superq_tree)
 {
     ImageOf<PixelRgb> &imgOut=portImgOut.prepare();
     imgOut=*imgIn;
+
     if (superq_tree!=NULL)
         showTree(superq_tree->root, imgOut);
 

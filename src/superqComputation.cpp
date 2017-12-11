@@ -536,15 +536,17 @@ void SuperqComputation::run()
                         go_on=computeSuperq();
                     }
                 }
-                else
+                else if (superq_computed==false)
                 {
                     iterativeModeling();
-                    mergeModeling(superq_tree->root, true);
+                    go_on=superq_computed=mergeModeling(superq_tree->root, true);
 
                     if (superq_tree->root!=NULL)
                         superq_tree->printTree(superq_tree->root);
 
-                    superq_computed=true;
+                    yDebug()<<"computed "<<superq_computed;
+
+                    //go_on=superq_computed=true;
                 }
             }
 
@@ -564,7 +566,7 @@ void SuperqComputation::run()
                 x_filtered.resize(11,0.0);
             }
 
-            mutex.unlock();
+            //mutex.unlock();
         }
         else
         {
@@ -801,7 +803,7 @@ bool SuperqComputation::computeSuperq()
     superQ_nlp->init();
     superQ_nlp->configure(this->rf,bounds_automatic, ob_class);
 
-    mutex.lock();
+    //mutex.lock();
     if (points.size()>0)
     {
         superQ_nlp->setPoints(points, optimizer_points);
@@ -816,7 +818,7 @@ bool SuperqComputation::computeSuperq()
 
         double t_s=Time::now()-t0_superq;
         
-        mutex.unlock();
+        //mutex.unlock();
 
         if (status==Ipopt::Solve_Succeeded)
         {
@@ -847,9 +849,7 @@ Vector SuperqComputation::computeMultipleSuperq(const deque<Vector> &points_spli
     Vector colors(3,0.0);
     colors[1]=255;
     
-    cout<<endl<<endl;
-    yDebug()<<"Saving points!!!!"<<"/3Dpoints-"+tag_file;
-    savePoints("/3Dpoints-"+tag_file, colors);
+    //savePoints("/3Dpoints-"+tag_file, colors);
 
     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
     app->Options()->SetNumericValue("tol",tol);
@@ -992,6 +992,7 @@ void SuperqComputation::sendPoints(const deque<Vector> &p)
     {
         points.push_back(p[i]);
     }
+    yDebug()<<"New points "<<points.size();
 }
 
 /***********************************************************************/
@@ -1365,41 +1366,50 @@ double SuperqComputation::f(Vector &x, Vector &point_cloud)
 }
 
 /****************************************************************/
-void SuperqComputation::mergeModeling(node *node, bool go_on)
+bool SuperqComputation::mergeModeling(node *node, bool go_on)
 {
     if (node!=NULL)
     {
-        if (node->f_value==0)
+        if (node->f_value==0 && (node->right!=NULL) && (node->left!=NULL))
         {
             yDebug()<<"[SuperqComputation] That's root!";
-            double cost_right_2=(node->right->right->f_value +
-                                 node->right->left->f_value)/2.0;
+            double cost_right_2=0.0;
 
-            yDebug()<<"[SuperqComputation] cost right "<<cost_right_2;
-            yDebug()<<"[SuperqComputation] node right f value"<<node->right->f_value;
-
-            if (cost_right_2 < node->right->f_value)
+            if ((node->right->right!=NULL) && (node->right->left!=NULL))
             {
-                mergeModeling(node->right, go_on);
+                cost_right_2=(node->right->right->f_value +
+                                     node->right->left->f_value)/2.0;
+
+                yDebug()<<"[SuperqComputation] cost right "<<cost_right_2;
+                yDebug()<<"[SuperqComputation] node right f value"<<node->right->f_value;
+
+                if (cost_right_2 < node->right->f_value)
+                {
+                    mergeModeling(node->right, go_on);
+                }
+                else
+                {
+                    node->right->right=NULL;
+                    node->right->left=NULL;
+                }
             }
-            else
+
+            double cost_left_2=0.0;
+            if ((node->left->right!=NULL) && (node->left->left!=NULL))
             {
-                node->right->right=NULL;
-                node->right->left=NULL;
-            }
+                cost_left_2=(node->left->right->f_value +
+                                     node->left->left->f_value)/2.0;
 
-            double cost_left_2=(node->left->right->f_value +
-                                 node->left->left->f_value)/2.0;
+                yDebug()<<"[SuperqComputation] cost left "<<cost_left_2;
+                yDebug()<<"[SuperqComputation] node left f value"<<node->left->f_value;
 
-            yDebug()<<"[SuperqComputation] cost left "<<cost_left_2;
-            yDebug()<<"[SuperqComputation] node left f value"<<node->left->f_value;
-
-            if (cost_left_2 < node->left->f_value)
-                mergeModeling(node->left, go_on);
-            else
-            {
-                node->left->right=NULL;
-                node->left->left=NULL;
+                if (cost_left_2 < node->left->f_value)
+                    mergeModeling(node->left, go_on);
+                else
+                {
+                    node->left->right=NULL;
+                    node->left->left=NULL;
+                }
             }
         }
         else if (node->right!=NULL && node->left!=NULL)
@@ -1479,7 +1489,9 @@ void SuperqComputation::mergeModeling(node *node, bool go_on)
                 if (node->father !=superq_tree->root)
                     mergeModeling(node->father, false);
                 else
+                {
                     yDebug()<<"[SuperqComputation]stop 1";
+                }
             }
             else
             {
@@ -1488,9 +1500,15 @@ void SuperqComputation::mergeModeling(node *node, bool go_on)
                 if (node->father !=superq_tree->root)
                     mergeModeling(node->father, false);
                 else
+                {
                     yDebug()<<"[SuperqComputation] stop 2";
+                }
             }
             yDebug()<<"[SuperqComputation] stop fuori";
+
+            //return true;
         }
+        //return true;
     }
+    return true;
 }
