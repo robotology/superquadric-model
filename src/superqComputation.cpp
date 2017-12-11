@@ -120,7 +120,7 @@ void SuperqComputation::setPointsFilterPar(const Property &newOptions, bool firs
 /***********************************************************************/
 Property SuperqComputation::getPointsFilterPar()
 {
-    LockGuard lg(mutex);
+    //LockGuard lg(mutex);
 
     Property advOptions;
     advOptions.put("filter_radius",radius);
@@ -131,7 +131,7 @@ Property SuperqComputation::getPointsFilterPar()
 /***********************************************************************/
 void SuperqComputation::setSuperqFilterPar(const Property &newOptions, bool first_time)
 {
-    LockGuard lg(mutex);
+    //LockGuard lg(mutex);
 
     int mOrderValue=newOptions.find("median_order").asInt();
     if (newOptions.find("median_order").isNull() && (first_time==true))
@@ -259,7 +259,7 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions, bool firs
 /***********************************************************************/
 Property SuperqComputation::getSuperqFilterPar()
 {
-    LockGuard lg(mutex);
+    //LockGuard lg(mutex);
 
     Property advOptions;
     if (fixed_window)
@@ -277,7 +277,7 @@ Property SuperqComputation::getSuperqFilterPar()
 /***********************************************************************/
 void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
 {
-    LockGuard lg(mutex);
+    //LockGuard lg(mutex);
 
     int points=newOptions.find("optimizer_points").asInt();
 
@@ -473,7 +473,7 @@ void SuperqComputation::setPar(const string &par_name, const string &value)
 /***********************************************************************/
 double SuperqComputation::getTime()
 {
-    LockGuard lg(mutex);
+    //LockGuard lg(mutex);
     return t_superq;
 }
 
@@ -801,36 +801,44 @@ bool SuperqComputation::computeSuperq()
     superQ_nlp->init();
     superQ_nlp->configure(this->rf,bounds_automatic, ob_class);
 
-    superQ_nlp->setPoints(points, optimizer_points);
-
-    double t0_superq=Time::now();
-
-    yDebug()<<"[SuperqComputation]: Start IPOPT ";
-
-    Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
-
-    yDebug()<<"[SuperqComputation]: Finish IPOPT ";
-
-    double t_s=Time::now()-t0_superq;
-
-    if (status==Ipopt::Solve_Succeeded)
+    mutex.lock();
+    if (points.size()>0)
     {
-        x=superQ_nlp->get_result();
-        yInfo("[SuperqComputation]: Solution of the optimization problem: %s", x.toString(3,3).c_str());
-        yInfo("[SuperqComputation]: Execution time : %f", t_s);
-        return true;
-    }
-    else if(status==Ipopt::Maximum_CpuTime_Exceeded)
-    {
-        x=superQ_nlp->get_result();
-        yWarning("[SuperqComputation]: Solution after maximum time exceeded: %s", x.toString(3,3).c_str());
-        return true;
+        superQ_nlp->setPoints(points, optimizer_points);
+
+        double t0_superq=Time::now();
+
+        yDebug()<<"[SuperqComputation]: Start IPOPT ";
+
+        Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
+
+        yDebug()<<"[SuperqComputation]: Finish IPOPT ";
+
+        double t_s=Time::now()-t0_superq;
+        
+        mutex.unlock();
+
+        if (status==Ipopt::Solve_Succeeded)
+        {
+            x=superQ_nlp->get_result();
+            yInfo("[SuperqComputation]: Solution of the optimization problem: %s", x.toString(3,3).c_str());
+            yInfo("[SuperqComputation]: Execution time : %f", t_s);
+            return true;
+        }
+        else if(status==Ipopt::Maximum_CpuTime_Exceeded)
+        {
+            x=superQ_nlp->get_result();
+            yWarning("[SuperqComputation]: Solution after maximum time exceeded: %s", x.toString(3,3).c_str());
+            return true;
+        }
+        else
+        {
+            x.resize(11,0.0);
+            return false;
+        }
     }
     else
-    {
-        x.resize(11,0.0);
         return false;
-    }
 }
 
 /***********************************************************************/
@@ -838,8 +846,10 @@ Vector SuperqComputation::computeMultipleSuperq(const deque<Vector> &points_spli
 {
     Vector colors(3,0.0);
     colors[1]=255;
-
-    //savePoints("/3Dpoints-"+tag_file, colors);
+    
+    cout<<endl<<endl;
+    yDebug()<<"Saving points!!!!"<<"/3Dpoints-"+tag_file;
+    savePoints("/3Dpoints-"+tag_file, colors);
 
     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
     app->Options()->SetNumericValue("tol",tol);
@@ -973,6 +983,8 @@ Vector SuperqComputation::getSolution(bool filtered_superq)
 void SuperqComputation::sendPoints(const deque<Vector> &p)
 {
     LockGuard lg(mutex);
+
+    yDebug()<<"Clearning points "<<points.size();
 
     points.clear();
 
