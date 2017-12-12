@@ -204,7 +204,8 @@ bool SuperqVisualization::showTree(node *leaf, ImageOf<PixelRgb> &imgOut)
 {    
     if(leaf!=NULL)
     {
-        addSuperq(leaf->superq, imgOut);
+        if (leaf->right==NULL || leaf->left==NULL)
+            addSuperq(leaf->superq, imgOut);
         if (leaf->right!=NULL)
             showTree(leaf->right, imgOut);
 

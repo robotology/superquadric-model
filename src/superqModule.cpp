@@ -240,30 +240,37 @@ void SuperqModule::addSuperqInProp(node *leaf, int count, Property &superq_pr)
             if (leaf->right!=NULL)
                 addSuperqInProp(leaf->right, count, superq_pr);
 
+            count++;
+
             if (leaf->left!=NULL)
                 addSuperqInProp(leaf->left, count, superq_pr);
 
-            Bottle bottle;
-            Bottle &b1=bottle.addList();
-            b1.addDouble(sup[0]); b1.addDouble(sup[1]); b1.addDouble(sup[2]);
-            superq_pr.put("dimensions_"+count_str, bottle.get(0));
+            count++;
 
-            Bottle &b2=bottle.addList();
-            b2.addDouble(sup[3]); b2.addDouble(sup[4]);
-            superq_pr.put("exponent_"+count_str, bottle.get(1));
+            if (leaf->right==NULL || leaf->left==NULL)
+            {
+                Bottle bottle;
+                Bottle &b1=bottle.addList();
+                b1.addDouble(sup[0]); b1.addDouble(sup[1]); b1.addDouble(sup[2]);
+                superq_pr.put("dimensions_"+count_str, bottle.get(0));
 
-            Bottle &b3=bottle.addList();
-            b3.addDouble(sup[5]); b3.addDouble(sup[6]); b3.addDouble(sup[7]);
-            superq_pr.put("center_"+count_str, bottle.get(2));
+                Bottle &b2=bottle.addList();
+                b2.addDouble(sup[3]); b2.addDouble(sup[4]);
+                superq_pr.put("exponent_"+count_str, bottle.get(1));
 
-            Bottle &b4=bottle.addList();
-            Vector orient=dcm2axis(euler2dcm(sup.subVector(8,10)));
-            b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
-            superq_pr.put("orientation_"+count_str, bottle.get(3));
+                Bottle &b3=bottle.addList();
+                b3.addDouble(sup[5]); b3.addDouble(sup[6]); b3.addDouble(sup[7]);
+                superq_pr.put("center_"+count_str, bottle.get(2));
 
-            yDebug()<<"Property "<<superq_pr.toString();
+                Bottle &b4=bottle.addList();
+                Vector orient=dcm2axis(euler2dcm(sup.subVector(8,10)));
+                b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
+                superq_pr.put("orientation_"+count_str, bottle.get(3));
+
+                yDebug()<<"Property "<<superq_pr.toString();
+            }
+            count++;
         }
-
         else
         {
             count++;

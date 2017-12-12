@@ -1383,7 +1383,20 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                 yDebug()<<"[SuperqComputation] cost right "<<cost_right_2;
                 yDebug()<<"[SuperqComputation] node right f value"<<node->right->f_value;
 
-                if (cost_right_2 < node->right->f_value)
+                double area_pcr=computePointCloudArea(*node->right->point_cloud);
+                
+                double area_supr=node->right->superq[0] * node->right->superq[1] * node->right->superq[2];
+
+                yInfo()<<"Point cloud area "<< area_pcr;
+
+                yInfo()<<"Superquadric area "<< area_supr;
+
+                yInfo()<<area_supr/area_pcr;
+            
+                if (area_supr/area_pcr > 1.3)
+                    yError()<<"Superq right too big!";
+
+                if ((cost_right_2  < node->right->f_value) || (area_supr/area_pcr >1.3))
                 {
                     mergeModeling(node->right, go_on);
                 }
@@ -1403,7 +1416,20 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                 yDebug()<<"[SuperqComputation] cost left "<<cost_left_2;
                 yDebug()<<"[SuperqComputation] node left f value"<<node->left->f_value;
 
-                if (cost_left_2 < node->left->f_value)
+                double area_pcl=computePointCloudArea(*node->left->point_cloud);
+                
+                double area_supl=node->left->superq[0] * node->left->superq[1] * node->left->superq[2];
+
+                yInfo()<<"Point cloud area "<< area_pcl;
+
+                yInfo()<<"Superquadric area "<< area_supl;
+
+                yInfo()<<area_supl/area_pcl;
+
+                if (area_supl/area_pcl > 1.3)
+                    yError()<<"Superq left too  big!";
+
+                if ((cost_left_2  < node->left->f_value) || (area_supl/area_pcl > 1.3))
                     mergeModeling(node->left, go_on);
                 else
                 {
@@ -1421,6 +1447,17 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
             yDebug()<<"[SuperqComputation] cost "<<cost_2;
             yDebug()<<"[SuperqComputation] f_value "<<node->f_value;
 
+            double area_pc=computePointCloudArea(*node->point_cloud);
+                
+            double area_sup=node->superq[0] * node->superq[1] * node->superq[2];
+
+            yInfo()<<"Point cloud area "<< area_pc;
+
+            yInfo()<<"Superquadric area "<< area_sup;
+
+            if (area_sup/area_pc > 1.3)
+                    yError()<<"Superq too big!";
+
             if (((node->right->right!=NULL && node->right->left!=NULL)||
                  (node->left->right!=NULL && node->left->left!=NULL)) && go_on==true)
             {
@@ -1428,7 +1465,7 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                 mergeModeling(node->left, go_on);
 
             }
-            else if ((cost_2<node->f_value) && (node->father->point_cloud->size()>0))
+            else if (((cost_2<node->f_value) || (area_sup/area_pc > 1.3)) && (node->father->point_cloud->size()>0))
             {              
                 yDebug()<<"[SuperqComputation] point cloud father size"<<node->father->point_cloud->size();
                 points_splitted1.clear();
@@ -1470,7 +1507,25 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                 yDebug()<<"[SuperqComputation] cost merged "<<cost_merged;
                 yDebug()<<"[SuperqComputation] cost old "<<cost_old;
 
-                if(cost_merged + 0.01 < cost_old)
+
+                double area_pc1=computePointCloudArea(points_splitted1);
+                
+                double area_sup1=superq1[0] * superq1[1] * superq1[2];
+
+                double area_pc2=computePointCloudArea(points_splitted2);
+                
+                double area_sup2=superq2[0] * superq2[1] * superq2[2];
+
+                yInfo()<<"Point cloud area 1"<< area_pc1;
+
+                yInfo()<<"Superquadric area 1"<< area_sup1;
+
+                yInfo()<<"Point cloud area 2"<< area_pc2;
+
+                yInfo()<<"Superquadric area 2"<< area_sup2;
+
+                //if(cost_merged + 0.01 < cost_old)
+                if((cost_merged +0.01 < cost_old) || ((area_sup1/area_pc1 > 1.3) && (area_sup2/area_pc2 > 1.3)))
                 {
                     node_c1.superq=superq1;
                     node_c2.superq=superq2;
@@ -1512,3 +1567,40 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
     }
     return true;
 }
+
+/****************************************************************/
+double SuperqComputation::computePointCloudArea(deque<Vector> &points)
+{
+    Matrix BB(3,2);
+
+    BB(0,0)=points[0][0];
+    BB(1,0)=points[0][1];
+    BB(2,0)=points[0][2];
+    BB(0,1)=points[0][0];
+    BB(1,1)=points[0][1];
+    BB(2,1)=points[0][2];
+
+    for (size_t i=0; i<points.size();i++)
+    {
+        Vector &point=points[i];
+        if(BB(0,0)>point[0])
+           BB(0,0)=point[0];
+
+        if(BB(0,1)<point[0])
+            BB(0,1)=point[0];
+
+        if(BB(1,0)>point[1])
+            BB(1,0)=point[1];
+
+        if(BB(1,1)<point[1])
+            BB(1,1)=point[1];
+
+        if(BB(2,0)>point[2])
+            BB(2,0)=point[2];
+
+        if(BB(2,1)<point[2])
+            BB(2,1)=point[2];
+    }
+
+    return ((BB(0,1) - BB(0,0)) * (BB(1,1) - BB(1,0)) * (BB(2,1) - BB(2,0))) / 8;
+}   
