@@ -1393,10 +1393,10 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
 
                 yInfo()<<area_supr/area_pcr;
             
-                if (area_supr/area_pcr > 1.3)
+                if (area_supr/area_pcr > 0.98)
                     yError()<<"Superq right too big!";
 
-                if ((cost_right_2  < node->right->f_value) || (area_supr/area_pcr >1.3))
+                if ((cost_right_2 - 0.1 < node->right->f_value) || (area_supr/area_pcr >0.98))
                 {
                     mergeModeling(node->right, go_on);
                 }
@@ -1426,10 +1426,10 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
 
                 yInfo()<<area_supl/area_pcl;
 
-                if (area_supl/area_pcl > 1.3)
+                if (area_supl/area_pcl > 0.98)
                     yError()<<"Superq left too  big!";
 
-                if ((cost_left_2  < node->left->f_value) || (area_supl/area_pcl > 1.3))
+                if ((cost_left_2 < node->left->f_value) || (area_supl/area_pcl > 0.98))
                     mergeModeling(node->left, go_on);
                 else
                 {
@@ -1455,7 +1455,7 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
 
             yInfo()<<"Superquadric area "<< area_sup;
 
-            if (area_sup/area_pc > 1.3)
+            if (area_sup/area_pc > 0.98)
                     yError()<<"Superq too big!";
 
             if (((node->right->right!=NULL && node->right->left!=NULL)||
@@ -1465,7 +1465,7 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                 mergeModeling(node->left, go_on);
 
             }
-            else if (((cost_2<node->f_value) || (area_sup/area_pc > 1.3)) && (node->father->point_cloud->size()>0))
+            else if (((cost_2 <node->f_value) || (area_sup/area_pc > 0.98)) && (node->father->point_cloud->size()>0))
             {              
                 yDebug()<<"[SuperqComputation] point cloud father size"<<node->father->point_cloud->size();
                 points_splitted1.clear();
@@ -1525,7 +1525,7 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                 yInfo()<<"Superquadric area 2"<< area_sup2;
 
                 //if(cost_merged + 0.01 < cost_old)
-                if((cost_merged +0.01 < cost_old) || ((area_sup1/area_pc1 > 1.3) && (area_sup2/area_pc2 > 1.3)))
+                if((cost_merged  < cost_old) || ((area_sup1/area_pc1 < 0.98) && (area_sup2/area_pc2 < 0.98)))
                 {
                     node_c1.superq=superq1;
                     node_c2.superq=superq2;
