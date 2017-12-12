@@ -1396,7 +1396,7 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                 if (area_supr/area_pcr > 0.98)
                     yError()<<"Superq right too big!";
 
-                if ((cost_right_2 - 0.1 < node->right->f_value) || (area_supr/area_pcr >0.98))
+                if ((cost_right_2  < node->right->f_value) || (area_supr/area_pcr >0.98))
                 {
                     mergeModeling(node->right, go_on);
                 }
@@ -1465,7 +1465,7 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                 mergeModeling(node->left, go_on);
 
             }
-            else if (((cost_2 <node->f_value) || (area_sup/area_pc > 0.98)) && (node->father->point_cloud->size()>0))
+            else if (((cost_2 - 0.1 <node->f_value) || (area_sup/area_pc > 0.98)) && (node->father->point_cloud->size()>0))
             {              
                 yDebug()<<"[SuperqComputation] point cloud father size"<<node->father->point_cloud->size();
                 points_splitted1.clear();
@@ -1516,16 +1516,12 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                 
                 double area_sup2=superq2[0] * superq2[1] * superq2[2];
 
-                yInfo()<<"Point cloud area 1"<< area_pc1;
+                yInfo()<<"Ratio 1"<< area_sup1/area_pc1;
 
-                yInfo()<<"Superquadric area 1"<< area_sup1;
-
-                yInfo()<<"Point cloud area 2"<< area_pc2;
-
-                yInfo()<<"Superquadric area 2"<< area_sup2;
+                yInfo()<<"Ratio 2"<< area_sup2/area_pc2;
 
                 //if(cost_merged + 0.01 < cost_old)
-                if((cost_merged  < cost_old) || ((area_sup1/area_pc1 < 0.98) && (area_sup2/area_pc2 < 0.98)))
+                if((cost_merged +0.01 < cost_old) || ((area_sup1/area_pc1 < 0.5) && (area_sup2/area_pc2 < 0.5)))
                 {
                     node_c1.superq=superq1;
                     node_c2.superq=superq2;
