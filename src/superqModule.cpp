@@ -226,45 +226,24 @@ void SuperqModule::addSuperqInProp(node *leaf, int &count, Property &superq_pr)
     if (leaf!=NULL)
     {
         if (norm(leaf->superq.subVector(0,2))>0.0)
-        {
-            yDebug()<<"count a  "<<count;
-            
+        {            
             stringstream ss;
  
             sup=leaf->superq;
 
-            yDebug()<<"count b "<<count;
             if (leaf->right!=NULL)
-            {   
-                yDebug()<<"right";     
+            {     
                 addSuperqInProp(leaf->right, count, superq_pr);
 
                 count++;
             }
 
-yDebug()<<"count c "<<count;
-
             if (leaf->left!=NULL)
             {
-                yDebug()<<"left"; 
                 addSuperqInProp(leaf->left, count, superq_pr);
 
                 count++;
             }
-
-yDebug()<<"count d "<<count;
-
-            if (leaf->right==NULL || leaf->left==NULL)
-                yDebug()<<"Figli NULL";
-            else
-            {
-                //if (leaf->right->right==NULL || leaf->right->left==NULL)
-                //    yDebug()<<"Nipoti NULL";
-                //if (leaf->left->right==NULL || leaf->left->left==NULL)
-                //    yDebug()<<"Nipoti NULL";
-              
-            }
-
 
             if (leaf->right==NULL && leaf->left==NULL)
             {
@@ -300,15 +279,12 @@ yDebug()<<"count d "<<count;
             count++;
             if (leaf->right!=NULL)
             {
-                yDebug()<<"first right"; 
                 addSuperqInProp(leaf->right, count, superq_pr);
-                yDebug()<<"after right";
                 count++;
             }
             if (leaf->left!=NULL)
             {
                 //count++;
-                yDebug()<<"first left"; 
                 addSuperqInProp(leaf->left, count, superq_pr);               
             }
         }
