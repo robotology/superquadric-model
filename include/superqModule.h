@@ -206,7 +206,7 @@ protected:
     yarp::os::Property fillMultipleSolutions(node *leaf);
 
     /**********************************************************************/
-    void addSuperqInProp(node *leaf, int count, yarp::os::Property &superq_pr);
+    void addSuperqInProp(node *leaf, int &count, yarp::os::Property &superq_pr);
 
     /**********************************************************************/
     bool set_points_filtering(const std::string &entry);

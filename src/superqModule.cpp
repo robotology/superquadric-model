@@ -219,7 +219,7 @@ Property SuperqModule::fillMultipleSolutions(node *leaf)
 }
 
 /**********************************************************************/
-void SuperqModule::addSuperqInProp(node *leaf, int count, Property &superq_pr)
+void SuperqModule::addSuperqInProp(node *leaf, int &count, Property &superq_pr)
 {
     Vector sup(11,0.0);
 
@@ -227,28 +227,49 @@ void SuperqModule::addSuperqInProp(node *leaf, int count, Property &superq_pr)
     {
         if (norm(leaf->superq.subVector(0,2))>0.0)
         {
-            yDebug()<<"count "<<count;
-            //count++;
+            yDebug()<<"count a  "<<count;
+            
             stringstream ss;
-            ss<<count;
-            string count_str=ss.str();
-
-            cout<<count_str;
-
+ 
             sup=leaf->superq;
 
+            yDebug()<<"count b "<<count;
             if (leaf->right!=NULL)
+            {   
+                yDebug()<<"right";     
                 addSuperqInProp(leaf->right, count, superq_pr);
 
-            count++;
+                count++;
+            }
+
+yDebug()<<"count c "<<count;
 
             if (leaf->left!=NULL)
+            {
+                yDebug()<<"left"; 
                 addSuperqInProp(leaf->left, count, superq_pr);
 
-            count++;
+                count++;
+            }
+
+yDebug()<<"count d "<<count;
 
             if (leaf->right==NULL || leaf->left==NULL)
+                yDebug()<<"Figli NULL";
+            else
             {
+                //if (leaf->right->right==NULL || leaf->right->left==NULL)
+                //    yDebug()<<"Nipoti NULL";
+                //if (leaf->left->right==NULL || leaf->left->left==NULL)
+                //    yDebug()<<"Nipoti NULL";
+              
+            }
+
+
+            if (leaf->right==NULL && leaf->left==NULL)
+            {
+                ss<<count;
+                string count_str=ss.str();
                 Bottle bottle;
                 Bottle &b1=bottle.addList();
                 b1.addDouble(sup[0]); b1.addDouble(sup[1]); b1.addDouble(sup[2]);
@@ -267,18 +288,29 @@ void SuperqModule::addSuperqInProp(node *leaf, int count, Property &superq_pr)
                 b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
                 superq_pr.put("orientation_"+count_str, bottle.get(3));
 
-                yDebug()<<"Property "<<superq_pr.toString();
-            }
-            count++;
+                yDebug()<<"Property "<<count<<superq_pr.toString();
+                //count++;
+
+            }   
+            //count++;         
+            
         }
         else
         {
             count++;
             if (leaf->right!=NULL)
+            {
+                yDebug()<<"first right"; 
                 addSuperqInProp(leaf->right, count, superq_pr);
-            count++;
+                yDebug()<<"after right";
+                count++;
+            }
             if (leaf->left!=NULL)
-                addSuperqInProp(leaf->left, count, superq_pr);
+            {
+                //count++;
+                yDebug()<<"first left"; 
+                addSuperqInProp(leaf->left, count, superq_pr);               
+            }
         }
 
     }
