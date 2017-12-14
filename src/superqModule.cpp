@@ -234,15 +234,13 @@ void SuperqModule::addSuperqInProp(node *leaf, int &count, Property &superq_pr)
             if (leaf->right!=NULL)
             {     
                 addSuperqInProp(leaf->right, count, superq_pr);
-
                 count++;
             }
 
             if (leaf->left!=NULL)
             {
                 addSuperqInProp(leaf->left, count, superq_pr);
-
-                count++;
+                //count++;
             }
 
             if (leaf->right==NULL && leaf->left==NULL)
