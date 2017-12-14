@@ -186,7 +186,6 @@ bool SuperqVisualization::threadInit()
     point2D.resize(2,0.0);
     point.resize(3,0.0);
     point1.resize(3,0.0);
-    //superq.resize(11,0.0);
 
     return true;
 }
@@ -194,7 +193,6 @@ bool SuperqVisualization::threadInit()
 /***********************************************************************/
 void SuperqVisualization::run()
 {
-    //LockGuard lg(mutex);
     double t0=Time::now();
     if (what_to_plot=="superq" && imgIn!=NULL)
         showSuperq(superq_filtered);

@@ -279,8 +279,6 @@ void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
     LockGuard lg(mutex);
 
     int points=newOptions.find("optimizer_points").asInt();
-
-
     if (newOptions.find("optimizer_points").isNull() && (first_time==true))
     {
         optimizer_points=50;
@@ -435,7 +433,6 @@ Property SuperqComputation::getIpoptPar()
 /***********************************************************************/
 void SuperqComputation::setPar(const string &par_name, const string &value)
 {
-    //LockGuard lg(mutex);
     if (par_name=="tag_file")
         tag_file=value;
     else if (par_name=="filter_points")
@@ -489,12 +486,12 @@ bool SuperqComputation::threadInit()
 /***********************************************************************/
 void SuperqComputation::run()
 {
-    yDebug()<<"is stopping "<<isStopping();
+    yDebug()<<"[SuperqComputation]: is stopping variable "<<isStopping();
     while (!isStopping())
     {
         t0=Time::now();
 
-        yDebug()<<"points size "<<points.size();
+        yDebug()<<"[SuperqComputation]: points size "<<points.size();
 
         if (points.size()>0)
         {
@@ -877,7 +874,6 @@ Vector SuperqComputation::getSolution(bool filtered_superq)
 /***********************************************************************/
 void SuperqComputation::sendPoints(const deque<Vector> &p)
 {
-    //LockGuard lg_shared(mutex_shared);
     LockGuard lg(mutex);
 
     points.clear();

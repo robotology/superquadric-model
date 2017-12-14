@@ -101,7 +101,6 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
     Property superq;
 
     LockGuard lg(mutex);
-    //LockGuard lg(mutex_shared);
 
     superqCom->setPar("object_class", object_class);
 
@@ -114,13 +113,13 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
 
     superqCom->sendPoints(p_aux);
 
-    //superqCom->step();
     superqCom->run();
 
     Vector sol(11,0.0);
     sol=superqCom->getSolution(0);
 
     superqCom->setPar("one_shot", "off");
+
     p_aux.clear();
     superqCom->sendPoints(p_aux);
 
@@ -132,10 +131,6 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
 /**********************************************************************/
 bool SuperqModule::send_point_clouds(const vector<Vector> &p)
 {
-    //LockGuard lg(mutex);
-
-    //LockGuard lg_shared(mutex_shared);
-
     double t, t_fin;  
     
     t=Time::now();
@@ -156,8 +151,6 @@ bool SuperqModule::send_point_clouds(const vector<Vector> &p)
     superqCom->sendPoints(p_aux);
     yDebug()<<"Time operations send points "<<Time::now() - t;
 
-    //superqCom->step();
-
     t_fin= Time::now() - t;
 
     yDebug()<<"Time operations  final"<<t_fin;
@@ -176,7 +169,6 @@ bool SuperqModule::reset_filter()
 /**********************************************************************/
 Property SuperqModule::get_superq_filtered()
 {
-    //LockGuard lg(mutex);
     Property superq;
     Vector sol(11,0.0);
     sol=superqCom->getSolution(1);
@@ -392,19 +384,19 @@ bool SuperqModule::updateModule()
     t0=Time::now();
     LockGuard lg(mutex);
 
-    yDebug()<<"[Module ] module 1";
+    yDebug()<<"[SuperqModule]: start updatemodule";
 
     if (mode_online)
     {
         superqCom->setPar("object_class", object_class);
-         yDebug()<<"[Module ] module 2";
+         yDebug()<<"[SuperqModule]: set object class";
 
         Property &x_to_send=portSuperq.prepare();
-        yDebug()<<"[Module ] module 3";
+        yDebug()<<"[SuperqModule]: prepare port";
 
         imgIn=portImgIn.read();
 
-        yDebug()<<"[Module ] module 4";
+        yDebug()<<"[SuperqModule]: read image";
 
         if (times_superq.size()<10)
             times_superq.push_back(superqCom->getTime());
@@ -420,18 +412,18 @@ bool SuperqModule::updateModule()
         else
             times_superq.clear();
 
-        yDebug()<<"[Module ] module 5";
+        yDebug()<<"[SuperqModule]: fill solution";
         
         if (!filter_superq)
             x_to_send=fillProperty(x);
         else
             x_to_send=fillProperty(x_filtered);
 
-        yDebug()<<"[Module ] module 6";
+        yDebug()<<"[SuperqModule]: send superq";
 
         portSuperq.write();
 
-        yDebug()<<"[Module ] module 7";
+        yDebug()<<"[SuperqModule]: superq sent";
 
         if (visualization_on)
         {
@@ -450,7 +442,7 @@ bool SuperqModule::updateModule()
             times_vis.clear();
         }
 
-         yDebug()<<"[Module ] module 8";
+         yDebug()<<"[Module ] restarting ...";
     }
     else
     {
@@ -522,23 +514,21 @@ bool SuperqModule::configure(ResourceFinder &rf)
         bool thread_started=superqCom->start();
 
         if (thread_started)
-            yInfo()<<"[SuperqComputation]: Thread started!";
+            yInfo()<<"[SuperqModule]: Computetion thread started!";
         else
-            yError()<<"[SuperqComputation]: Problems in starting the thread!";
+            yError()<<"[SuperqModule]: Problems in starting the computation thread!";
     }
 
     superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K, points, vis_points, vis_step, imgIn);
-
-    //superqVis= new SuperqVisualization(mutex_shared, rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K,points, vis_points, vis_step, imgIn);
 
     if (visualization_on)
     {
         bool thread_started=superqVis->start();
 
         if (thread_started)
-            yInfo()<<"[SuperqVisualization]: Thread started!";
+            yInfo()<<"[SuperqModule]: Visualization thread started!";
         else
-            yError()<<"[SuperqVisualization]: Problems in starting the thread!";
+            yError()<<"[SuperqModule]: Problems in starting the visualization thread!";
     }
     else
     {
@@ -553,11 +543,8 @@ bool SuperqModule::interruptModule()
 {
     yInfo()<<"[SuperqModule]: Interruping ... ";
 
-    yDebug()<<"1 close ";
     portImgIn.interrupt();      
-    yDebug()<<"2 close ";
     portSuperq.interrupt();
-    yDebug()<<"3 close ";
 
     return true;
 }
@@ -712,13 +699,13 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     ipopt_par.put("mu_strategy",mu_strategy);
     ipopt_par.put("nlp_scaling_method",nlp_scaling_method);
 
-    yInfo()<<"[Superqcomputation]: optimizer_points      "<<optimizer_points;
-    yInfo()<<"[Superqcomputation]: max_cpu_time          "<<max_cpu_time;
-    yInfo()<<"[Superqcomputation]: tol                   "<<tol;
-    yInfo()<<"[Superqcomputation]: acceptable_iter       "<<acceptable_iter;
-    yInfo()<<"[Superqcomputation]: max_iter              "<<max_iter;
-    yInfo()<<"[Superqcomputation]: mu_strategy           "<<mu_strategy;
-    yInfo()<<"[Superqcomputation]: nlp_scaling_method    "<<nlp_scaling_method;
+    yInfo()<<"[SuperqModule]: optimizer_points      "<<optimizer_points;
+    yInfo()<<"[SuperqModule]: max_cpu_time          "<<max_cpu_time;
+    yInfo()<<"[SuperqModule]: tol                   "<<tol;
+    yInfo()<<"[SuperqModule]: acceptable_iter       "<<acceptable_iter;
+    yInfo()<<"[SuperqModule]: max_iter              "<<max_iter;
+    yInfo()<<"[SuperqModule]: mu_strategy           "<<mu_strategy;
+    yInfo()<<"[SuperqModule]: nlp_scaling_method    "<<nlp_scaling_method;
 
     return true;
 }
