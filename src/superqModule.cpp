@@ -108,7 +108,7 @@ Property SuperqModule::get_superq()
     }
     else
     {
-        yDebug()<<"superq comp "<<superqCom->superq_computed;
+        yDebug()<<"[SuperqComputation]: Superq has been computed "<<superqCom->superq_computed;
         while (!superqCom->superq_computed)
         {
             Time::delay(0.1);
@@ -151,7 +151,7 @@ bool SuperqModule::send_point_clouds(const vector<Vector> &p)
 
     t_fin= Time::now() - t;
 
-    yDebug()<<"Time operations  final"<<t_fin;
+    yDebug()<<"[SuperqModule]: Time operations  final"<<t_fin;
 
     return true;
 }
@@ -291,7 +291,7 @@ void SuperqModule::addSuperqInProp(node *leaf, int &count, Property &superq_pr)
 
     }
     else
-        yDebug()<<"Finished!";
+        yDebug()<<"[SuperqModule]:Finished property fill!";
 }
 
 /**********************************************************************/
@@ -541,7 +541,7 @@ bool SuperqModule::updateModule()
         {
             if (single_superq)
             {
-                yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
+                yInfo()<<"[SuperqModule]: number of points acquired:"<< points.size();
                 go_on=superqCom->computeSuperq();
             }
             else
@@ -609,9 +609,9 @@ bool SuperqModule::configure(ResourceFinder &rf)
         bool thread_started=superqCom->start();
 
         if (thread_started)
-            yInfo()<<"[SuperqComputation]: Thread started!";
+            yInfo()<<"[SuperqModule]: Computation hread started!";
         else
-            yError()<<"[SuperqComputation]: Problems in starting the thread!";
+            yError()<<"[SuperqModule]: Problems in starting the computation thread!";
 
         superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K, points, vis_points, vis_step, imgIn, superq_tree, single_superq);
 
@@ -620,9 +620,9 @@ bool SuperqModule::configure(ResourceFinder &rf)
         bool thread_started=superqVis->start();
 
             if (thread_started)
-                yInfo()<<"[SuperqVisualization]: Thread started!";
+                yInfo()<<"[SuperqModule]: Visualization thread started!";
             else
-                yError()<<"[SuperqVisualization]: Problems in starting the thread!";
+                yError()<<"[SuperqModule]: Problems in starting the visualization thread!";
         }
         else
         {
@@ -638,11 +638,8 @@ bool SuperqModule::interruptModule()
 {
     yInfo()<<"[SuperqModule]: Interruping ... ";
 
-    yDebug()<<"1 close ";
     portImgIn.interrupt();
-    yDebug()<<"2 close ";
     portSuperq.interrupt();
-    yDebug()<<"3 close ";
 
     return true;
 }
@@ -805,15 +802,15 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     ipopt_par.put("nlp_scaling_method",nlp_scaling_method);
     ipopt_par.put("tree_splitting",tree_splitting);
 
-    yInfo()<<"[Superqcomputation]: optimizer_points      "<<optimizer_points;
-    yInfo()<<"[Superqcomputation]: max_cpu_time          "<<max_cpu_time;
-    yInfo()<<"[Superqcomputation]: tol                   "<<tol;
-    yInfo()<<"[Superqcomputation]: acceptable_iter       "<<acceptable_iter;
-    yInfo()<<"[Superqcomputation]: max_iter              "<<max_iter;
-    yInfo()<<"[Superqcomputation]: mu_strategy           "<<mu_strategy;
-    yInfo()<<"[Superqcomputation]: nlp_scaling_method    "<<nlp_scaling_method;
-    yInfo()<<"[Superqcomputation]: tree_splitting        "<<tree_splitting;
-    yInfo()<<"[Superqcomputation]: f_thres               "<<f_thres;
+    yInfo()<<"[SuperqModule]: optimizer_points      "<<optimizer_points;
+    yInfo()<<"[SuperqModule]: max_cpu_time          "<<max_cpu_time;
+    yInfo()<<"[SuperqModule]: tol                   "<<tol;
+    yInfo()<<"[SuperqModule]: acceptable_iter       "<<acceptable_iter;
+    yInfo()<<"[SuperqModule]: max_iter              "<<max_iter;
+    yInfo()<<"[SuperqModule]: mu_strategy           "<<mu_strategy;
+    yInfo()<<"[SuperqModule]: nlp_scaling_method    "<<nlp_scaling_method;
+    yInfo()<<"[SuperqModule]: tree_splitting        "<<tree_splitting;
+    yInfo()<<"[SuperqModule]: f_thres               "<<f_thres;
 
     return true;
 }

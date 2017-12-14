@@ -120,8 +120,6 @@ void SuperqComputation::setPointsFilterPar(const Property &newOptions, bool firs
 /***********************************************************************/
 Property SuperqComputation::getPointsFilterPar()
 {
-    //LockGuard lg(mutex);
-
     Property advOptions;
     advOptions.put("filter_radius",radius);
     advOptions.put("filter_nnThreshold",nnThreshold);
@@ -131,8 +129,6 @@ Property SuperqComputation::getPointsFilterPar()
 /***********************************************************************/
 void SuperqComputation::setSuperqFilterPar(const Property &newOptions, bool first_time)
 {
-    //LockGuard lg(mutex);
-
     int mOrderValue=newOptions.find("median_order").asInt();
     if (newOptions.find("median_order").isNull() && (first_time==true))
     {
@@ -259,8 +255,6 @@ void SuperqComputation::setSuperqFilterPar(const Property &newOptions, bool firs
 /***********************************************************************/
 Property SuperqComputation::getSuperqFilterPar()
 {
-    //LockGuard lg(mutex);
-
     Property advOptions;
     if (fixed_window)
         advOptions.put("fixed_window","on");
@@ -277,11 +271,7 @@ Property SuperqComputation::getSuperqFilterPar()
 /***********************************************************************/
 void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
 {
-    //LockGuard lg(mutex);
-
     int points=newOptions.find("optimizer_points").asInt();
-
-
     if (newOptions.find("optimizer_points").isNull() && (first_time==true))
     {
         optimizer_points=50;
@@ -453,7 +443,6 @@ Property SuperqComputation::getIpoptPar()
 /***********************************************************************/
 void SuperqComputation::setPar(const string &par_name, const string &value)
 {
-    //LockGuard lg(mutex);
     if (par_name=="tag_file")
         tag_file=value;
     else if (par_name=="filter_points")
@@ -473,7 +462,6 @@ void SuperqComputation::setPar(const string &par_name, const string &value)
 /***********************************************************************/
 double SuperqComputation::getTime()
 {
-    //LockGuard lg(mutex);
     return t_superq;
 }
 
@@ -511,7 +499,7 @@ bool SuperqComputation::threadInit()
 /***********************************************************************/
 void SuperqComputation::run()
 {
-    yDebug()<<"is stopping "<<isStopping();
+    yDebug()<<"[SuperqComputation]: is the module stopping "<<isStopping();
     while (!isStopping())
     {
         t0=Time::now();
@@ -544,9 +532,8 @@ void SuperqComputation::run()
                     if (superq_tree->root!=NULL)
                         superq_tree->printTree(superq_tree->root);
 
-                    yDebug()<<"computed "<<superq_computed;
+                    yDebug()<<"[SuperqComputation]: The superquadric has been computed "<<superq_computed;
 
-                    //go_on=superq_computed=true;
                 }
             }
 
@@ -565,8 +552,6 @@ void SuperqComputation::run()
             {
                 x_filtered.resize(11,0.0);
             }
-
-            //mutex.unlock();
         }
         else
         {
@@ -803,7 +788,6 @@ bool SuperqComputation::computeSuperq()
     superQ_nlp->init();
     superQ_nlp->configure(this->rf,bounds_automatic, ob_class);
 
-    //mutex.lock();
     if (points.size()>0)
     {
         superQ_nlp->setPoints(points, optimizer_points);
@@ -817,8 +801,6 @@ bool SuperqComputation::computeSuperq()
         yDebug()<<"[SuperqComputation]: Finish IPOPT ";
 
         double t_s=Time::now()-t0_superq;
-        
-        //mutex.unlock();
 
         if (status==Ipopt::Solve_Succeeded)
         {
@@ -904,7 +886,7 @@ void SuperqComputation::filterSuperq()
 {
     yInfo()<< "[SuperqComputation]: Filtering the last "<< median_order << " superquadrics...";
 
-    yInfo()<<"[SuperqComputation]: x "<<x.toString();
+    yInfo()<< "[SuperqComputation]: x "<<x.toString();
 
     if (fixed_window)
     {
@@ -984,7 +966,7 @@ void SuperqComputation::sendPoints(const deque<Vector> &p)
 {
     LockGuard lg(mutex);
 
-    yDebug()<<"Clearning points "<<points.size();
+    yDebug()<<"[SuperqComputation]: Clearning points "<<points.size();
 
     points.clear();
 
@@ -1084,9 +1066,7 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
             nodeContent node_c2;
 
             if ((!newnode->right) && (!newnode->left))
-            {
-                //if ((norm(newnode->right->superq)==0) && (norm(newnode->left->superq)==0))
-                //{
+            {              
                 yDebug()<<"[SuperqComputation] Computing right and left";
                 splitPoints(false, newnode);
                 superq1=computeMultipleSuperq(points_splitted1);
@@ -1105,7 +1085,6 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
 
 
                 superq_tree->insert(node_c1, node_c2, newnode);
-               // }
             }
             else
                 yInfo()<<"[SuperqComputation] Skipping computation because already computed";
@@ -1235,7 +1214,7 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
             }
         }
         else
-            yDebug()<<"stop";
+            yDebug()<<"[SuperqComputation]: stop";
     }
 
 }
@@ -1320,8 +1299,8 @@ void SuperqComputation::splitPoints(bool merging, node *leaf)
                 points_splitted2.push_back(point);
         }
 
-        yDebug()<<"[SuperqComputation] points_splitted 1 "<<points_splitted1.size();
-        yDebug()<<"[SuperqComputation] points_splitted 2 "<<points_splitted2.size();
+        yDebug()<<"[SuperqComputation]: points_splitted 1 "<<points_splitted1.size();
+        yDebug()<<"[SuperqComputation]: points_splitted 2 "<<points_splitted2.size();
     }
 }
 
@@ -1372,7 +1351,7 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
     {
         if (node->f_value==0 && (node->right!=NULL) && (node->left!=NULL))
         {
-            yDebug()<<"[SuperqComputation] That's root!";
+            yDebug()<<"[SuperqComputation]: That's root!";
             double cost_right_2=0.0;
 
             if ((node->right->right!=NULL) && (node->right->left!=NULL))
@@ -1380,21 +1359,21 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                 cost_right_2=(node->right->right->f_value +
                                      node->right->left->f_value)/2.0;
 
-                yDebug()<<"[SuperqComputation] cost right "<<cost_right_2;
-                yDebug()<<"[SuperqComputation] node right f value"<<node->right->f_value;
+                yDebug()<<"[SuperqComputation]: cost right "<<cost_right_2;
+                yDebug()<<"[SuperqComputation]: node right f value"<<node->right->f_value;
 
                 double area_pcr=computePointCloudArea(*node->right->point_cloud);
                 
                 double area_supr=node->right->superq[0] * node->right->superq[1] * node->right->superq[2];
 
-                yInfo()<<"Point cloud area "<< area_pcr;
+                yInfo()<<"[SuperqComputation]: Point cloud area "<< area_pcr;
 
-                yInfo()<<"Superquadric area "<< area_supr;
+                yInfo()<<"[SuperqComputation]: Superquadric area "<< area_supr;
 
                 yInfo()<<area_supr/area_pcr;
             
                 if (area_supr/area_pcr > 0.98)
-                    yError()<<"Superq right too big!";
+                    yError()<<"[SuperqComputation]: Superq right too big!";
 
                 if ((cost_right_2  < node->right->f_value) || (area_supr/area_pcr >0.98))
                 {
@@ -1413,21 +1392,21 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                 cost_left_2=(node->left->right->f_value +
                                      node->left->left->f_value)/2.0;
 
-                yDebug()<<"[SuperqComputation] cost left "<<cost_left_2;
-                yDebug()<<"[SuperqComputation] node left f value"<<node->left->f_value;
+                yDebug()<<"[SuperqComputation]: cost left "<<cost_left_2;
+                yDebug()<<"[SuperqComputation]: node left f value"<<node->left->f_value;
 
                 double area_pcl=computePointCloudArea(*node->left->point_cloud);
                 
                 double area_supl=node->left->superq[0] * node->left->superq[1] * node->left->superq[2];
 
-                yInfo()<<"Point cloud area "<< area_pcl;
+                yInfo()<<"[SuperqComputation]: Point cloud area "<< area_pcl;
 
-                yInfo()<<"Superquadric area "<< area_supl;
+                yInfo()<<"[SuperqComputation]: Superquadric area "<< area_supl;
 
                 yInfo()<<area_supl/area_pcl;
 
                 if (area_supl/area_pcl > 0.98)
-                    yError()<<"Superq left too  big!";
+                    yError()<<"[SuperqComputation]: Superq left too  big!";
 
                 if ((cost_left_2 < node->left->f_value) || (area_supl/area_pcl > 0.98))
                     mergeModeling(node->left, go_on);
@@ -1451,12 +1430,12 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                 
             double area_sup=node->superq[0] * node->superq[1] * node->superq[2];
 
-            yInfo()<<"Point cloud area "<< area_pc;
+            yInfo()<<"[SuperqComputation]: Point cloud area "<< area_pc;
 
-            yInfo()<<"Superquadric area "<< area_sup;
+            yInfo()<<"[SuperqComputation]: Superquadric area "<< area_sup;
 
             if (area_sup/area_pc > 0.98)
-                    yError()<<"Superq too big!";
+                    yError()<<"[SuperqComputation]: Superq too big!";
 
             if (((node->right->right!=NULL && node->right->left!=NULL)||
                  (node->left->right!=NULL && node->left->left!=NULL)) && go_on==true)
@@ -1516,9 +1495,9 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                 
                 double area_sup2=superq2[0] * superq2[1] * superq2[2];
 
-                yInfo()<<"Ratio 1"<< area_sup1/area_pc1;
+                yInfo()<<"[SuperqComputation]: Ratio 1"<< area_sup1/area_pc1;
 
-                yInfo()<<"Ratio 2"<< area_sup2/area_pc2;
+                yInfo()<<"[SuperqComputation]: Ratio 2"<< area_sup2/area_pc2;
 
                 //if(cost_merged + 0.01 < cost_old)
                 if((cost_merged +0.01 < cost_old) || ((area_sup1/area_pc1 < 0.5) && (area_sup2/area_pc2 < 0.5)))
@@ -1541,7 +1520,7 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                     mergeModeling(node->father, false);
                 else
                 {
-                    yDebug()<<"[SuperqComputation]stop 1";
+                    yDebug()<<"[SuperqComputation]: stop 1";
                 }
             }
             else
@@ -1552,14 +1531,11 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                     mergeModeling(node->father, false);
                 else
                 {
-                    yDebug()<<"[SuperqComputation] stop 2";
+                    yDebug()<<"[SuperqComputation]: stop 2";
                 }
             }
-            yDebug()<<"[SuperqComputation] stop fuori";
-
-            //return true;
+            yDebug()<<"[SuperqComputation]: stop fuori";
         }
-        //return true;
     }
     return true;
 }

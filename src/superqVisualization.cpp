@@ -215,7 +215,7 @@ bool SuperqVisualization::showTree(node *leaf, ImageOf<PixelRgb> &imgOut)
     else
     {
 
-        yDebug()<<"Finished";
+        yDebug()<<"[SuperqVisualization]: Finished";
     }
 }
 
