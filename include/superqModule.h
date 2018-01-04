@@ -42,12 +42,18 @@ class SuperqModule : public yarp::os::RFModule,
 {
 protected:
 
-	/** RGB values **/
-    int r,g,b;
+	/** R values **/
+    int r;
+	/** G values **/
+	int g;
+	/** B values **/
+	int b;
 	/** Count variable**/
     int count;
-	/** Thread rates**/
-    int rate, rate_vis;
+	/** Computation thread rate**/
+    int rate;
+	/** Visualization thread rate**/
+	int rate_vis;
 	/** Tag name of files for saving 3D points**/
     std::string tag_file;
 	/** Path where code context is located **/
