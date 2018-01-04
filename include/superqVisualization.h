@@ -40,10 +40,19 @@ protected:
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > portImgOut;
 
     // Parameters for visualization
-    int r,g,b;
+	/** R value for visualization **/
+    int r;
+	/** Green value for visualization **/
+	int g;
+	/** Blue value for visualization **/
+	int b;
+	/** Time for visualization**/
     double t_vis;
+    /** Number of points used for visualization**/
+    int vis_points;
+	/** Number of visualization step**/
     int vis_step;
-    int vis_points;   
+	/** String used for deciding what to plot: "points" or "superq"**/
     std::string what_to_plot;
 
     yarp::sig::Vector point,point1;
@@ -51,8 +60,10 @@ protected:
     std::deque<int> Color;
 
     // Variables for gaze
+	/** Eye camera selected **/
     std::string eye;
     yarp::sig::Matrix R,H,K;
+	/** Gaze Control interface **/
     yarp::dev::IGazeControl *igaze;
 
     yarp::os::Mutex mutex;

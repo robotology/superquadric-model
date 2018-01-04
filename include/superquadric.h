@@ -37,11 +37,17 @@ class  SuperQuadric_NLP : public Ipopt::TNLP
 {
 
 protected:
+
+	/** Boolean variable for enabling automatic bounds computation **/
     bool bounds_automatic;
+	/** Auxiliar vector for gradient computation**/
     yarp::sig::Vector x_v;
+	/** Starting point for the optimization problem**/
     yarp::sig::Vector x0;
+	/** Bounds variable of the optimization problem**/
     yarp::sig::Matrix bounds;
     double aux_objvalue;
+	/** Object class: cylinder, sphere and box**/
     std::string obj_class;
 
     yarp::os::ResourceFinder *rf;
@@ -218,7 +224,9 @@ protected:
 
 
 public:
+	/** Final solution**/
     yarp::sig::Vector solution;
+	/** 3D points actually used for superquadric estimation**/
     std::deque<yarp::sig::Vector> points_downsampled;
 
     /** Init function */

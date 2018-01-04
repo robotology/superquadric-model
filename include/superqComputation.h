@@ -49,43 +49,74 @@ class SuperqComputation : public yarp::os::Thread
 {
 protected:
 
+	/** Count variable**/
     int count;
+	/** Boolean variable for enabling point cloud saving**/
     bool save_points;
+	/** Tag name of files for saving 3D points**/
     std::string tag_file;
+	/** Path where code context is located **/
     std::string homeContextPath;
+	/** Pointcloud name file in case the module runs offline**/
     yarp::os::ConstString pointCloudFileName;
+	/** OpenCV variable for blob extraction**/
     std::vector<cv::Point> contour;
 
+	/** Port for receiving point cloud **/
     yarp::os::BufferedPort<yarp::os::Bottle> pointPort;
 
     // Filters parameters
+	/** Radius for spatial density filter**/
     double radius;
+	/** Density threshold for spatial density filter**/
     int nnThreshold;
     int numVertices;
-    int median_order;   
-    int min_median_order;    
+	/** Median filder order**/
+    int median_order;  
+	/** Minimum median filder order allowed**/ 
+    int min_median_order;   
+	/** New median filder order estimated**/ 
     int new_median_order;
+	/** Boolean variable for enabling point cloud filtering**/
     bool filter_points;
-    bool fixed_window;
+	/** Boolean variable for enabling the use of a fixed window during the median filter**/
+    bool fixed_window;	
+	/** Boolean variable for enabling superquadric filtering**/
     bool filter_superq;
+	/** Threshold for velocity estimation for median order**/
     double threshold_median;
+	/** Minimum norm of velocity for considering the object moving**/
     double min_norm_vel;
 
     // On/off parameters
+	/** Boolean variable for going to the next step of the state machine**/
     bool go_on;
     bool one_shot;
 
     // Options for optimization with ipopt
-    double tol, sum;
+	/** Tolerance of the optimization problem **/
+    double tol;
+	double sum;
+	/** Max cpu time allowed for solving the optimization problem**/
     double max_cpu_time;
-    int acceptable_iter,max_iter;
+	/** Acceptable iter of Ipopt algorithm**/
+    int acceptable_iter;
+	/** Maximum iteration allowed of Ipopt algorithm**/
+	int max_iter;
+	/** Number of 3D points used for optimization**/
     int optimizer_points;
+	/** Boolean varibal for enabling automatic computation of variables bounds**/
     bool bounds_automatic;
-    std::string mu_strategy,nlp_scaling_method;
+	/** Mu strategy of the Ipopt algorithm**/
+    std::string mu_strategy;
+	/** NLP scaling method of the Ipopt algorithm**/
+	std::string nlp_scaling_method;
     yarp::sig::Vector elem_x;
 
+	/** Time required for computing superquadric**/
     double t_superq;
     int count_file;
+	/** Objec class: cylinder, sphere of box**/
     std::string ob_class;
     
     yarp::os::ResourceFinder *rf;
@@ -94,12 +125,17 @@ protected:
     yarp::os::Mutex &mutex_shared;
 
     // Classes uses for filtering the superquadric
+	/** Median filter for discarding wrong superquadrics**/
     iCub::ctrl::MedianFilter *mFilter;
+	/** Time Polyestimator for estimating object velocity*/
     iCub::ctrl::AWPolyEstimator *PolyEst;
 
     // Properties with all the options
+	/** Parameters of point cloud filter**/
     yarp::os::Property filter_points_par;
+	/** Parameters of superquadric filter**/
     yarp::os::Property filter_superq_par;
+	/** Parameters of the Ipopt optimization problem**/
     yarp::os::Property ipopt_par;
 public:
 

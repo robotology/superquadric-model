@@ -42,11 +42,11 @@ class SuperqModule : public yarp::os::RFModule,
 {
 protected:
 
-	/** R values **/
+	/** Red value for visualization**/
     int r;
-	/** G values **/
+	/** Green value for visualization **/
 	int g;
-	/** B values **/
+	/** Blue value for visualization **/
 	int b;
 	/** Count variable**/
     int count;
@@ -155,7 +155,7 @@ protected:
     int vis_points;
 	/** Number of visualization step**/
     int vis_step;
-	/** Eyes camera selected **/
+	/** Eye camera selected **/
     std::string eye;
     yarp::sig::Matrix R,H,K;
     yarp::sig::Vector point,point1;
