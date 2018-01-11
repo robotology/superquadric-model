@@ -65,9 +65,9 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 }
 
 /***********************************************************************/
-SuperqComputation::SuperqComputation(Mutex &_mutex_shared, int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,deque<yarp::sig::Vector> &_points, ImageOf<PixelRgb> *_imgIn, string _tag_file, double _threshold_median,
+SuperqComputation::SuperqComputation(Mutex &_mutex_shared, int _rate, bool _filter_points, bool _filter_superq, bool _fixed_window,deque<yarp::sig::Vector> &_points, string _tag_file, double _threshold_median,
                                 const Property &_filter_points_par, Vector &_x, Vector &_x_filtered, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points, ResourceFinder *_rf):
-                                mutex_shared(_mutex_shared), filter_points(_filter_points), filter_superq(_filter_superq), fixed_window( _fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points), imgIn(_imgIn),
+                                mutex_shared(_mutex_shared), filter_points(_filter_points), filter_superq(_filter_superq), fixed_window( _fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points),
                                 filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), Thread(), homeContextPath(_homeContextPath), x(_x), x_filtered(_x_filtered), points(_points), rf(_rf)
 {
 }
