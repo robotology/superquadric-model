@@ -37,17 +37,16 @@ class  SuperQuadric_NLP : public Ipopt::TNLP
 {
 
 protected:
-
-	/** Boolean variable for enabling automatic bounds computation **/
+    /** Boolean variable for enabling automatic bounds computation **/
     bool bounds_automatic;
-	/** Auxiliar vector for gradient computation**/
+    /** Auxiliar vector for gradient computation**/
     yarp::sig::Vector x_v;
-	/** Starting point for the optimization problem**/
+    /** Starting point for the optimization problem**/
     yarp::sig::Vector x0;
-	/** Bounds variable of the optimization problem**/
+    /** Bounds variable of the optimization problem**/
     yarp::sig::Matrix bounds;
     double aux_objvalue;
-	/** Object class: cylinder, sphere and box**/
+    /** Object class: cylinder, sphere and box**/
     std::string obj_class;
 
     yarp::os::ResourceFinder *rf;
@@ -120,13 +119,12 @@ protected:
      void F(const Ipopt::Number *x, std::deque<yarp::sig::Vector> &points, bool &new_x);
 
      /** Auxiliary function for computing cost function of the nonlinear problem to be solved with ipopt
-    * @param obj is the Vector of the object
-    * @param x is the variable
-    * @param point is one point of the point cloud
-    * @return a part of the cost function value
-    */
+     * @param x is the variable
+     * @param point is one point of the point cloud
+     * @return a part of the cost function value
+     */
      /****************************************************************/
-     double f(const Ipopt::Number *x, yarp::sig::Vector &point_cloud);
+     double f(const Ipopt::Number *x, const yarp::sig::Matrix &R, const yarp::sig::Vector &point_cloud);
 
      /** Auxiliary function for computing the gradient of cost function of the nonlinear problem
      * @param x is the variable
@@ -136,14 +134,13 @@ protected:
      /****************************************************************/
      double F_v(const yarp::sig::Vector &x, const std::deque<yarp::sig::Vector> &points);
 
-     /** Auxiliary function for computing the gradient cost function of the nonlinear problem
-     * @param obj is the Vector of the object
-     * @param x is the variable
-     * @param point is one point of the point cloud
-     * @return a part of the cost function value
-     */
-     /****************************************************************/
-     double f_v(const yarp::sig::Vector &x, const yarp::sig::Vector &point_cloud);
+	 /** Auxiliary function for computing cost function of the nonlinear problem to be solved with ipopt
+	 * @param x is the variable
+	 * @param point is one point of the point cloud
+	 * @return a part of the cost function value
+	 */
+	 /****************************************************************/
+	 double f_v(const yarp::sig::Vector &x, const yarp::sig::Matrix &R, const yarp::sig::Vector &point_cloud);
 
      /** Gradient of the cost function of the nonlinear problem
       * @param x is the variable
@@ -224,9 +221,9 @@ protected:
 
 
 public:
-	/** Final solution**/
+    /** Final solution**/
     yarp::sig::Vector solution;
-	/** 3D points actually used for superquadric estimation**/
+    /** 3D points actually used for superquadric estimation**/
     std::deque<yarp::sig::Vector> points_downsampled;
 
     /** Init function */
