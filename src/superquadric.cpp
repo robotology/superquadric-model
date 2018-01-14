@@ -150,9 +150,15 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
      {
          double value=0.0;
 
+         Vector euler(3,0.0);
+         euler[0]=x[8];
+         euler[1]=x[9];
+         euler[2]=x[10];
+         Matrix R=euler2dcm(euler);
+
          for(size_t i=0;i<points.size();i++)
          {
-             double tmp=pow(f(x,points[i]),x[3])-1;
+             double tmp=pow(f(x,R,points[i]),x[3])-1;
              value+=tmp*tmp;
          }
          value*=x[0]*x[1]*x[2]/points.size();
@@ -160,21 +166,15 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
      }
  }
 
-  /****************************************************************/
- double SuperQuadric_NLP::f(const Ipopt::Number *x, Vector &point_cloud)
+ /****************************************************************/
+ double SuperQuadric_NLP::f(const Ipopt::Number *x, const Matrix &R,
+                            const Vector &point_cloud)
  {
-     Vector euler(3,0.0);
-     euler[0]=x[8];
-     euler[1]=x[9];
-     euler[2]=x[10];
-     Matrix R=euler2dcm(euler);
-
-     double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
-     double num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[5]*R(1,0)-x[6]*R(1,1)-x[7]*R(1,2);
-     double num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[5]*R(2,0)-x[6]*R(2,1)-x[7]*R(2,2);
-     double tmp=pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
-
-     return pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]));
+	 double num1 = R(0, 0)*point_cloud[0] + R(0, 1)*point_cloud[1] + R(0, 2)*point_cloud[2] - x[5] * R(0, 0) - x[6] * R(0, 1) - x[7] * R(0, 2);
+	 double num2 = R(1, 0)*point_cloud[0] + R(1, 1)*point_cloud[1] + R(1, 2)*point_cloud[2] - x[5] * R(1, 0) - x[6] * R(1, 1) - x[7] * R(1, 2);
+	 double num3 = R(2, 0)*point_cloud[0] + R(2, 1)*point_cloud[1] + R(2, 2)*point_cloud[2] - x[5] * R(2, 0) - x[6] * R(2, 1) - x[7] * R(2, 2);
+	 double tmp = pow(abs(num1 / x[0]), 2.0 / x[4]) + pow(abs(num2 / x[1]), 2.0 / x[4]);
+	 return pow(abs(tmp), x[4] / x[3]) + pow(abs(num3 / x[2]), (2.0 / x[3]));
  }
 
  /****************************************************************/
@@ -182,9 +182,15 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
  {
      double value=0.0;
 
+     Vector euler(3,0.0);
+     euler[0]=x[8];
+     euler[1]=x[9];
+     euler[2]=x[10];
+     Matrix R=euler2dcm(euler);
+
      for (size_t i=0;i<points.size();i++)
      {
-          double tmp=pow(f_v(x,points[i]),x[3])-1;
+          double tmp=pow(f_v(x,R,points[i]),x[3])-1;
           value+=tmp*tmp;
      }
 
@@ -192,22 +198,15 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
      return value;
  }
 
-  /****************************************************************/
- double SuperQuadric_NLP::f_v(const Vector &x, const Vector &point_cloud)
+ /****************************************************************/
+ double SuperQuadric_NLP::f_v(const Vector &x, const Matrix &R,
+	                          const Vector &point_cloud)
  {
-     Vector euler(3,0.0);
-
-     euler[0]=x[8];
-     euler[1]=x[9];
-     euler[2]=x[10];
-     Matrix R=euler2dcm(euler);
-
-     double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
-     double num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[5]*R(1,0)-x[6]*R(1,1)-x[7]*R(1,2);
-     double num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[5]*R(2,0)-x[6]*R(2,1)-x[7]*R(2,2);
-     double tmp=pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
-
-     return pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]) );
+	 double num1 = R(0, 0)*point_cloud[0] + R(0, 1)*point_cloud[1] + R(0, 2)*point_cloud[2] - x[5] * R(0, 0) - x[6] * R(0, 1) - x[7] * R(0, 2);
+	 double num2 = R(1, 0)*point_cloud[0] + R(1, 1)*point_cloud[1] + R(1, 2)*point_cloud[2] - x[5] * R(1, 0) - x[6] * R(1, 1) - x[7] * R(1, 2);
+	 double num3 = R(2, 0)*point_cloud[0] + R(2, 1)*point_cloud[1] + R(2, 2)*point_cloud[2] - x[5] * R(2, 0) - x[6] * R(2, 1) - x[7] * R(2, 2);
+	 double tmp = pow(abs(num1 / x[0]), 2.0 / x[4]) + pow(abs(num2 / x[1]), 2.0 / x[4]);
+	 return pow(abs(tmp), x[4] / x[3]) + pow(abs(num3 / x[2]), (2.0 / x[3]));
  }
 
  /****************************************************************/
@@ -231,7 +230,7 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
 
          grad_n=F_v(x_tmp,points_downsampled);
 
-         grad_f[j]=(grad_p-grad_n)/eps;
+         grad_f[j]=(grad_p-grad_n)/(2.0*eps);
       }
 
      return true;
