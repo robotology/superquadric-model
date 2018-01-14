@@ -36,23 +36,25 @@
 class SuperqVisualization : public yarp::os::RateThread
 {
 protected:
-    // Output image
+    /**Input image port **/
+    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > portImgIn;
+    /**Output image port *   */
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > portImgOut;
 
     // Parameters for visualization
-	/** R value for visualization **/
+    /** R value for visualization **/
     int r;
-	/** Green value for visualization **/
-	int g;
-	/** Blue value for visualization **/
-	int b;
-	/** Time for visualization**/
+    /** Green value for visualization **/
+    int g;
+    /** Blue value for visualization **/
+    int b;
+    /** Time for visualization**/
     double t_vis;
     /** Number of points used for visualization**/
     int vis_points;
-	/** Number of visualization step**/
+    /** Number of visualization step**/
     int vis_step;
-	/** String used for deciding what to plot: "points" or "superq"**/
+    /** String used for deciding what to plot: "points" or "superq"**/
     std::string what_to_plot;
 
     yarp::sig::Vector point,point1;
@@ -60,10 +62,10 @@ protected:
     std::deque<int> Color;
 
     // Variables for gaze
-	/** Eye camera selected **/
+    /** Eye camera selected **/
     std::string eye;
     yarp::sig::Matrix R,H,K;
-	/** Gaze Control interface **/
+    /** Gaze Control interface **/
     yarp::dev::IGazeControl *igaze;
 
     yarp::os::Mutex mutex;
@@ -78,12 +80,12 @@ public:
     std::deque<yarp::sig::Vector> &points;
 
     /** Input image */
-    yarp::sig::ImageOf<yarp::sig::PixelRgb> *&imgIn;
+    yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
     /***********************************************************************/
-    SuperqVisualization(int rate, const std::string &_eye, const std::string &_what_to_plot, yarp::sig::Vector &x, yarp::sig::Vector &x_filtered,
+    SuperqVisualization(int rate, const std::string &_eye, const std::string &_what_to_plot, yarp::sig::Vector &_x, yarp::sig::Vector &_x_filtered,
                         std::deque<int> &_Color, yarp::dev::IGazeControl *_igaze, const yarp::sig::Matrix _K, std::deque<yarp::sig::Vector> &_points,
-                        const int &_vis_points, const int &_vis_step, yarp::sig::ImageOf<yarp::sig::PixelRgb> *&imgIn);
+                        const int &_vis_points, const int &_vis_step);
 
     /** Show point cloud on the image
     * @return true
@@ -112,6 +114,10 @@ public:
     /** Run function of RateThread */
     /***********************************************************************/
     virtual void run();
+
+    /** Interrupt ports functionalities */
+    /***********************************************************************/
+    void interruptPorts();
 
     /** Release function of RateThread */
     /***********************************************************************/

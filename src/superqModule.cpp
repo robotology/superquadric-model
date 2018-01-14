@@ -389,14 +389,10 @@ bool SuperqModule::updateModule()
     if (mode_online)
     {
         superqCom->setPar("object_class", object_class);
-         yDebug()<<"[SuperqModule]: set object class";
+        yDebug()<<"[SuperqModule]: set object class";
 
         Property &x_to_send=portSuperq.prepare();
         yDebug()<<"[SuperqModule]: prepare port";
-
-        imgIn=portImgIn.read();
-
-        yDebug()<<"[SuperqModule]: read image";
 
         if (times_superq.size()<10)
             times_superq.push_back(superqCom->getTime());
@@ -504,10 +500,9 @@ bool SuperqModule::configure(ResourceFinder &rf)
     if (config_ok==false)
         return false;
 
-    imgIn=portImgIn.read();
-
-    superqCom= new SuperqComputation(mutex_shared,rate, filter_points, filter_superq, fixed_window, points, imgIn, tag_file,
-                                     threshold_median,filter_points_par, x, x_filtered, filter_superq_par, ipopt_par, homeContextPath, save_points, this->rf);
+    superqCom= new SuperqComputation(mutex_shared,rate, filter_points, filter_superq, fixed_window, points, tag_file,
+                                     threshold_median,filter_points_par, x, x_filtered, filter_superq_par, ipopt_par,
+                                     homeContextPath, save_points, this->rf);
 
     if (mode_online)
     {
@@ -519,7 +514,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
             yError()<<"[SuperqModule]: Problems in starting the computation thread!";
     }
 
-    superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K, points, vis_points, vis_step, imgIn);
+    superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K, points, vis_points, vis_step);
 
     if (visualization_on)
     {
@@ -543,7 +538,7 @@ bool SuperqModule::interruptModule()
 {
     yInfo()<<"[SuperqModule]: Interruping ... ";
 
-    portImgIn.interrupt();      
+    superqVis->interruptPorts();      
     portSuperq.interrupt();
 
     return true;
@@ -563,9 +558,6 @@ bool SuperqModule::close()
 
     if (portRpc.asPort().isOpen())
         portRpc.close();
-
-    if (!portImgIn.isClosed())
-        portImgIn.close();
 
      if (!portSuperq.isClosed())
         portSuperq.close();
@@ -713,8 +705,6 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
 /***********************************************************************/
 bool SuperqModule::configViewer(ResourceFinder &rf)
 {
-    portImgIn.open("/superquadric-model/img:i");
-
     eye=rf.check("eye", Value("left")).asString();
     what_to_plot=rf.find("plot").asString().c_str();
     if (rf.find("plot").isNull())

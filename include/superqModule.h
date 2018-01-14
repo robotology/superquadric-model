@@ -42,129 +42,127 @@ class SuperqModule : public yarp::os::RFModule,
 {
 protected:
 
-	/** Red value for visualization**/
+    /** Red value for visualization**/
     int r;
-	/** Green value for visualization **/
-	int g;
-	/** Blue value for visualization **/
-	int b;
-	/** Count variable**/
+    /** Green value for visualization **/
+    int g;
+    /** Blue value for visualization **/
+    int b;
+    /** Count variable**/
     int count;
-	/** Computation thread rate**/
+    /** Computation thread rate**/
     int rate;
-	/** Visualization thread rate**/
-	int rate_vis;
-	/** Tag name of files for saving 3D points**/
+    /** Visualization thread rate**/
+    int rate_vis;
+    /** Tag name of files for saving 3D points**/
     std::string tag_file;
-	/** Path where code context is located **/
+    /** Path where code context is located **/
     std::string homeContextPath;
-	/** Pointcloud name file in case the module runs offline**/
+    /** Pointcloud name file in case the module runs offline**/
     yarp::os::ConstString pointCloudFileName;
-	/** Output file name saving the estimated superquadric**/
+    /** Output file name saving the estimated superquadric**/
     std::string outputFileName;
-	/** OpenCV variable for blob extraction**/
+    /** OpenCV variable for blob extraction**/
     std::vector<cv::Point> contour;
-	/** 3D points used for reconstructing the superquadric **/
+    /** 3D points used for reconstructing the superquadric **/
     std::deque<yarp::sig::Vector> points;
-	/** 3D points auxiliary used for reconstructing the superquadric **/
+    /** 3D points auxiliary used for reconstructing the superquadric **/
     std::deque<yarp::sig::Vector> points_aux;
-	/** 2D points of the segmented object **/
+    /** 2D points of the segmented object **/
     std::deque<cv::Point> blob_points;
 
     // Filters parameters
-	/** Radius for spatial density filter**/
+    /** Radius for spatial density filter**/
     double radius;
-	/** Density threshold for spatial density filter**/
+    /** Density threshold for spatial density filter**/
     int nnThreshold;
-	
+    
     int numVertices;
-	/** Median filder order**/
+    /** Median filder order**/
     int median_order;
-	/** Minimum median filder order allowed**/
+    /** Minimum median filder order allowed**/
     int min_median_order;
-	/** Maximum median filder order allowed**/
+    /** Maximum median filder order allowed**/
     int max_median_order;
-	/** New median filder order estimated**/
+    /** New median filder order estimated**/
     int new_median_order;
-	/** Boolean variable for enabling point cloud filtering**/
+    /** Boolean variable for enabling point cloud filtering**/
     bool filter_points;
-	/** Boolean variable for enabling the use of a fixed window during the median filter**/
+    /** Boolean variable for enabling the use of a fixed window during the median filter**/
     bool fixed_window;
-	/** Boolean variable for enabling superquadric filtering**/
+    /** Boolean variable for enabling superquadric filtering**/
     bool filter_superq;
-	/** String used for deciding what to plot: "points" or "superq"**/
+    /** String used for deciding what to plot: "points" or "superq"**/
     std::string what_to_plot;
-	/** Threshold for velocity estimation for median order**/
+    /** Threshold for velocity estimation for median order**/
     double threshold_median;
-	/** Minimum norm of velocity for considering the object moving**/
+    /** Minimum norm of velocity for considering the object moving**/
     double min_norm_vel;
 
     // On/off options
-	/** Boolean variable for enabling online or offline mode**/
+    /** Boolean variable for enabling online or offline mode**/
     bool mode_online;
-	/** Boolean variable for enabling visualization**/
+    /** Boolean variable for enabling visualization**/
     bool visualization_on;
-	/** Boolean variable for going to the next step of the state machine**/
+    /** Boolean variable for going to the next step of the state machine**/
     bool go_on;
-	/** Boolean variable for resetting the median filter**/
+    /** Boolean variable for resetting the median filter**/
     bool reset;
-	/** Boolean variable for enabling point cloud saving**/
+    /** Boolean variable for enabling point cloud saving**/
     bool save_points;
 
     // Optimization parameters
-	/** Tolerance of the optimization problem **/
+    /** Tolerance of the optimization problem **/
     double tol;
-	double sum;
-	/** Max cpu time allowed for solving the optimization problem**/
+    double sum;
+    /** Max cpu time allowed for solving the optimization problem**/
     double max_cpu_time;
-	/** Acceptable iter of Ipopt algorithm**/
+    /** Acceptable iter of Ipopt algorithm**/
     int acceptable_iter;
-	/** Maximum iteration allowed of Ipopt algorithm**/
-	int max_iter;
-	/** Number of 3D points used for optimization**/
+    /** Maximum iteration allowed of Ipopt algorithm**/
+    int max_iter;
+    /** Number of 3D points used for optimization**/
     int optimizer_points;
-	/** Mu strategy of the Ipopt algorithm**/
+    /** Mu strategy of the Ipopt algorithm**/
     std::string mu_strategy;
-	/** NLP scaling method of the Ipopt algorithm**/
-	std::string nlp_scaling_method;
+    /** NLP scaling method of the Ipopt algorithm**/
+    std::string nlp_scaling_method;
 
-	/** Estimated superquadric**/
+    /** Estimated superquadric**/
     yarp::sig::Vector x;
-	/** Filtered superquadric**/
+    /** Filtered superquadric**/
     yarp::sig::Vector x_filtered;
 
     // Time variables
-	/** Time required for computing superquadric**/
+    /** Time required for computing superquadric**/
     double t_superq;
-	/** Times used for computing several superquadrics**/
+    /** Times used for computing several superquadrics**/
     std::deque<double> times_superq;
-	/** Time for visualization**/
+    /** Time for visualization**/
     double t_vis;
-	/** Collections of times required for visualization**/
+    /** Collections of times required for visualization**/
     std::deque<double> times_vis;
 
-    /**Input image port **/
-    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > portImgIn;
     /** Port for streaming the computed superquadric**/
     yarp::os::BufferedPort<yarp::os::Property> portSuperq;
     /** Rpc port for interaction**/
     yarp::os::RpcServer portRpc;
 
     // Variables for visualization and gaze
-	/** Number of points used for visualization**/
+    /** Number of points used for visualization**/
     int vis_points;
-	/** Number of visualization step**/
+    /** Number of visualization step**/
     int vis_step;
-	/** Eye camera selected **/
+    /** Eye camera selected **/
     std::string eye;
     yarp::sig::Matrix R,H,K;
     yarp::sig::Vector point,point1;
     yarp::sig:: Vector point2D;
-	/** Color used for visualization**/
+    /** Color used for visualization**/
     std::deque<int> Color;
-	/** Gaze Control driver for visualization**/
+    /** Gaze Control driver for visualization**/
     yarp::dev::PolyDriver GazeCtrl;
-	/** Gaze Control interface **/
+    /** Gaze Control interface **/
     yarp::dev::IGazeControl *igaze;
 
     yarp::os::ResourceFinder *rf;
@@ -176,21 +174,18 @@ protected:
     std::string object_class;
 
     // Classes of the threads
-	/** SuperqComputation class actually computes the superquadric**/
+    /** SuperqComputation class actually computes the superquadric**/
     SuperqComputation *superqCom;
-	/** SuperqVisualization class shows the estimated superquadric**/
+    /** SuperqVisualization class shows the estimated superquadric**/
     SuperqVisualization *superqVis;
 
     // Property with all the parameters
-	/** Parameters of point cloud filter**/
+    /** Parameters of point cloud filter**/
     yarp::os::Property filter_points_par;
-	/** Parameters of superquadric filter**/
+    /** Parameters of superquadric filter**/
     yarp::os::Property filter_superq_par;
-	/** Parameters of the Ipopt optimization problem**/
+    /** Parameters of the Ipopt optimization problem**/
     yarp::os::Property ipopt_par;
-
-    /** Input image**/
-    yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
     /************************************************************************/
     bool attach(yarp::os::RpcServer &source);
