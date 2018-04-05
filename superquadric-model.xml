@@ -41,7 +41,7 @@ Determines which barrier parameter update strategy is to be used. POssible value
     <param default="none" desc="IPOPT nlp_scaling_method: Select the technique used for scaling the problem. Possible values: none, user-scaling, gradient-based, equilibration-based (advanced parameter- thrift service available).">nlp_scaling_method</param>
     <param default="false" desc="Variable to decide to filter points or not (standard parameter - thrift service available).">filter_points</param>
     <param default="0.005" desc="KNN radius value for filtering (advanced parameter  -  thrift service available).">radius</param>
-    <param default="100" desc="NKK threshold value for filtering (advanced parameter  -  thrift service available).">nnThreshold</param>
+    <param default="100" desc="KKN threshold value for filtering (advanced parameter  -  thrift service available).">nnThreshold</param>
     <param default="false" desc="Variable to decide to filter superq or not (standard parameter - thrift service available).">filter_superq</param>
     <param default="true" desc="Variable to decide if to use a fixed window for the median filter on superquadrics (standard parameter - thrift service available).">fixed_window</param>
     <param default="1" desc="Window width in case and adaptive window is not used (advanced parameter - thrift service available).">median_order</param>
@@ -65,7 +65,7 @@ Determines which barrier parameter update strategy is to be used. POssible value
   </input>
   <input>
       <type>yarp::os::Bottle</type>
-      <port carrier="tcp">/superquadric-model/blob:i</port>
+      <port carrier="tcp">/superquadric-model/point:i</port>
       <description>
         receive the 2D blob of the object.
       </description>
