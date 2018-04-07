@@ -562,7 +562,7 @@ bool SuperqModule::close()
      if (!portSuperq.isClosed())
         portSuperq.close();
 
-    if (mode_online)
+    if (mode_online && visualization_on)
         GazeCtrl.close();
 
     return true;
@@ -725,7 +725,7 @@ bool SuperqModule::configViewer(ResourceFinder &rf)
         r=255; g=255; b=0;
     }
 
-    if (mode_online)
+    if (mode_online && visualization_on)
     {
         Property optionG;
         optionG.put("device","gazecontrollerclient");

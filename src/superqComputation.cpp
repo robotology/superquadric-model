@@ -493,11 +493,11 @@ void SuperqComputation::run()
 
         yDebug()<<"[SuperqComputation]: points size "<<points.size();
 
+        if (one_shot==false)
+            getPoints3D();
+
         if (points.size()>0)
         {
-            if (one_shot==false)
-                getPoints3D();
-
             mutex.lock();
 
             if ((filter_points==true) && (points.size()>0))
@@ -621,33 +621,36 @@ void SuperqComputation::getPoints3D()
 /***********************************************************************/
 void SuperqComputation::savePoints(const string &namefile, const Vector &colors)
 {
-    ofstream fout;
-    stringstream ss;
-    ss << count_file;
-    string count_file_str=ss.str();
-    fout.open((homeContextPath+namefile+count_file_str+".off").c_str());
-
-    if (fout.is_open())
+    if (save_points)
     {
-        fout<<"COFF"<<endl;
-        fout<<points.size()<<" 0 0"<<endl;
-        fout<<endl;
-        for (size_t i=0; i<points.size(); i++)
+        ofstream fout;
+        stringstream ss;
+        ss<<count_file;
+        string count_file_str=ss.str();
+        fout.open((homeContextPath+namefile+count_file_str+".off").c_str());
+
+        if (fout.is_open())
         {
-            int r=points[i][3];
-            int g=points[i][4];
-            int b=points[i][5];
-            fout<<points[i].subVector(0,2).toString(3,3)<<" "<<r<<" "<<g<<" "<<b<<endl;
+            fout<<"COFF"<<endl;
+            fout<<points.size()<<" 0 0"<<endl;
+            fout<<endl;
+            for (size_t i=0; i<points.size(); i++)
+            {
+                int r=points[i][3];
+                int g=points[i][4];
+                int b=points[i][5];
+                fout<<points[i].subVector(0,2).toString(3,3)<<" "<<r<<" "<<g<<" "<<b<<endl;
+            }
+
+            fout<<endl;
         }
+        else
+            yError()<<"[SuperqComputation]: Some problems in opening output file!";
 
-        fout<<endl;
+        fout.close();
+
+        count_file++;
     }
-    else
-        yError()<<"[SuperqComputation]: Some problems in opening output file!";
-
-    fout.close();
-
-    count_file++;
 }
 
 /***********************************************************************/
