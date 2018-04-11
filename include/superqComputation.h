@@ -72,15 +72,15 @@ protected:
     int nnThreshold;
     int numVertices;
 	/** Median filder order**/
-    int median_order;  
-	/** Minimum median filder order allowed**/ 
-    int min_median_order;   
-	/** New median filder order estimated**/ 
+    int median_order;
+	/** Minimum median filder order allowed**/
+    int min_median_order;
+	/** New median filder order estimated**/
     int new_median_order;
 	/** Boolean variable for enabling point cloud filtering**/
     bool filter_points;
 	/** Boolean variable for enabling the use of a fixed window during the median filter**/
-    bool fixed_window;	
+    bool fixed_window;
 	/** Boolean variable for enabling superquadric filtering**/
     bool filter_superq;
 	/** Threshold for velocity estimation for median order**/
@@ -118,7 +118,7 @@ protected:
     int count_file;
 	/** Objec class: cylinder, sphere of box**/
     std::string ob_class;
-    
+
     yarp::os::ResourceFinder *rf;
     double t,t0;
     yarp::os::Mutex mutex;
@@ -278,9 +278,7 @@ public:
     * @return the period value
     */
     /***********************************************************************/
-    double getTime();     
+    double getTime();
 };
 
 #endif
-
-

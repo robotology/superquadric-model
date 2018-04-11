@@ -866,8 +866,6 @@ int SuperqComputation::adaptWindComputation()
 /***********************************************************************/
 Vector SuperqComputation::getSolution(bool filtered_superq)
 {
-    LockGuard lg(mutex);
-
     if (filtered_superq==false)
         return x;
     else
@@ -885,6 +883,7 @@ void SuperqComputation::sendPoints(const deque<Vector> &p)
     {
         points.push_back(p[i]);
     }
+
 }
 
 

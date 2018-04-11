@@ -137,11 +137,7 @@ bool SuperqModule::send_point_clouds(const vector<Vector> &p)
 
     superqCom->setPar("object_class", object_class);
 
-    yDebug()<<"Time operations  after set par 1"<<Time::now() - t;
-
     superqCom->setPar("one_shot", "on");
-
-    yDebug()<<"Time operations after set par 2"<<Time::now() - t;
 
     deque<Vector> p_aux;
 
@@ -149,11 +145,8 @@ bool SuperqModule::send_point_clouds(const vector<Vector> &p)
         p_aux.push_back(p[i]);
 
     superqCom->sendPoints(p_aux);
-    yDebug()<<"Time operations send points "<<Time::now() - t;
 
     t_fin= Time::now() - t;
-
-    yDebug()<<"Time operations  final"<<t_fin;
 
     return true;
 }
@@ -169,6 +162,9 @@ bool SuperqModule::reset_filter()
 /**********************************************************************/
 Property SuperqModule::get_superq_filtered()
 {
+    // NB: Temporary fix for sync problems!
+    Time::delay(0.5);
+
     Property superq;
     Vector sol(11,0.0);
     sol=superqCom->getSolution(1);
@@ -384,15 +380,11 @@ bool SuperqModule::updateModule()
     t0=Time::now();
     LockGuard lg(mutex);
 
-    yDebug()<<"[SuperqModule]: start updatemodule";
-
     if (mode_online)
     {
         superqCom->setPar("object_class", object_class);
-        yDebug()<<"[SuperqModule]: set object class";
 
         Property &x_to_send=portSuperq.prepare();
-        yDebug()<<"[SuperqModule]: prepare port";
 
         if (times_superq.size()<10)
             times_superq.push_back(superqCom->getTime());
@@ -407,19 +399,13 @@ bool SuperqModule::updateModule()
         }
         else
             times_superq.clear();
-
-        yDebug()<<"[SuperqModule]: fill solution";
         
         if (!filter_superq)
             x_to_send=fillProperty(x);
         else
             x_to_send=fillProperty(x_filtered);
 
-        yDebug()<<"[SuperqModule]: send superq";
-
         portSuperq.write();
-
-        yDebug()<<"[SuperqModule]: superq sent";
 
         if (visualization_on)
         {
@@ -437,8 +423,6 @@ bool SuperqModule::updateModule()
         else
             times_vis.clear();
         }
-
-         yDebug()<<"[Module ] restarting ...";
     }
     else
     {
