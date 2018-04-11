@@ -96,30 +96,17 @@ bool SuperqModule::set_visualization(const string &e)
 }
 
 /**********************************************************************/
-Property SuperqModule::get_superq(const vector<Vector> &p)
+Property SuperqModule::get_superq()
 {
+    // NB: Temporary fix for sync problems!
+    Time::delay(0.5);
+
     Property superq;
-
-    LockGuard lg(mutex);
-
-    superqCom->setPar("object_class", object_class);
-
-    superqCom->setPar("one_shot", "on");
-
-    deque<Vector> p_aux;
-    
-    for (size_t i=0; i<p.size(); i++)
-        p_aux.push_back(p[i]);
-
-    superqCom->sendPoints(p_aux);
-
-    superqCom->run();
-
     Vector sol(11,0.0);
     sol=superqCom->getSolution(0);
 
     superqCom->setPar("one_shot", "off");
-
+    deque<Vector> p_aux;
     p_aux.clear();
     superqCom->sendPoints(p_aux);
 

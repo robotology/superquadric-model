@@ -221,7 +221,7 @@ protected:
     * @return  a property with the estimated superquadric
     */
     /**********************************************************************/
-    yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> &blob);
+    yarp::os::Property get_superq();
 
     /** Get the point cloud for computing the superquadric
     * @param p is the point cloud to be acquired
