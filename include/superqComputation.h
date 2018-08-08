@@ -58,7 +58,7 @@ protected:
 	/** Path where code context is located **/
     std::string homeContextPath;
 	/** Pointcloud name file in case the module runs offline**/
-    yarp::os::ConstString pointCloudFileName;
+    std::string pointCloudFileName;
 	/** OpenCV variable for blob extraction**/
     std::vector<cv::Point> contour;
 

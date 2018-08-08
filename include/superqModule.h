@@ -59,7 +59,7 @@ protected:
     /** Path where code context is located **/
     std::string homeContextPath;
     /** Pointcloud name file in case the module runs offline**/
-    yarp::os::ConstString pointCloudFileName;
+    std::string pointCloudFileName;
     /** Output file name saving the estimated superquadric**/
     std::string outputFileName;
     /** OpenCV variable for blob extraction**/
