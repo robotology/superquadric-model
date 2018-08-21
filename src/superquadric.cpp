@@ -156,7 +156,7 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
          euler[2]=x[10];
          Matrix R=euler2dcm(euler);
 
-         //Test
+         //This is required for VTK visualization in comparison with analytic
          R = R.transposed();
 
          for(size_t i=0;i<points.size();i++)
@@ -191,7 +191,7 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
      euler[2]=x[10];
      Matrix R=euler2dcm(euler);
 
-     //Test
+     //This is required for VTK visualization in comparison with analytic
      R = R.transposed();
 
      for (size_t i=0;i<points.size();i++)
@@ -277,7 +277,7 @@ void SuperQuadric_NLP::computeX0(Vector &x0, deque<Vector> &point_cloud)
     x0[6]=0.0;
     x0[7]=0.0;
 
-    // Let-s try to compute centroid from bounding box
+    // Let-s try to compute centroid from bounding box and skip the following lines
     /*for (size_t i=0; i<point_cloud.size();i++)
     {
         Vector &point=point_cloud[i];
@@ -297,8 +297,6 @@ void SuperQuadric_NLP::computeX0(Vector &x0, deque<Vector> &point_cloud)
     Matrix bounding_box(3,2);
     bounding_box=computeBoundingBox(point_cloud,x0);
 
-    yDebug()<<"BOUNDING BOX"<<bounding_box.toString();
-
     x0[0]=(-bounding_box(0,0)+bounding_box(0,1))/2;
     x0[1]=(-bounding_box(1,0)+bounding_box(1,1))/2;
     x0[2]=(-bounding_box(2,0)+bounding_box(2,1))/2;
@@ -309,7 +307,6 @@ void SuperQuadric_NLP::computeX0(Vector &x0, deque<Vector> &point_cloud)
     x0[6] = (bounding_box(1,0)+bounding_box(1,1))/2;
     x0[7] = (bounding_box(2,0)+bounding_box(2,1))/2;
 
-    yDebug()<<"x0"<<x0.toString();
 }
 
 /****************************************************************/
@@ -363,19 +360,6 @@ void SuperQuadric_NLP::computeInitialOrientation(Vector &x0,deque<Vector> &point
 Matrix SuperQuadric_NLP::computeBoundingBox(deque<Vector> &points, const Vector &x0)
 {
     Matrix BB(3,2);
-    Matrix R3(3,3);
-
-    //R3=euler2dcm(x0.subVector(8,10)).submatrix(0,2,0,2);
-
-    Vector point(3,0.0);
-    //point=R3.transposed()*points[0];
-
-    /*BB(0,0)=point[0];
-    BB(1,0)=point[1];
-    BB(2,0)=point[2];
-    BB(0,1)=point[0];
-    BB(1,1)=point[1];
-    BB(2,1)=point[2];*/
 
     BB(0,0)=numeric_limits<double>::infinity();
     BB(1,0)=numeric_limits<double>::infinity();
@@ -386,9 +370,7 @@ Matrix SuperQuadric_NLP::computeBoundingBox(deque<Vector> &points, const Vector 
 
     for (size_t i=0; i<points.size();i++)
     {
-        //Vector &pnt=points[i];
         Vector &point=points[i];
-        //point=R3.transposed()*pnt;
         if(BB(0,0)>point[0])
            BB(0,0)=point[0];
 
