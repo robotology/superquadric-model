@@ -169,6 +169,9 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
      euler[2]=x[10];
      Matrix R=euler2dcm(euler);
 
+     // Required for VTK visualization
+     R=R.transposed();
+
      double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
      double num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[5]*R(1,0)-x[6]*R(1,1)-x[7]*R(1,2);
      double num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[5]*R(2,0)-x[6]*R(2,1)-x[7]*R(2,2);
@@ -201,6 +204,9 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
      euler[1]=x[9];
      euler[2]=x[10];
      Matrix R=euler2dcm(euler);
+
+     // Required for VTK visualization
+     R=R.transposed();
 
      double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
      double num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[5]*R(1,0)-x[6]*R(1,1)-x[7]*R(1,2);
@@ -272,19 +278,21 @@ void SuperQuadric_NLP::computeX0(Vector &x0, deque<Vector> &point_cloud)
     x0[6]=0.0;
     x0[7]=0.0;
 
-    for (size_t i=0; i<point_cloud.size();i++)
+    // Let-s try to compute centroid from bounding box and skip the following lines
+    /*for (size_t i=0; i<point_cloud.size();i++)
     {
         Vector &point=point_cloud[i];
         x0[5]+=point[0];
         x0[6]+=point[1];
         x0[7]+=point[2];
     }
-
     x0[5]/=point_cloud.size();
     x0[6]/=point_cloud.size();
-    x0[7]/=point_cloud.size();
+    x0[7]/=point_cloud.size();*/
 
-    computeInitialOrientation(x0,point_cloud);
+
+    // Let's try not to use initial orientation
+    //computeInitialOrientation(x0,point_cloud);
 
     Matrix bounding_box(3,2);
     bounding_box=computeBoundingBox(point_cloud,x0);
@@ -292,6 +300,12 @@ void SuperQuadric_NLP::computeX0(Vector &x0, deque<Vector> &point_cloud)
     x0[0]=(-bounding_box(0,0)+bounding_box(0,1))/2;
     x0[1]=(-bounding_box(1,0)+bounding_box(1,1))/2;
     x0[2]=(-bounding_box(2,0)+bounding_box(2,1))/2;
+
+
+    // Let-s try to compute centroid from bounding box
+    x0[5] = (bounding_box(0,0)+bounding_box(0,1))/2;
+    x0[6] = (bounding_box(1,0)+bounding_box(1,1))/2;
+    x0[7] = (bounding_box(2,0)+bounding_box(2,1))/2;
 }
 
 /****************************************************************/
@@ -345,24 +359,17 @@ void SuperQuadric_NLP::computeInitialOrientation(Vector &x0,deque<Vector> &point
 Matrix SuperQuadric_NLP::computeBoundingBox(deque<Vector> &points, const Vector &x0)
 {
     Matrix BB(3,2);
-    Matrix R3(3,3);
 
-    R3=euler2dcm(x0.subVector(8,10)).submatrix(0,2,0,2);
-
-    Vector point(3,0.0);
-    point=R3.transposed()*points[0];
-
-    BB(0,0)=point[0];
-    BB(1,0)=point[1];
-    BB(2,0)=point[2];
-    BB(0,1)=point[0];
-    BB(1,1)=point[1];
-    BB(2,1)=point[2];
+    BB(0,0)=numeric_limits<double>::infinity();
+    BB(1,0)=numeric_limits<double>::infinity();
+    BB(2,0)=numeric_limits<double>::infinity();
+    BB(0,1)=-numeric_limits<double>::infinity();
+    BB(1,1)=-numeric_limits<double>::infinity();
+    BB(2,1)=-numeric_limits<double>::infinity();
 
     for (size_t i=0; i<points.size();i++)
     {
-        Vector &pnt=points[i];
-        point=R3.transposed()*pnt;
+        Vector &point=points[i];
         if(BB(0,0)>point[0])
            BB(0,0)=point[0];
 

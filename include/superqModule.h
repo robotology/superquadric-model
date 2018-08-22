@@ -48,7 +48,7 @@ protected:
     int rate, rate_vis;
     std::string tag_file;
     std::string homeContextPath;
-    yarp::os::ConstString pointCloudFileName;
+    std::string pointCloudFileName;
     std::string outputFileName;
     std::vector<cv::Point> contour;
     std::deque<yarp::sig::Vector> points;

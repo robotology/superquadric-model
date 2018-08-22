@@ -54,7 +54,7 @@ protected:
     bool save_points;
     std::string tag_file;
     std::string homeContextPath;
-    yarp::os::ConstString pointCloudFileName;
+    std::string pointCloudFileName;
     std::vector<cv::Point> contour;
 
     yarp::os::BufferedPort<yarp::os::Bottle> pointPort;

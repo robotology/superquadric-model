@@ -504,20 +504,24 @@ void SuperqComputation::run()
     {
         t0=Time::now();
 
-        if (points.size()>0)
-        {
+        //Catch up
+        //if (points.size()>0)
+        //{
             if (one_shot==false)
                 getPoints3D();
 
             if (points.size()>0)
             {
+                yDebug()<<"deb 1 "<<points.size();
+                mutex.lock();
+
                 if (single_superq)
                 {
-                    if ((filter_points==true))
+                    yDebug()<<"deb 2 "<<points.size();
+                    if ((filter_points==true) && (points.size()>0))
                     {
                         filter();
                     }
-
                     if (points.size()>0)
                     {
                         yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
@@ -535,23 +539,24 @@ void SuperqComputation::run()
                     yDebug()<<"[SuperqComputation]: The superquadric has been computed "<<superq_computed;
 
                 }
-            }
 
-            if ((go_on==false) && (points.size()>0))
-            {
-                yError("[SuperqComputation]: Not found a suitable superquadric! ");
-            }
-            else if (go_on==true && norm(x)>0.0 && (points.size()>0))
-            {
-                if (filter_superq)
-                    filterSuperq();
+                if ((go_on==false) && (points.size()>0))
+                {
+                    yError("[SuperqComputation]: Not found a suitable superquadric! ");
+                }
+                else if (go_on==true && norm(x)>0.0 && (points.size()>0))
+                {
+                    if (filter_superq)
+                        filterSuperq();
+                    else
+                        x_filtered=x;
+                }
                 else
-                    x_filtered=x;
-            }
-            else
-            {
-                x_filtered.resize(11,0.0);
-            }
+                {
+                    x_filtered.resize(11,0.0);
+                }
+
+                mutex.unlock();
         }
         else
         {
@@ -788,41 +793,41 @@ bool SuperqComputation::computeSuperq()
     superQ_nlp->init();
     superQ_nlp->configure(this->rf,bounds_automatic, ob_class);
 
-    if (points.size()>0)
+    //if (points.size()>0)
+    //{
+    superQ_nlp->setPoints(points, optimizer_points);
+
+    double t0_superq=Time::now();
+
+    yDebug()<<"[SuperqComputation]: Start IPOPT ";
+
+    Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
+
+    yDebug()<<"[SuperqComputation]: Finish IPOPT ";
+
+    double t_s=Time::now()-t0_superq;
+
+    if (status==Ipopt::Solve_Succeeded)
     {
-        superQ_nlp->setPoints(points, optimizer_points);
-
-        double t0_superq=Time::now();
-
-        yDebug()<<"[SuperqComputation]: Start IPOPT ";
-
-        Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
-
-        yDebug()<<"[SuperqComputation]: Finish IPOPT ";
-
-        double t_s=Time::now()-t0_superq;
-
-        if (status==Ipopt::Solve_Succeeded)
-        {
-            x=superQ_nlp->get_result();
-            yInfo("[SuperqComputation]: Solution of the optimization problem: %s", x.toString(3,3).c_str());
-            yInfo("[SuperqComputation]: Execution time : %f", t_s);
-            return true;
-        }
-        else if(status==Ipopt::Maximum_CpuTime_Exceeded)
-        {
-            x=superQ_nlp->get_result();
-            yWarning("[SuperqComputation]: Solution after maximum time exceeded: %s", x.toString(3,3).c_str());
-            return true;
-        }
-        else
-        {
-            x.resize(11,0.0);
-            return false;
-        }
+        x=superQ_nlp->get_result();
+        yInfo("[SuperqComputation]: Solution of the optimization problem: %s", x.toString(3,3).c_str());
+        yInfo("[SuperqComputation]: Execution time : %f", t_s);
+        return true;
+    }
+    else if(status==Ipopt::Maximum_CpuTime_Exceeded)
+    {
+        x=superQ_nlp->get_result();
+        yWarning("[SuperqComputation]: Solution after maximum time exceeded: %s", x.toString(3,3).c_str());
+        return true;
     }
     else
+    {
+        x.resize(11,0.0);
         return false;
+    }
+    //}
+    //else
+    //    return false;
 }
 
 /***********************************************************************/

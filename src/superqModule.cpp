@@ -98,6 +98,9 @@ bool SuperqModule::set_visualization(const string &e)
 /**********************************************************************/
 Property SuperqModule::get_superq()
 {
+    // NB: Temporary fix for sync problems!
+    Time::delay(0.5);
+
     Property superq;
 
     Vector sol(11,0.0);
@@ -117,9 +120,13 @@ Property SuperqModule::get_superq()
         superq=fillMultipleSolutions(superq_tree->root);
     }
 
+    superqCom->setPar("one_shot", "off");
+
     deque<Vector> p_aux;
     p_aux.clear();
     superqCom->sendPoints(p_aux);
+
+    yDebug()<<"Sent superq "<<superq.toString();
 
     return superq;
 }
@@ -167,6 +174,9 @@ bool SuperqModule::reset_filter()
 /**********************************************************************/
 Property SuperqModule::get_superq_filtered()
 {
+    // NB: Temporary fix for sync problems!
+    Time::delay(0.5);
+
     Property superq;
     Vector sol(11,0.0);
     sol=superqCom->getSolution(1);
@@ -474,14 +484,14 @@ bool SuperqModule::updateModule()
     t0=Time::now();
     LockGuard lg(mutex);
 
-
     if (mode_online)
     {
         superqCom->setPar("object_class", object_class);
 
         Property &x_to_send=portSuperq.prepare();
 
-        imgIn=portImgIn.read();
+        if (visualization_on)
+            imgIn=portImgIn.read();
 
         if (times_superq.size()<10)
             times_superq.push_back(superqCom->getTime());
@@ -496,7 +506,6 @@ bool SuperqModule::updateModule()
         }
         else
             times_superq.clear();
-
 
         if (!filter_superq)
             x_to_send=fillProperty(x);
@@ -521,6 +530,7 @@ bool SuperqModule::updateModule()
         else
             times_vis.clear();
         }
+
     }
     else
     {
@@ -591,12 +601,13 @@ bool SuperqModule::configure(ResourceFinder &rf)
     configServices(rf);
     configSuperq(rf);
 
-    config_ok=configViewer(rf);
-    if (config_ok==false)
-        return false;
+    if (visualization_on)
+    {
+        config_ok=configViewer(rf);
+        if (config_ok==false)
+            return false;
+    }
 
-
-    imgIn=portImgIn.read();
     superq_tree= new superqTree();
 
     superqCom= new SuperqComputation(mutex_shared,rate, filter_points, filter_superq, single_superq, fixed_window, points, imgIn, tag_file,
@@ -604,6 +615,9 @@ bool SuperqModule::configure(ResourceFinder &rf)
 
     if (mode_online)
     {
+        if (visualization_on)
+            imgIn=portImgIn.read();
+
         bool thread_started=superqCom->start();
 
         if (thread_started)
@@ -636,7 +650,9 @@ bool SuperqModule::interruptModule()
 {
     yInfo()<<"[SuperqModule]: Interruping ... ";
 
-    portImgIn.interrupt();
+    if (visualization_on)
+        portImgIn.interrupt();
+
     portSuperq.interrupt();
 
     return true;
@@ -651,7 +667,7 @@ bool SuperqModule::close()
     superqCom->stop();
     delete superqCom;
 
-    if (mode_online)
+    if (mode_online && visualization_on)
     {
         superqVis->stop();
         delete superqVis;
@@ -660,13 +676,16 @@ bool SuperqModule::close()
     if (portRpc.asPort().isOpen())
         portRpc.close();
 
-    if (!portImgIn.isClosed())
-        portImgIn.close();
+    if (visualization_on)
+    {
+        if (!portImgIn.isClosed())
+            portImgIn.close();
+    }
 
      if (!portSuperq.isClosed())
         portSuperq.close();
 
-    if (mode_online)
+    if (mode_online && visualization_on)
         GazeCtrl.close();
 
     return true;
@@ -679,7 +698,7 @@ bool SuperqModule::configOnOff(ResourceFinder &rf)
     pointCloudFileName=rf.findFile("pointCloudFile");
     save_points=(rf.check("save_points", Value("no")).asString()=="yes");
 
-    visualization_on=(rf.check("visualization_on", Value("yes")).asString()=="yes");
+    visualization_on=(rf.check("visualization_on", Value("no")).asString()=="yes");
 
     rate=rf.check("rate", Value(100)).asInt();
     rate_vis=rf.check("rate_vis", Value(100)).asInt();
@@ -839,7 +858,7 @@ bool SuperqModule::configViewer(ResourceFinder &rf)
         r=255; g=255; b=0;
     }
 
-    if (mode_online)
+    if (mode_online && visualization_on)
     {
         Property optionG;
         optionG.put("device","gazecontrollerclient");
