@@ -79,6 +79,7 @@ protected:
     bool go_on;
     bool reset;
     bool save_points;
+    bool merge_model;
 
     // Optimization parameters
     double tol, sum;
@@ -86,6 +87,7 @@ protected:
     int acceptable_iter,max_iter;
     int optimizer_points;
     std::string mu_strategy,nlp_scaling_method;
+    int h_tree;
 
     yarp::sig::Vector x;
     yarp::sig::Vector x_filtered;

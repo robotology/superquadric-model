@@ -67,9 +67,11 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 
 /***********************************************************************/
 SuperqComputation::SuperqComputation(Mutex &_mutex_shared, int _rate, bool _filter_points, bool _filter_superq, bool _single_superq, bool _fixed_window,deque<yarp::sig::Vector> &_points, ImageOf<PixelRgb> *_imgIn, string _tag_file, double _threshold_median,
-                                const Property &_filter_points_par, Vector &_x, Vector &_x_filtered, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points, ResourceFinder *_rf, superqTree *_superq_tree):
+                                const Property &_filter_points_par, Vector &_x, Vector &_x_filtered, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points, ResourceFinder *_rf, superqTree *_superq_tree,
+                                bool _merge_model, int _h_tree):
                                 mutex_shared(_mutex_shared),filter_points(_filter_points), filter_superq(_filter_superq), single_superq(_single_superq),fixed_window( _fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points), imgIn(_imgIn),
-                                filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), Thread(), homeContextPath(_homeContextPath), x(_x), x_filtered(_x_filtered), points(_points), rf(_rf), superq_tree(_superq_tree)
+                                filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), Thread(), homeContextPath(_homeContextPath), x(_x), x_filtered(_x_filtered), points(_points), rf(_rf), superq_tree(_superq_tree),
+                                merge_model(_merge_model), h_tree(_h_tree)
 {
 }
 
@@ -292,20 +294,22 @@ void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
         }
     }
 
-    int ts=newOptions.find("tree_splitting").asInt();
-    if (newOptions.find("tree_splitting").isNull() && (first_time==true))
+    h_tree=newOptions.find("h_tree").asInt();
+    if (newOptions.find("h_tree").isNull() && (first_time==true))
     {
-        tree_splitting=2;
+        h_tree = 3;
+        n_nodes=pow(2,h_tree+1) - 1;
     }
-    else if (!newOptions.find("tree_splitting").isNull())
+    else if (!newOptions.find("n_nodes").isNull())
     {
-        if ((ts>=1))
-        {
-            tree_splitting=ts;
+        if ((h_tree>=1))
+        {         
+            n_nodes=pow(2,h_tree+1) - 1;
         }
         else
         {
-            tree_splitting=2;
+            h_tree = 3;
+            n_nodes=pow(2,h_tree+1) - 1;
         }
     }
 
@@ -499,64 +503,65 @@ bool SuperqComputation::threadInit()
 /***********************************************************************/
 void SuperqComputation::run()
 {
-    yDebug()<<"[SuperqComputation]: is the module stopping "<<isStopping();
     while (!isStopping())
     {
         t0=Time::now();
 
-        //Catch up
-        //if (points.size()>0)
-        //{
-            if (one_shot==false)
-                getPoints3D();
+        if (one_shot==false)
+            getPoints3D();
 
-            if (points.size()>0)
+        if (points.size()>0)
+        {
+            mutex.lock();
+
+            if (single_superq)
             {
-                yDebug()<<"deb 1 "<<points.size();
-                mutex.lock();
-
-                if (single_superq)
+                if ((filter_points==true) && (points.size()>0))
                 {
-                    yDebug()<<"deb 2 "<<points.size();
-                    if ((filter_points==true) && (points.size()>0))
-                    {
-                        filter();
-                    }
-                    if (points.size()>0)
-                    {
-                        yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
-                        go_on=computeSuperq();
-                    }
+                    filter();
                 }
-                else if (superq_computed==false)
+                if (points.size()>0)
                 {
-                    iterativeModeling();
+                    yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
+                    go_on=computeSuperq();
+                }
+            }
+            else if (superq_computed==false)
+            {
+                iterativeModeling();
+
+                superq_tree->printTree(superq_tree->root);
+
+                if (merge_model)
                     go_on=superq_computed=mergeModeling(superq_tree->root, true);
-
-                    if (superq_tree->root!=NULL)
-                        superq_tree->printTree(superq_tree->root);
-
-                    yDebug()<<"[SuperqComputation]: The superquadric has been computed "<<superq_computed;
-
-                }
-
-                if ((go_on==false) && (points.size()>0))
-                {
-                    yError("[SuperqComputation]: Not found a suitable superquadric! ");
-                }
-                else if (go_on==true && norm(x)>0.0 && (points.size()>0))
-                {
-                    if (filter_superq)
-                        filterSuperq();
-                    else
-                        x_filtered=x;
-                }
                 else
-                {
-                    x_filtered.resize(11,0.0);
-                }
+                    go_on=superq_computed=true;
 
-                mutex.unlock();
+
+                if (superq_tree->root!=NULL)
+                    superq_tree->printTree(superq_tree->root);
+
+                yDebug()<<"[SuperqComputation]: The superquadric has been computed "<<superq_computed;
+
+            }
+
+            if ((go_on==false) && (points.size()>0))
+            {
+                yError("[SuperqComputation]: Not found a suitable superquadric! ");
+            }
+            else if (go_on==true && norm(x)>0.0 && (points.size()>0))
+            {
+                if (filter_superq)
+                    filterSuperq();
+                else
+                    x_filtered=x;
+            }
+            else
+            {
+                x_filtered.resize(11,0.0);
+            }
+
+            mutex.unlock();
         }
         else
         {
@@ -985,27 +990,15 @@ void SuperqComputation::sendPoints(const deque<Vector> &p)
 /***********************************************************************/
 void SuperqComputation::iterativeModeling()
 {
-    Vector f(2,0.0);
-    bool first_time=true;
-
     superq_tree->setPoints(&points);
 
-    node *newnode=superq_tree->root;
-
-    int i=0;
-    int j=tree_splitting;
-    int count=0;
-    int count2=0;
-    bool final=false;
-
-    computeNestedSuperq(newnode, i,j, first_time, count, final, count2);
+    computeNestedSuperq(superq_tree->root);
 }
 
 /***********************************************************************/
-
-void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool first_time,int &count, bool final, int &count2)
+void SuperqComputation::computeNestedSuperq(node *newnode)
 {
-    if ((newnode!=NULL) && (i<tree_splitting))
+    if ((newnode!=NULL))
     {
         cout<<endl;
         Vector superq1(11,0.0);
@@ -1014,214 +1007,33 @@ void SuperqComputation::computeNestedSuperq(node *newnode, int &i,int &j, bool f
         nodeContent node_c1;
         nodeContent node_c2;
 
-        splitPoints(false, newnode);
+        if ((newnode->height <= h_tree))
+        {
+            splitPoints(false, newnode);
 
-        superq1=computeMultipleSuperq(points_splitted1);
-        superq2=computeMultipleSuperq(points_splitted2);
+            superq1=computeMultipleSuperq(points_splitted1);
+            superq2=computeMultipleSuperq(points_splitted2);
 
-        node_c1.f_value=evaluateLoss(superq1, points_splitted1);
-        node_c2.f_value=evaluateLoss(superq2, points_splitted2);
+            node_c1.f_value=evaluateLoss(superq1, points_splitted1);
+            node_c2.f_value=evaluateLoss(superq2, points_splitted2);
 
-        node_c1.superq=superq1;
-        node_c2.superq=superq2;
-        node_c1.point_cloud= new deque<Vector>;
-        node_c2.point_cloud= new deque<Vector>;
+            node_c1.superq=superq1;
+            node_c2.superq=superq2;
+            node_c1.point_cloud= new deque<Vector>;
+            node_c2.point_cloud= new deque<Vector>;
 
-        *node_c1.point_cloud=points_splitted1;
-        *node_c2.point_cloud=points_splitted2;
+            *node_c1.point_cloud=points_splitted1;
+            *node_c2.point_cloud=points_splitted2;
 
-        superq_tree->insert(node_c1, node_c2, newnode);
+            node_c1.height=newnode->height + 1;
+            node_c2.height=newnode->height + 1;
 
-        i++;
-        first_time=true;
+            superq_tree->insert(node_c1, node_c2, newnode);
+        }
 
-        computeNestedSuperq(newnode->left,i,j, first_time, count, final, count2);
-
-        first_time=true;
+        computeNestedSuperq(newnode->left);
+        computeNestedSuperq(newnode->right);
     }
-    else if ((i==tree_splitting))
-    {
-        yInfo()<<"[SuperqComputation] Completing Tree..";
-
-        if (first_time==true)
-        {
-            cout<<endl;
-
-            newnode=superq_tree->root;
-            yDebug()<<newnode->right->point_cloud->size();
-
-            first_time=false;
-            j=0;
-
-            computeNestedSuperq(newnode->right,i,j, first_time, count, final, count2);
-
-
-            first_time=false;
-            cout<<endl;
-
-        }
-        else if ((newnode!=NULL) && (j<tree_splitting-1))
-        {
-
-            j++;
-            Vector superq1(11,0.0);
-            Vector superq2(11,0.0);
-
-            nodeContent node_c1;
-            nodeContent node_c2;
-
-            if ((!newnode->right) && (!newnode->left))
-            {              
-                yDebug()<<"[SuperqComputation] Computing right and left";
-                splitPoints(false, newnode);
-                superq1=computeMultipleSuperq(points_splitted1);
-                superq2=computeMultipleSuperq(points_splitted2);
-
-                node_c1.f_value=evaluateLoss(superq1, points_splitted1);
-                node_c2.f_value=evaluateLoss(superq2, points_splitted2);
-
-                node_c1.superq=superq1;
-                node_c2.superq=superq2;
-                node_c1.point_cloud= new deque<Vector>;
-                node_c2.point_cloud= new deque<Vector>;
-
-                *node_c1.point_cloud=points_splitted1;
-                *node_c2.point_cloud=points_splitted2;
-
-
-                superq_tree->insert(node_c1, node_c2, newnode);
-            }
-            else
-                yInfo()<<"[SuperqComputation] Skipping computation because already computed";
-
-            computeNestedSuperq(newnode->right,i,j, first_time, count, final, count2);
-
-        }
-
-        if ((j==tree_splitting-1) && (count<tree_splitting))
-        {
-            if (count==0)
-            {
-                count++;
-                newnode=superq_tree->root;
-                yDebug()<<newnode->right->point_cloud->size();
-
-                first_time=false;
-
-                computeNestedSuperq(newnode->right,i,j, first_time, count, final, count2);
-            }
-            else if ((newnode!=NULL) && (count<tree_splitting))
-            {
-                Vector superq1(11,0.0);
-                Vector superq2(11,0.0);
-
-                nodeContent node_c1;
-                nodeContent node_c2;
-
-                if ((!newnode->right) && (!newnode->left))
-                {
-                    yDebug()<<"[SuperqComputation] Computing right and left";
-                    //if ((norm(newnode->right->superq)==0) && (norm(newnode->left->superq)==0))
-                    //{
-                        splitPoints(false, newnode);
-
-                        superq1=computeMultipleSuperq(points_splitted1);
-                        superq2=computeMultipleSuperq(points_splitted2);
-
-                        node_c1.f_value=evaluateLoss(superq1, points_splitted1);
-                        node_c2.f_value=evaluateLoss(superq2, points_splitted2);
-
-                        node_c1.superq=superq1;
-                        node_c2.superq=superq2;
-                        node_c1.point_cloud= new deque<Vector>;
-                        node_c2.point_cloud= new deque<Vector>;
-
-                        *node_c1.point_cloud=points_splitted1;
-                        *node_c2.point_cloud=points_splitted2;
-
-
-                        superq_tree->insert(node_c1, node_c2, newnode);
-                    //}
-                }
-                else
-                    yInfo()<<"[SuperqComputation] Skipping computation because already computed";
-
-                if (count %2 !=0)
-                {
-                    count++;
-                    computeNestedSuperq(newnode->left,i,j, first_time, count, final, count2);
-                }
-                else
-                {
-                    count++;
-                    computeNestedSuperq(newnode->right,i,j, first_time, count, final, count2);
-                }
-            }
-        }
-        else if ((count==tree_splitting) && (count2<tree_splitting))
-        {
-            if (count2==0)
-            {
-                count2++;
-                newnode=superq_tree->root;
-                yDebug()<<newnode->right->point_cloud->size();
-
-                first_time=false;
-
-                computeNestedSuperq(newnode->left,i,j, first_time, count, final, count2);
-            }
-            else if ((newnode!=NULL) && (count2<tree_splitting))
-            {
-                Vector superq1(11,0.0);
-                Vector superq2(11,0.0);
-
-                nodeContent node_c1;
-                nodeContent node_c2;
-
-                if ((!newnode->right) && (!newnode->left))
-                {
-                    yDebug()<<"[SuperqComputation] Computing right and left";
-                    //if ((norm(newnode->right->superq)==0) && (norm(newnode->left->superq)==0))
-                    //{
-                        splitPoints(false, newnode);
-
-                        superq1=computeMultipleSuperq(points_splitted1);
-                        superq2=computeMultipleSuperq(points_splitted2);
-
-                        node_c1.f_value=evaluateLoss(superq1, points_splitted1);
-                        node_c2.f_value=evaluateLoss(superq2, points_splitted2);
-
-                        node_c1.superq=superq1;
-                        node_c2.superq=superq2;
-                        node_c1.point_cloud= new deque<Vector>;
-                        node_c2.point_cloud= new deque<Vector>;
-
-                        *node_c1.point_cloud=points_splitted1;
-                        *node_c2.point_cloud=points_splitted2;
-
-
-                        superq_tree->insert(node_c1, node_c2, newnode);
-                    //}
-                }
-                else
-                    yInfo()<<"[SuperqComputation] Skipping computation because already computed";
-
-                if (count2 %2 !=0)
-                {
-                    count2++;
-                    computeNestedSuperq(newnode->right,i,j, first_time, count, final, count2);
-                }
-                else
-                {
-                    count2++;
-                    computeNestedSuperq(newnode->left,i,j, first_time, count, final, count2);
-                }
-            }
-        }
-        else
-            yDebug()<<"[SuperqComputation]: stop";
-    }
-
 }
 
 /***********************************************************************/
@@ -1291,9 +1103,7 @@ void SuperqComputation::splitPoints(bool merging, node *leaf)
         plane[2]=n[2];
         plane[3]=(plane[0]*center[0]+plane[1]*center[1]+plane[2]*center[2]);
 
-
         leaf->plane=plane;
-
 
         for (size_t j=0; j<points_splitted.size(); j++)
         {
@@ -1341,7 +1151,7 @@ double SuperqComputation::f(Vector &x, Vector &point_cloud)
     euler[2]=x[10];
     Matrix R=euler2dcm(euler);
 
-    // Because it's in the calcolous
+    // Because it's in the calculous
     R = R.transposed();
 
     double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
@@ -1350,6 +1160,102 @@ double SuperqComputation::f(Vector &x, Vector &point_cloud)
     double tmp=pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
 
     return pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]));
+}
+
+/****************************************************************/
+/*bool SuperqComputation::mergeModeling(node *node)
+{
+    if (node->height < h_tree - 1)
+    {
+        mergeModeling(node->left);
+        mergeModeling(node->right);
+    }
+    else
+    {
+        computeSuperqAxis(node->left);
+        computeSuperqAxis(node->right);
+
+        Matrix relations(3,3);
+
+        if (axisParallel(node->left, node->right, relations))
+            mergeSuperqs(node, relations);
+
+    }
+}
+
+/****************************************************************/
+/*void computeSuperqAxis(node *node)
+{
+    Matrix R=euler2dcm(node->superq.subVector(8,10));
+    node->R=R;
+    //node->axis_x = R.getCol(0);
+    //node->axis_y = R.getCol(1);
+    //node->axis_z = R.getCol(2);
+}
+
+/****************************************************************/
+/*bool axisParallel(node *node1, node *node2, Matrix &relations)
+{
+    threshold=0.2;
+    if (dot(node1->axis_x, node2->axis_x) < threshold)
+        relations(0,0) = 1;
+    else if  (dot(node1->axis_x, node2->axis_y) < threshold)
+        relations(0,1) = 1;
+    else if  (dot(node1->axis_x, node2->axis_z) < threshold)
+        relations(0,2) = 1;
+    else if (dot(node1->axis_y, node2->axis_x) < threshold)
+        relations(1,0) = 1;
+    else if  (dot(node1->axis_y, node2->axis_y) < threshold)
+        relations(1,1) = 1;
+    else if  (dot(node1->axis_y, node2->axis_z) < threshold)
+        relations(1,2) = 1;
+    else if (dot(node1->axis_z, node2->axis_x) < threshold)
+        relations(2,0) = 1;
+    else if  (dot(node1->axis_z, node2->axis_y) < threshold)
+        relations(2,1) = 1;
+    else if  (dot(node1->axis_z, node2->axis_z) < threshold)
+        relations(2,2) = 1;
+
+    if (norm(relations) > 0.0)
+        return true;
+    else
+        return false;
+}
+
+/****************************************************************/
+/*void mergeSuperqs(node *node, relations)
+{
+    Vector axis_left, axis_right;
+    int dir_left, dir_right;
+
+    for (int i=0; i<3; i++)
+    {
+        for (int j=0; j<3; j++)
+        {
+            if (relations(i,j)==1)
+            {
+                axis_left=node->left->R.getCol(i);
+                axis_right=node->right->R.getCol(j);
+                i=dir_left;
+                j=dir_right;
+            }
+
+        }
+    }
+
+    vector<Vector> extremes_right;
+    vector<Vector> extremes_left;
+
+    extremes_left.push_back(axis_left * node->left->superq[dir_left] - node->left->superq.subVector(5,7));
+    extremes_left.push_back(axis_left * node->left->superq[dir_left] + node->left->superq.subVector(5,7));
+
+    extremes_right.push_back(axis_right * node->right->superq[dir_right] - node->right->superq.subVector(5,7));
+    extremes_right.push_back(axis_right * node->right->superq[dir_right] + node->right->superq.subVector(5,7));
+
+
+
+
+
 }
 
 /****************************************************************/

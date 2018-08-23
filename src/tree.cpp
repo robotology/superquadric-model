@@ -18,13 +18,16 @@ using namespace yarp::math;
 superqTree::superqTree()
 {
     root= new node;
-    //root->point_cloud->clear();
     root->superq.resize(11,0.0);
     root->plane.resize(4,0.0);
-    root->f_value=0;
+    root->f_penalized=0;
     root->left=NULL;
     root->right=NULL;
-    count=0;
+    root->height=1;
+    root->axis_x.resize(3,0.0);
+    root->axis_y.resize(3,0.0);
+    root->axis_z.resize(3,0.0);
+    root->R;
 }
 
 /***********************************************************************/
@@ -74,9 +77,11 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
         leaf->right->left=NULL;
         leaf->right->right=NULL;
         leaf->right->father=leaf;
+        leaf->right->height=node_content1.height;
 
         if (leaf->left==NULL)
             leaf->left=new node;
+
 
         leaf->left->f_value=f_v2;
         leaf->left->superq=node_content2.superq;
@@ -85,6 +90,7 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
         leaf->left->left=NULL;
         leaf->left->right=NULL;
         leaf->left->father=leaf;
+        leaf->left->height=node_content1.height;
 
 
         yDebug()<<"First case";
@@ -101,6 +107,7 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
         leaf->left->left=NULL;
         leaf->left->right=NULL;
         leaf->left->father=leaf;
+        leaf->left->height=node_content1.height;
 
 
         if (leaf->right==NULL)
@@ -113,6 +120,7 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
         leaf->right->left=NULL;
         leaf->right->right=NULL;
         leaf->right->father=leaf;
+        leaf->right->height=node_content1.height;
 
         yDebug()<<"Second case";
     }
@@ -145,8 +153,6 @@ void superqTree::printNode(node *leaf)
 {
     if(leaf!=NULL)
     {
-        yDebug()<<"count"<<count;
-        count++;
         yInfo()<<"Node content:";
         yInfo()<<"point_cloud size:"<<leaf->point_cloud->size();
         yInfo()<<"superquadric    :"<<leaf->superq.toString();

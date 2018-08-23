@@ -13,11 +13,18 @@ struct node
 {
     std::deque<yarp::sig::Vector> *point_cloud;
     yarp::sig::Vector superq;
-    yarp::sig::Vector plane;
-    double f_value;
+    yarp::sig::Vector plane;   
     node *left;
     node *right;
     node *father;
+    double f_penalized;
+    double f_value;
+    int height;
+    yarp::sig::Vector axis_x;
+    yarp::sig::Vector axis_y;
+    yarp::sig::Vector axis_z;
+    yarp::sig::Matrix R;
+
 };
 
 struct nodeContent
@@ -26,6 +33,7 @@ struct nodeContent
     yarp::sig::Vector superq;
     yarp::sig::Vector plane;
     double f_value;
+    int height;
 };
 
 
