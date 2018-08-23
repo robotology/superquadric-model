@@ -292,7 +292,7 @@ void SuperQuadric_NLP::computeX0(Vector &x0, deque<Vector> &point_cloud)
 
 
     // Let's try not to use initial orientation
-    //computeInitialOrientation(x0,point_cloud);
+    computeInitialOrientation(x0,point_cloud);
 
     Matrix bounding_box(3,2);
     bounding_box=computeBoundingBox(point_cloud,x0);

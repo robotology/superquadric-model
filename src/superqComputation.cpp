@@ -297,7 +297,7 @@ void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
     h_tree=newOptions.find("h_tree").asInt();
     if (newOptions.find("h_tree").isNull() && (first_time==true))
     {
-        h_tree = 3;
+        h_tree = 2;
         n_nodes=pow(2,h_tree+1) - 1;
     }
     else if (!newOptions.find("n_nodes").isNull())
@@ -308,7 +308,7 @@ void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
         }
         else
         {
-            h_tree = 3;
+            h_tree = 2;
             n_nodes=pow(2,h_tree+1) - 1;
         }
     }
@@ -1126,6 +1126,7 @@ double SuperqComputation::evaluateLoss(Vector &superq, deque<Vector> &points_spl
     int count_subsample=0.0;
     int c;
 
+    double inside_penalty=1;
     c=points_splitted.size()/optimizer_points;
 
     if (c==0)
@@ -1134,7 +1135,8 @@ double SuperqComputation::evaluateLoss(Vector &superq, deque<Vector> &points_spl
     for(size_t i=0;i<points_splitted.size();i+=c)
     {
         double tmp=pow(f(superq,points_splitted[i]),superq[3])-1;
-        value+=tmp*tmp;
+        double penalty=(tmp<0.0?inside_penalty:1.0);
+        value+=tmp*tmp*penalty;
         count_subsample++;
     }
 
@@ -1259,6 +1261,27 @@ double SuperqComputation::f(Vector &x, Vector &point_cloud)
 }
 
 /****************************************************************/
+/*bool SuperqComputation::mergeModeling(node *node, bool go_on)
+{
+    if (node!=NULL)
+    {
+        if (node->height < h_tree -1)
+        {
+            mergeModeling(node->left, go_on);
+            mergeModeling(node->right, go_on);
+        }
+
+        if ((node->right->f_value > node->f_value) && (node->left->f_value > node->f_value))
+        {
+            node->right=NULL;
+            node->left=NULL;
+
+
+        }
+    }
+}
+
+/****************************************************************/
 bool SuperqComputation::mergeModeling(node *node, bool go_on)
 {
     if (node!=NULL)
@@ -1358,7 +1381,8 @@ bool SuperqComputation::mergeModeling(node *node, bool go_on)
                 mergeModeling(node->left, go_on);
 
             }
-            else if (((cost_2 - 0.1 <node->f_value) || (area_sup/area_pc > 0.98)) && (node->father->point_cloud->size()>0))
+            else if (((cost_2 - 0.1 <node->f_value) || (area_sup/area_pc > 0.98)
+                      ) && (node->father->point_cloud->size()>0))
             {              
                 yDebug()<<"[SuperqComputation] point cloud father size"<<node->father->point_cloud->size();
                 points_splitted1.clear();
