@@ -303,6 +303,8 @@ void SuperQuadric_NLP::computeX0(Vector &x0, deque<Vector> &point_cloud)
 
 
     // Let-s try to compute centroid from bounding box
+    Matrix R = euler2dcm(x0.subVector(8,10));
+    bounding_box = R.submatrix(0,2,0,2) * bounding_box;
     x0[5] = (bounding_box(0,0)+bounding_box(0,1))/2;
     x0[6] = (bounding_box(1,0)+bounding_box(1,1))/2;
     x0[7] = (bounding_box(2,0)+bounding_box(2,1))/2;
@@ -368,9 +370,16 @@ Matrix SuperQuadric_NLP::computeBoundingBox(deque<Vector> &points, const Vector 
     BB(1,1)=-numeric_limits<double>::infinity();
     BB(2,1)=-numeric_limits<double>::infinity();
 
+    Matrix T=euler2dcm((x0.subVector(8,10)));
+    T.setCol(3,x0.subVector(5,7));
+    T = SE3inv(T);
+
     for (size_t i=0; i<points.size();i++)
     {
-        Vector &point=points[i];
+        //Vector &point=points[i];
+        Vector point(4,1.0);
+        point.setSubvector(0,points[i]);
+        point = T * point;
         if(BB(0,0)>point[0])
            BB(0,0)=point[0];
 
