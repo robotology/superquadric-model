@@ -140,6 +140,7 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
  {
      F(x,points_downsampled, new_x);
      obj_value=aux_objvalue;
+
      return true;
  }
 

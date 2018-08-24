@@ -24,6 +24,7 @@ struct node
     yarp::sig::Vector axis_y;
     yarp::sig::Vector axis_z;
     yarp::sig::Matrix R;
+    bool plane_important;
 
 };
 
@@ -34,6 +35,7 @@ struct nodeContent
     yarp::sig::Vector plane;
     double f_value;
     int height;
+    bool plane_important;
 };
 
 

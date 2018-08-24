@@ -533,7 +533,7 @@ void SuperqComputation::run()
                 superq_tree->printTree(superq_tree->root);
 
                 if (merge_model)
-                    go_on=superq_computed=mergeModeling(superq_tree->root, true);
+                    go_on=superq_computed=mergeModeling(superq_tree->root);
                 else
                     go_on=superq_computed=true;
 
@@ -1165,124 +1165,216 @@ double SuperqComputation::f(Vector &x, Vector &point_cloud)
 }
 
 /****************************************************************/
-/*bool SuperqComputation::mergeModeling(node *node)
+bool SuperqComputation::mergeModeling(node *node)
 {
-    if (node->height < h_tree - 1)
+    yDebug()<<"node->heghit"<<node->height;
+    if (node->height < h_tree)
     {
+        yDebug()<<"     Merge Left";
         mergeModeling(node->left);
+        yDebug()<<"     Merge Right";
         mergeModeling(node->right);
     }
-    else
+    //else
+    //{
+    if (node->height > 1)
     {
         computeSuperqAxis(node->left);
         computeSuperqAxis(node->right);
 
         Matrix relations(3,3);
 
-        if (axisParallel(node->left, node->right, relations))
-            mergeSuperqs(node, relations);
+        if (axisParallel(node->left, node->right, relations) && sectionEqual(node->left, node->right, relations))
+        {
+            yDebug()<< "                     Axis parallel";
+            node->left=NULL;
+            node->right=NULL;
+        }
+        else
+        {
+            yDebug()<<" Not parallel";
+            computeSuperqAxis(node->father->left);
+            computeSuperqAxis(node->father->right);
+
+            if(axisParallel(node->left, node->father->right, relations) ||
+               axisParallel(node->right, node->father->right, relations))
+            {
+                yDebug()<<" Plane important";
+                node->plane_important=true;
+            }
+
+            if ((node->left->plane_important==true) && (node->right->plane_important==true))
+            {
+                return true;
+            }
+            else if ((node->left->plane_important==true) || (node->right->plane_important==true))
+            {
+                superqUsingPlane(node, node->left->plane_important?node->left->plane:node->right->plane);
+            }
+        }
 
     }
+    else
+    {
+        if ((node->left->plane_important==true) && (node->right->plane_important==true))
+        {
+            return true;
+        }
+        else if ((node->left->plane_important==true) || (node->right->plane_important==true))
+        {
+            superqUsingPlane(node, node->left->plane_important?node->left->plane:node->right->plane);
+        }
+    }
+
+    return true;
 }
 
 /****************************************************************/
-/*void computeSuperqAxis(node *node)
+void SuperqComputation::superqUsingPlane(node *node, Vector &plane)
+{
+    // Let's see if we need to save the new plane in father
+    //leaf->plane=plane;
+
+    points_splitted1.clear();
+    points_splitted2.clear();
+
+    Vector superq1, superq2;
+
+    deque<Vector> points_splitted=*node->point_cloud;
+
+    for (size_t j=0; j<points_splitted.size(); j++)
+    {
+        Vector point=points_splitted[j];
+        if (plane[0]*point[0]+plane[1]*point[1]+plane[2]*point[2]- plane[3] > 0)
+            points_splitted1.push_back(point);
+        else
+            points_splitted2.push_back(point);
+    }
+
+    yDebug()<<"[SuperqComputation]: New points_splitted 1 "<<points_splitted1.size();
+    yDebug()<<"[SuperqComputation]: New points_splitted 2 "<<points_splitted2.size();
+
+    superq1=computeMultipleSuperq(points_splitted1);
+    superq2=computeMultipleSuperq(points_splitted2);
+
+    nodeContent node_c1;
+    nodeContent node_c2;
+
+    node_c1.f_value=evaluateLoss(superq1, points_splitted1);
+    node_c2.f_value=evaluateLoss(superq2, points_splitted2);
+
+    node_c1.superq=superq1;
+    node_c2.superq=superq2;
+    node_c1.point_cloud= new deque<Vector>;
+    node_c2.point_cloud= new deque<Vector>;
+
+    *node_c1.point_cloud=points_splitted1;
+    *node_c2.point_cloud=points_splitted2;
+
+    node_c1.height=node->height + 1;
+    node_c2.height=node->height + 1;
+    node_c1.plane_important=node->left->plane_important;
+    node_c2.plane_important=node->right->plane_important;
+
+    superq_tree->insert(node_c1, node_c2, node);
+}
+
+/****************************************************************/
+void SuperqComputation::computeSuperqAxis(node *node)
 {
     Matrix R=euler2dcm(node->superq.subVector(8,10));
-    node->R=R;
-    //node->axis_x = R.getCol(0);
-    //node->axis_y = R.getCol(1);
-    //node->axis_z = R.getCol(2);
+    //node->R=R;
+    node->axis_x = R.getCol(0);
+    node->axis_y = R.getCol(1);
+    node->axis_z = R.getCol(2);
+
+    yDebug()<<"              Axis "<<R.toString();
 }
 
 /****************************************************************/
-/*bool axisParallel(node *node1, node *node2, Matrix &relations)
+bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations)
 {
-    threshold=0.2;
-    if (dot(node1->axis_x, node2->axis_x) < threshold)
-        relations(0,0) = 1;
-    else if  (dot(node1->axis_x, node2->axis_y) < threshold)
-        relations(0,1) = 1;
-    else if  (dot(node1->axis_x, node2->axis_z) < threshold)
-        relations(0,2) = 1;
-    else if (dot(node1->axis_y, node2->axis_x) < threshold)
-        relations(1,0) = 1;
-    else if  (dot(node1->axis_y, node2->axis_y) < threshold)
-        relations(1,1) = 1;
-    else if  (dot(node1->axis_y, node2->axis_z) < threshold)
-        relations(1,2) = 1;
-    else if (dot(node1->axis_z, node2->axis_x) < threshold)
-        relations(2,0) = 1;
-    else if  (dot(node1->axis_z, node2->axis_y) < threshold)
-        relations(2,1) = 1;
-    else if  (dot(node1->axis_z, node2->axis_z) < threshold)
-        relations(2,2) = 1;
 
-    if (norm(relations) > 0.0)
+    double threshold=0.2;
+    if (abs(dot(node1->axis_x, node2->axis_x)) < threshold)
+    {
+        yDebug()<<"Cosines "<<dot(node1->axis_x, node2->axis_x);
+        relations(0,0) = 1;
+    }
+    else if  (abs(dot(node1->axis_x, node2->axis_y)) < threshold)
+    {
+        yDebug()<<"Cosines "<<dot(node1->axis_x, node2->axis_y);
+        relations(0,1) = 1;
+    }
+    else if  (abs(dot(node1->axis_x, node2->axis_z)) < threshold)
+    {
+        relations(0,2) = 1;
+        yDebug()<<"Cosines "<<dot(node1->axis_x, node2->axis_z);
+    }
+    else if (abs(dot(node1->axis_y, node2->axis_x)) < threshold)
+    {
+        relations(1,0) = 1;
+        yDebug()<<"Cosines "<<dot(node1->axis_y, node2->axis_x);
+    }
+    else if  (abs(dot(node1->axis_y, node2->axis_y)) < threshold)
+    {
+        relations(1,1) = 1;
+        yDebug()<<"Cosines "<<dot(node1->axis_y, node2->axis_y);
+    }
+    else if  (abs(dot(node1->axis_y, node2->axis_z))< threshold)
+    {
+        relations(1,2) = 1;
+        yDebug()<<"Cosines "<<dot(node1->axis_y, node2->axis_z);
+    }
+    else if (abs(dot(node1->axis_z, node2->axis_x)) < threshold)
+    {
+        relations(2,0) = 1;
+        yDebug()<<"Cosines "<<dot(node1->axis_z, node2->axis_x);
+    }
+    else if  (abs(dot(node1->axis_z, node2->axis_y)) < threshold)
+    {
+        relations(2,1) = 1;
+        yDebug()<<"Cosines "<<dot(node1->axis_z, node2->axis_y);
+    }
+    else if  (abs(dot(node1->axis_z, node2->axis_z)) < threshold)
+    {
+        relations(2,2) = 1;
+        yDebug()<<"Cosines "<<dot(node1->axis_z, node2->axis_z);
+    }
+
+    yDebug()<<"rel "<<relations.toString();
+    if ((norm(relations, 0) > 0.0) || (norm(relations, 1) > 0.0) || (norm(relations, 2) > 0.0))
         return true;
     else
         return false;
 }
 
 /****************************************************************/
-/*void mergeSuperqs(node *node, relations)
+bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations)
 {
-    Vector axis_left, axis_right;
-    int dir_left, dir_right;
+    double threshold=0.045;
+    Vector dim1=node1->superq.subVector(0,2);
+    Vector dim2=node2->superq.subVector(0,2);
 
-    for (int i=0; i<3; i++)
+    Vector dim_rot=relations*dim2;
+
+    yDebug()<<"     Dim 1 "<<dim1.toString();
+    yDebug()<<"     Dim 2 rot "<<dim_rot.toString();
+    for (size_t i=0; i<3; i++)
     {
-        for (int j=0; j<3; j++)
+        if (dim_rot[i]!= 0.0)
         {
-            if (relations(i,j)==1)
-            {
-                axis_left=node->left->R.getCol(i);
-                axis_right=node->right->R.getCol(j);
-                i=dir_left;
-                j=dir_right;
-            }
-
+            if ((abs(dim1[i] - dim_rot[i]) < threshold))
+                return true;
+            else
+                return false;
         }
     }
-
-    vector<Vector> extremes_right;
-    vector<Vector> extremes_left;
-
-    extremes_left.push_back(axis_left * node->left->superq[dir_left] - node->left->superq.subVector(5,7));
-    extremes_left.push_back(axis_left * node->left->superq[dir_left] + node->left->superq.subVector(5,7));
-
-    extremes_right.push_back(axis_right * node->right->superq[dir_right] - node->right->superq.subVector(5,7));
-    extremes_right.push_back(axis_right * node->right->superq[dir_right] + node->right->superq.subVector(5,7));
-
-
-
-
-
+    return false;
 }
 
 /****************************************************************/
 /*bool SuperqComputation::mergeModeling(node *node, bool go_on)
-{
-    if (node!=NULL)
-    {
-        if (node->height < h_tree -1)
-        {
-            mergeModeling(node->left, go_on);
-            mergeModeling(node->right, go_on);
-        }
-
-        if ((node->right->f_value > node->f_value) && (node->left->f_value > node->f_value))
-        {
-            node->right=NULL;
-            node->left=NULL;
-
-
-        }
-    }
-}
-
-/****************************************************************/
-bool SuperqComputation::mergeModeling(node *node, bool go_on)
 {
     if (node!=NULL)
     {

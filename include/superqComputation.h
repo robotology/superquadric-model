@@ -266,7 +266,19 @@ public:
     void iterativeModeling();
 
     /***********************************************************************/
-    bool mergeModeling(node *node, bool go_on);
+    bool mergeModeling(node *node);
+
+    /****************************************************************/
+    void superqUsingPlane(node *node, yarp::sig::Vector &plane);
+
+    /****************************************************************/
+    void computeSuperqAxis(node *node);
+
+    /****************************************************************/
+    bool axisParallel(node *node1, node *node2, yarp::sig::Matrix &relations);
+
+    /****************************************************************/
+    bool sectionEqual(node *node1, node *node2, yarp::sig::Matrix &relations);
 
     /***********************************************************************/
     void splitPoints(bool merging, node *leaf);

@@ -556,7 +556,7 @@ bool SuperqModule::updateModule()
             {
                 t_mult=Time::now();
                 superqCom->iterativeModeling();
-                superqCom->mergeModeling(superq_tree->root, true);
+                superqCom->mergeModeling(superq_tree->root);
                 t_mult=Time::now()-t_mult;
                 superq_tree->printTree(superq_tree->root);
                 yInfo()<<"             Execution Time           :"<<t_mult;
