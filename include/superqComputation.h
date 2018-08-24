@@ -286,9 +286,6 @@ public:
    /***********************************************************************/
    void computeNestedSuperq(node *newnode);
 
-   /****************************************************************/
-   double computePointCloudArea(std::deque<yarp::sig::Vector> &pc);
-
 };
 
 #endif

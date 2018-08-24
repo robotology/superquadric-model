@@ -1148,8 +1148,8 @@ bool SuperqComputation::mergeModeling(node *node)
             computeSuperqAxis(node->father->left);
             computeSuperqAxis(node->father->right);
 
-            if(axisParallel(node->left, node->father->right, relations) ||
-               axisParallel(node->right, node->father->right, relations))
+            if(axisParallel(node->left, (node==node->father->right)?node->father->left:node->father->right, relations) ||
+               axisParallel(node->right, (node==node->father->right)?node->father->left:node->father->right, relations))
             {
                 node->plane_important=true;
             }
@@ -1319,41 +1319,4 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
         }
     }
     return false;
-}
-
-/****************************************************************/
-double SuperqComputation::computePointCloudArea(deque<Vector> &points)
-{
-    Matrix BB(3,2);
-
-    BB(0,0)=points[0][0];
-    BB(1,0)=points[0][1];
-    BB(2,0)=points[0][2];
-    BB(0,1)=points[0][0];
-    BB(1,1)=points[0][1];
-    BB(2,1)=points[0][2];
-
-    for (size_t i=0; i<points.size();i++)
-    {
-        Vector &point=points[i];
-        if(BB(0,0)>point[0])
-           BB(0,0)=point[0];
-
-        if(BB(0,1)<point[0])
-            BB(0,1)=point[0];
-
-        if(BB(1,0)>point[1])
-            BB(1,0)=point[1];
-
-        if(BB(1,1)<point[1])
-            BB(1,1)=point[1];
-
-        if(BB(2,0)>point[2])
-            BB(2,0)=point[2];
-
-        if(BB(2,1)<point[2])
-            BB(2,1)=point[2];
-    }
-
-    return ((BB(0,1) - BB(0,0)) * (BB(1,1) - BB(1,0)) * (BB(2,1) - BB(2,0))) / 8;
-}   
+} 
