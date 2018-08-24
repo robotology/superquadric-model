@@ -528,6 +528,9 @@ void SuperqComputation::run()
             }
             else if (superq_computed==false)
             {
+                double t0_in, t_in;
+                t0_in=Time::now();
+
                 iterativeModeling();
 
                 superq_tree->printTree(superq_tree->root);
@@ -537,6 +540,9 @@ void SuperqComputation::run()
                 else
                     go_on=superq_computed=true;
 
+                t_in=Time::now() - t0_in;
+
+                yInfo()<<">>>>>>>>>>>>>> Computation time of multiple superquadrics model: "<<t_in;
 
                 if (superq_tree->root!=NULL)
                     superq_tree->printTree(superq_tree->root);
@@ -1014,9 +1020,6 @@ void SuperqComputation::computeNestedSuperq(node *newnode)
             superq1=computeMultipleSuperq(points_splitted1);
             superq2=computeMultipleSuperq(points_splitted2);
 
-            node_c1.f_value=evaluateLoss(superq1, points_splitted1);
-            node_c2.f_value=evaluateLoss(superq2, points_splitted2);
-
             node_c1.superq=superq1;
             node_c2.superq=superq2;
             node_c1.point_cloud= new deque<Vector>;
@@ -1120,63 +1123,14 @@ void SuperqComputation::splitPoints(bool merging, node *leaf)
 }
 
 /****************************************************************/
-double SuperqComputation::evaluateLoss(Vector &superq, deque<Vector> &points_splitted)
-{
-    double value=0.0;
-    int count_subsample=0.0;
-    int c;
-
-    double inside_penalty=1;
-    c=points_splitted.size()/optimizer_points;
-
-    if (c==0)
-        c=1;
-
-    for(size_t i=0;i<points_splitted.size();i+=c)
-    {
-        double tmp=pow(f(superq,points_splitted[i]),superq[3])-1;
-        double penalty=(tmp<0.0?inside_penalty:1.0);
-        value+=tmp*tmp*penalty;
-        count_subsample++;
-    }
-
-    value/=count_subsample;
-    return value;
-}
-
-/****************************************************************/
-double SuperqComputation::f(Vector &x, Vector &point_cloud)
-{
-    Vector euler(3,0.0);
-    euler[0]=x[8];
-    euler[1]=x[9];
-    euler[2]=x[10];
-    Matrix R=euler2dcm(euler);
-
-    // Because it's in the calculous
-    R = R.transposed();
-
-    double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
-    double num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[5]*R(1,0)-x[6]*R(1,1)-x[7]*R(1,2);
-    double num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[5]*R(2,0)-x[6]*R(2,1)-x[7]*R(2,2);
-    double tmp=pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
-
-    return pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]));
-}
-
-/****************************************************************/
 bool SuperqComputation::mergeModeling(node *node)
 {
-    yDebug()<<"node->heghit"<<node->height;
     if (node->height < h_tree)
     {
-        yDebug()<<"     Merge Left";
         mergeModeling(node->left);
-        yDebug()<<"     Merge Right";
         mergeModeling(node->right);
     }
-    //else
-    //{
+
     if (node->height > 1)
     {
         computeSuperqAxis(node->left);
@@ -1186,20 +1140,17 @@ bool SuperqComputation::mergeModeling(node *node)
 
         if (axisParallel(node->left, node->right, relations) && sectionEqual(node->left, node->right, relations))
         {
-            yDebug()<< "                     Axis parallel";
             node->left=NULL;
             node->right=NULL;
         }
         else
         {
-            yDebug()<<" Not parallel";
             computeSuperqAxis(node->father->left);
             computeSuperqAxis(node->father->right);
 
             if(axisParallel(node->left, node->father->right, relations) ||
                axisParallel(node->right, node->father->right, relations))
             {
-                yDebug()<<" Plane important";
                 node->plane_important=true;
             }
 
@@ -1260,9 +1211,6 @@ void SuperqComputation::superqUsingPlane(node *node, Vector &plane)
     nodeContent node_c1;
     nodeContent node_c2;
 
-    node_c1.f_value=evaluateLoss(superq1, points_splitted1);
-    node_c2.f_value=evaluateLoss(superq2, points_splitted2);
-
     node_c1.superq=superq1;
     node_c2.superq=superq2;
     node_c1.point_cloud= new deque<Vector>;
@@ -1288,7 +1236,7 @@ void SuperqComputation::computeSuperqAxis(node *node)
     node->axis_y = R.getCol(1);
     node->axis_z = R.getCol(2);
 
-    yDebug()<<"              Axis "<<R.toString();
+    //yDebug()<<"              Axis "<<R.toString();
 }
 
 /****************************************************************/
@@ -1298,51 +1246,51 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
     double threshold=0.2;
     if (abs(dot(node1->axis_x, node2->axis_x)) < threshold)
     {
-        yDebug()<<"Cosines "<<dot(node1->axis_x, node2->axis_x);
+       // yDebug()<<"Cosines "<<dot(node1->axis_x, node2->axis_x);
         relations(0,0) = 1;
     }
     else if  (abs(dot(node1->axis_x, node2->axis_y)) < threshold)
     {
-        yDebug()<<"Cosines "<<dot(node1->axis_x, node2->axis_y);
+        //yDebug()<<"Cosines "<<dot(node1->axis_x, node2->axis_y);
         relations(0,1) = 1;
     }
     else if  (abs(dot(node1->axis_x, node2->axis_z)) < threshold)
     {
         relations(0,2) = 1;
-        yDebug()<<"Cosines "<<dot(node1->axis_x, node2->axis_z);
+        //yDebug()<<"Cosines "<<dot(node1->axis_x, node2->axis_z);
     }
     else if (abs(dot(node1->axis_y, node2->axis_x)) < threshold)
     {
         relations(1,0) = 1;
-        yDebug()<<"Cosines "<<dot(node1->axis_y, node2->axis_x);
+        //yDebug()<<"Cosines "<<dot(node1->axis_y, node2->axis_x);
     }
     else if  (abs(dot(node1->axis_y, node2->axis_y)) < threshold)
     {
         relations(1,1) = 1;
-        yDebug()<<"Cosines "<<dot(node1->axis_y, node2->axis_y);
+        //yDebug()<<"Cosines "<<dot(node1->axis_y, node2->axis_y);
     }
     else if  (abs(dot(node1->axis_y, node2->axis_z))< threshold)
     {
         relations(1,2) = 1;
-        yDebug()<<"Cosines "<<dot(node1->axis_y, node2->axis_z);
+        //yDebug()<<"Cosines "<<dot(node1->axis_y, node2->axis_z);
     }
     else if (abs(dot(node1->axis_z, node2->axis_x)) < threshold)
     {
         relations(2,0) = 1;
-        yDebug()<<"Cosines "<<dot(node1->axis_z, node2->axis_x);
+        //yDebug()<<"Cosines "<<dot(node1->axis_z, node2->axis_x);
     }
     else if  (abs(dot(node1->axis_z, node2->axis_y)) < threshold)
     {
         relations(2,1) = 1;
-        yDebug()<<"Cosines "<<dot(node1->axis_z, node2->axis_y);
+        //yDebug()<<"Cosines "<<dot(node1->axis_z, node2->axis_y);
     }
     else if  (abs(dot(node1->axis_z, node2->axis_z)) < threshold)
     {
         relations(2,2) = 1;
-        yDebug()<<"Cosines "<<dot(node1->axis_z, node2->axis_z);
+        //yDebug()<<"Cosines "<<dot(node1->axis_z, node2->axis_z);
     }
 
-    yDebug()<<"rel "<<relations.toString();
+    //yDebug()<<"rel "<<relations.toString();
     if ((norm(relations, 0) > 0.0) || (norm(relations, 1) > 0.0) || (norm(relations, 2) > 0.0))
         return true;
     else
@@ -1358,8 +1306,8 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
 
     Vector dim_rot=relations*dim2;
 
-    yDebug()<<"     Dim 1 "<<dim1.toString();
-    yDebug()<<"     Dim 2 rot "<<dim_rot.toString();
+    //yDebug()<<"     Dim 1 "<<dim1.toString();
+    //yDebug()<<"     Dim 2 rot "<<dim_rot.toString();
     for (size_t i=0; i<3; i++)
     {
         if (dim_rot[i]!= 0.0)
@@ -1371,203 +1319,6 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
         }
     }
     return false;
-}
-
-/****************************************************************/
-/*bool SuperqComputation::mergeModeling(node *node, bool go_on)
-{
-    if (node!=NULL)
-    {
-        if (node->f_value==0 && (node->right!=NULL) && (node->left!=NULL))
-        {
-            yDebug()<<"[SuperqComputation]: That's root!";
-            double cost_right_2=0.0;
-
-            if ((node->right->right!=NULL) && (node->right->left!=NULL))
-            {
-                cost_right_2=(node->right->right->f_value +
-                                     node->right->left->f_value)/2.0;
-
-                yDebug()<<"[SuperqComputation]: cost right "<<cost_right_2;
-                yDebug()<<"[SuperqComputation]: node right f value"<<node->right->f_value;
-
-                double area_pcr=computePointCloudArea(*node->right->point_cloud);
-                
-                double area_supr=node->right->superq[0] * node->right->superq[1] * node->right->superq[2];
-
-                yInfo()<<"[SuperqComputation]: Point cloud area "<< area_pcr;
-
-                yInfo()<<"[SuperqComputation]: Superquadric area "<< area_supr;
-
-                yInfo()<<area_supr/area_pcr;
-            
-                if (area_supr/area_pcr > 0.98)
-                    yError()<<"[SuperqComputation]: Superq right too big!";
-
-                if ((cost_right_2  < node->right->f_value) || (area_supr/area_pcr >0.98))
-                {
-                    mergeModeling(node->right, go_on);
-                }
-                else
-                {
-                    node->right->right=NULL;
-                    node->right->left=NULL;
-                }
-            }
-
-            double cost_left_2=0.0;
-            if ((node->left->right!=NULL) && (node->left->left!=NULL))
-            {
-                cost_left_2=(node->left->right->f_value +
-                                     node->left->left->f_value)/2.0;
-
-                yDebug()<<"[SuperqComputation]: cost left "<<cost_left_2;
-                yDebug()<<"[SuperqComputation]: node left f value"<<node->left->f_value;
-
-                double area_pcl=computePointCloudArea(*node->left->point_cloud);
-                
-                double area_supl=node->left->superq[0] * node->left->superq[1] * node->left->superq[2];
-
-                yInfo()<<"[SuperqComputation]: Point cloud area "<< area_pcl;
-
-                yInfo()<<"[SuperqComputation]: Superquadric area "<< area_supl;
-
-                yInfo()<<area_supl/area_pcl;
-
-                if (area_supl/area_pcl > 0.98)
-                    yError()<<"[SuperqComputation]: Superq left too  big!";
-
-                if ((cost_left_2 < node->left->f_value) || (area_supl/area_pcl > 0.98))
-                    mergeModeling(node->left, go_on);
-                else
-                {
-                    node->left->right=NULL;
-                    node->left->left=NULL;
-                }
-            }
-        }
-        else if (node->right!=NULL && node->left!=NULL)
-        {
-            cout<<endl;
-
-            double cost_2=(node->right->f_value +
-                                 node->left->f_value)/2.0;
-            yDebug()<<"[SuperqComputation] cost "<<cost_2;
-            yDebug()<<"[SuperqComputation] f_value "<<node->f_value;
-
-            double area_pc=computePointCloudArea(*node->point_cloud);
-                
-            double area_sup=node->superq[0] * node->superq[1] * node->superq[2];
-
-            yInfo()<<"[SuperqComputation]: Point cloud area "<< area_pc;
-
-            yInfo()<<"[SuperqComputation]: Superquadric area "<< area_sup;
-
-            if (area_sup/area_pc > 0.98)
-                    yError()<<"[SuperqComputation]: Superq too big!";
-
-            if (((node->right->right!=NULL && node->right->left!=NULL)||
-                 (node->left->right!=NULL && node->left->left!=NULL)) && go_on==true)
-            {
-                mergeModeling(node->right, go_on);
-                mergeModeling(node->left, go_on);
-
-            }
-            else if (((cost_2 - 0.1 <node->f_value) || (area_sup/area_pc > 0.98)
-                      ) && (node->father->point_cloud->size()>0))
-            {              
-                yDebug()<<"[SuperqComputation] point cloud father size"<<node->father->point_cloud->size();
-                points_splitted1.clear();
-                points_splitted2.clear();
-
-                for (size_t j=0; j<node->father->point_cloud->size(); j++)
-                {
-                    deque<Vector> p_tmp=*node->father->point_cloud;
-                    Vector point=p_tmp[j];
-                    if (node->plane[0]*point[0]+node->plane[1]*point[1]+node->plane[2]*point[2]- node->plane[3] > 0)
-                        points_splitted1.push_back(point);
-                    else
-                        points_splitted2.push_back(point);
-                }
-
-                yDebug()<<"[SuperqComputation] points_splitted 1 "<<points_splitted1.size();
-                yDebug()<<"[SuperqComputation] points_splitted 2 "<<points_splitted2.size();
-
-                Vector superq1(11,0.0);
-                Vector superq2(11,0.0);
-
-                nodeContent node_c1;
-                nodeContent node_c2;
-
-
-                superq1=computeMultipleSuperq(points_splitted1);
-                superq2=computeMultipleSuperq(points_splitted2);
-
-                node_c1.f_value=evaluateLoss(superq1, points_splitted1);
-                node_c2.f_value=evaluateLoss(superq2, points_splitted2);
-
-                double cost_merged=(node_c1.f_value + node_c2.f_value)/2.0;
-                double cost_old;
-                if (node->father->right !=node)
-                    cost_old = (cost_2*2 +node->father->right->f_value)/3.0;
-                else
-                    cost_old = (cost_2*2 +node->father->left->f_value)/3.0;
-
-                yDebug()<<"[SuperqComputation] cost merged "<<cost_merged;
-                yDebug()<<"[SuperqComputation] cost old "<<cost_old;
-
-
-                double area_pc1=computePointCloudArea(points_splitted1);
-                
-                double area_sup1=superq1[0] * superq1[1] * superq1[2];
-
-                double area_pc2=computePointCloudArea(points_splitted2);
-                
-                double area_sup2=superq2[0] * superq2[1] * superq2[2];
-
-                yInfo()<<"[SuperqComputation]: Ratio 1"<< area_sup1/area_pc1;
-
-                yInfo()<<"[SuperqComputation]: Ratio 2"<< area_sup2/area_pc2;
-
-                //if(cost_merged + 0.01 < cost_old)
-                if((cost_merged +0.01 < cost_old) || ((area_sup1/area_pc1 < 0.5) && (area_sup2/area_pc2 < 0.5)))
-                {
-                    node_c1.superq=superq1;
-                    node_c2.superq=superq2;
-                    node_c1.point_cloud= new deque<Vector>;
-                    node_c2.point_cloud= new deque<Vector>;
-
-                    *node_c1.point_cloud=points_splitted1;
-                    *node_c2.point_cloud=points_splitted2;
-
-                    node->father->right=NULL;
-                    node->father->left=NULL;
-                    superq_tree->insert(node_c1, node_c2, node->father);
-
-                }
-
-                if (node->father !=superq_tree->root)
-                    mergeModeling(node->father, false);
-                else
-                {
-                    yDebug()<<"[SuperqComputation]: stop 1";
-                }
-            }
-            else
-            {
-                node->right=NULL;
-                node->left=NULL;
-                if (node->father !=superq_tree->root)
-                    mergeModeling(node->father, false);
-                else
-                {
-                    yDebug()<<"[SuperqComputation]: stop 2";
-                }
-            }
-            yDebug()<<"[SuperqComputation]: stop fuori";
-        }
-    }
-    return true;
 }
 
 /****************************************************************/

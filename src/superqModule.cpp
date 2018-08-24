@@ -134,17 +134,9 @@ Property SuperqModule::get_superq()
 /**********************************************************************/
 bool SuperqModule::send_point_clouds(const vector<Vector> &p)
 {
-    double t, t_fin;
-
-    t=Time::now();
-
     superqCom->setPar("object_class", object_class);
 
-    yDebug()<<"Time operations  after set par 1"<<Time::now() - t;
-
     superqCom->setPar("one_shot", "on");
-
-    yDebug()<<"Time operations after set par 2"<<Time::now() - t;
 
     superqCom->superq_computed=false;
 
@@ -154,11 +146,6 @@ bool SuperqModule::send_point_clouds(const vector<Vector> &p)
         p_aux.push_back(p[i]);
 
     superqCom->sendPoints(p_aux);
-    yDebug()<<"Time operations send points "<<Time::now() - t;
-
-    t_fin= Time::now() - t;
-
-    yDebug()<<"[SuperqModule]: Time operations  final"<<t_fin;
 
     return true;
 }
@@ -250,7 +237,6 @@ void SuperqModule::addSuperqInProp(node *leaf, int &count, Property &superq_pr)
             if (leaf->left!=NULL)
             {
                 addSuperqInProp(leaf->left, count, superq_pr);
-                //count++;
             }
 
             if (leaf->right==NULL && leaf->left==NULL)
@@ -274,13 +260,7 @@ void SuperqModule::addSuperqInProp(node *leaf, int &count, Property &superq_pr)
                 Vector orient=dcm2axis(euler2dcm(sup.subVector(8,10)));
                 b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
                 superq_pr.put("orientation_"+count_str, bottle.get(3));
-
-                yDebug()<<"Property "<<count<<superq_pr.toString();
-                //count++;
-
-            }   
-            //count++;         
-            
+             }
         }
         else
         {
@@ -292,7 +272,6 @@ void SuperqModule::addSuperqInProp(node *leaf, int &count, Property &superq_pr)
             }
             if (leaf->left!=NULL)
             {
-                //count++;
                 addSuperqInProp(leaf->left, count, superq_pr);               
             }
         }
