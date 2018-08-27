@@ -996,6 +996,8 @@ void SuperqComputation::sendPoints(const deque<Vector> &p)
 /***********************************************************************/
 void SuperqComputation::iterativeModeling()
 {
+    setIpoptPar(ipopt_par, true);
+
     superq_tree->setPoints(&points);
 
     computeNestedSuperq(superq_tree->root);
@@ -1032,11 +1034,83 @@ void SuperqComputation::computeNestedSuperq(node *newnode)
             node_c2.height=newnode->height + 1;
 
             superq_tree->insert(node_c1, node_c2, newnode);
+
+            bool left=splitMore(newnode->left);
+            bool right=splitMore(newnode->right);
+
+            if (left==false && right==false)
+            {
+                h_tree=newnode->height;
+            }
+
+            yDebug()<<"H "<<h_tree;
         }
 
         computeNestedSuperq(newnode->left);
         computeNestedSuperq(newnode->right);
     }
+}
+
+/***********************************************************************/
+bool SuperqComputation::splitMore(node * node)
+{
+    double threshold=0.02;
+    double f_value=evaluateLoss(node->superq, *node->point_cloud);
+
+    yDebug()<<"f value "<<f_value;
+
+    if (abs(f_value) > threshold)
+    {
+        yDebug()<<"SPLIT MORE";
+        return true;
+    }
+    else
+        return false;
+}
+
+/****************************************************************/
+double SuperqComputation::evaluateLoss(Vector &superq, deque<Vector> &points_splitted)
+{
+    double value=0.0;
+    int count_subsample=0.0;
+    int c;
+
+    double inside_penalty=1;
+    c=points_splitted.size()/optimizer_points;
+
+    if (c==0)
+        c=1;
+
+    for(size_t i=0;i<points_splitted.size();i+=c)
+    {
+        double tmp=pow(f(superq,points_splitted[i]),superq[3])-1;
+        double penalty=(tmp<0.0?inside_penalty:1.0);
+        value+=tmp*tmp*penalty;
+        count_subsample++;
+    }
+
+    value/=count_subsample;
+    return value;
+}
+
+/****************************************************************/
+double SuperqComputation::f(Vector &x, Vector &point_cloud)
+{
+    Vector euler(3,0.0);
+    euler[0]=x[8];
+    euler[1]=x[9];
+    euler[2]=x[10];
+    Matrix R=euler2dcm(euler);
+
+    // Because it's in the calculous
+    R = R.transposed();
+
+    double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
+    double num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[5]*R(1,0)-x[6]*R(1,1)-x[7]*R(1,2);
+    double num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[5]*R(2,0)-x[6]*R(2,1)-x[7]*R(2,2);
+    double tmp=pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
+
+    return pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]));
 }
 
 /***********************************************************************/

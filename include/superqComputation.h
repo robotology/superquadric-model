@@ -286,6 +286,15 @@ public:
    /***********************************************************************/
    void computeNestedSuperq(node *newnode);
 
+   /***********************************************************************/
+   bool splitMore(node * node);
+
+   /****************************************************************/
+   double evaluateLoss(yarp::sig::Vector &superq, std::deque<yarp::sig::Vector> &points_splitted);
+
+   /****************************************************************/
+   double f(yarp::sig::Vector &x, yarp::sig::Vector &point_cloud);
+
 };
 
 #endif
