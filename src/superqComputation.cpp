@@ -1035,13 +1035,13 @@ void SuperqComputation::computeNestedSuperq(node *newnode)
 
             superq_tree->insert(node_c1, node_c2, newnode);
 
-            bool left=splitMore(newnode->left);
-            bool right=splitMore(newnode->right);
+            //bool left=splitMore(newnode->left);
+            //bool right=splitMore(newnode->right);
 
-            if (left==false && right==false)
-            {
-                h_tree=newnode->height;
-            }
+            //if (left==false && right==false)
+            //{
+            //    h_tree=newnode->height;
+            //}
 
             yDebug()<<"H "<<h_tree;
         }
@@ -1382,15 +1382,20 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
 
     //yDebug()<<"     Dim 1 "<<dim1.toString();
     //yDebug()<<"     Dim 2 rot "<<dim_rot.toString();
+
+    bool equal=false;
+
     for (size_t i=0; i<3; i++)
     {
         if (dim_rot[i]!= 0.0)
         {
             if ((abs(dim1[i] - dim_rot[i]) < threshold))
-                return true;
+                equal=true;
             else
                 return false;
         }
     }
-    return false;
+
+    //yDebug()<<" Dimensions equal "<<equal;
+    return equal;
 } 
