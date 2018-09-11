@@ -102,6 +102,7 @@ bool SuperqModule::set_single_superq(const string &s)
     {
         LockGuard lg(mutex);
 
+        single_superq=(s=="on");
         superqCom->setPar("single_superq", s);
         //superqCom->setPar("object_class", "default");
 
@@ -113,35 +114,51 @@ bool SuperqModule::set_single_superq(const string &s)
 }
 
 /**********************************************************************/
-Property SuperqModule::get_superq()
+bool SuperqModule::set_debug(const string &d)
 {
-    // NB: Temporary fix for sync problems!
-    Time::delay(0.5);
+    if ((d=="on") || (d=="off"))
+    {
+        LockGuard lg(mutex);
+
+        superqCom->setPar("debug", d);
+        //superqCom->setPar("object_class", "default");
+
+        return true;
+
+    }
+    else
+        return false;
+}
+
+/**********************************************************************/
+Property SuperqModule::get_superq(const vector<Vector> &p)
+{
+    deque<Vector> p_aux;
+
+    for (size_t i=0; i<p.size(); i++)
+        p_aux.push_back(p[i]);
 
     Property superq;
 
     Vector sol(11,0.0);
     if (single_superq)
     {
-        sol=superqCom->getSolution(0);
+        superqCom->setPar("object_class", object_class);
+        sol=superqCom->computeOneShot(p_aux);
         superq=fillProperty(sol);
+
     }
     else
     {
-        yDebug()<<"[SuperqComputation]: Superq has been computed "<<superqCom->superq_computed;
-        while (!superqCom->superq_computed)
-        {
-            Time::delay(0.1);
-        }
+        superqCom->setPar("object_class", object_class);
+        superqCom->computeOneShotMultiple(p_aux);
 
         superq=fillMultipleSolutions(superq_tree->root);
     }
 
     superqCom->setPar("one_shot", "off");
 
-    deque<Vector> p_aux;
     p_aux.clear();
-    superqCom->sendPoints(p_aux);
 
     yDebug()<<"Sent superq "<<superq.toString();
 
@@ -482,14 +499,14 @@ bool SuperqModule::updateModule()
 
     if (mode_online)
     {
-        superqCom->setPar("object_class", object_class);
+        //superqCom->setPar("object_class", object_class);
 
-        Property &x_to_send=portSuperq.prepare();
+        //roperty &x_to_send=portSuperq.prepare();
 
         if (visualization_on)
             imgIn=portImgIn.read();
 
-        if (times_superq.size()<10)
+        /*if (times_superq.size()<10)
             times_superq.push_back(superqCom->getTime());
         else if (times_superq.size()==10)
         {
@@ -501,14 +518,14 @@ bool SuperqModule::updateModule()
             times_superq.push_back(0.0);
         }
         else
-            times_superq.clear();
+            times_superq.clear();*/
 
-        if (!filter_superq)
+        /*if (!filter_superq)
             x_to_send=fillProperty(x);
         else
             x_to_send=fillProperty(x_filtered);
 
-        portSuperq.write();
+        portSuperq.write();*/
 
         if (visualization_on)
         {
@@ -615,23 +632,23 @@ bool SuperqModule::configure(ResourceFinder &rf)
         if (visualization_on)
             imgIn=portImgIn.read();
 
-        bool thread_started=superqCom->start();
+        /*bool thread_started=superqCom->start();
 
         if (thread_started)
             yInfo()<<"[SuperqModule]: Computation hread started!";
         else
-            yError()<<"[SuperqModule]: Problems in starting the computation thread!";
+            yError()<<"[SuperqModule]: Problems in starting the computation thread!";*/
 
         superqVis= new SuperqVisualization(rate_vis,eye, what_to_plot,x, x_filtered, Color, igaze, K, points, vis_points, vis_step, imgIn, superq_tree, single_superq);
 
-    if (visualization_on)
-    {
-        bool thread_started=superqVis->start();
+        if (visualization_on)
+        {
+            bool thread_started=superqVis->start();
 
-            if (thread_started)
-                yInfo()<<"[SuperqModule]: Visualization thread started!";
-            else
-                yError()<<"[SuperqModule]: Problems in starting the visualization thread!";
+                if (thread_started)
+                    yInfo()<<"[SuperqModule]: Visualization thread started!";
+                else
+                    yError()<<"[SuperqModule]: Problems in starting the visualization thread!";
         }
         else
         {
@@ -723,6 +740,7 @@ bool SuperqModule::configOnOff(ResourceFinder &rf)
     filter_superq=(rf.check("filter_superq", Value("off")).asString()=="on");
     single_superq=(rf.check("single_superq", Value("on")).asString()=="on");
     merge_model=(rf.check("merge_model", Value("on")).asString()=="on");
+    debug=(rf.check("debug", Value("on")).asString()=="on");
 
     yInfo()<<"[SuperqModule]: rate          "<<rate;
     yInfo()<<"[SuperqModule]: filter_points "<<filter_points;

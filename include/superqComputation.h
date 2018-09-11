@@ -117,6 +117,7 @@ public:
     superqTree *superq_tree;
 
     bool merge;
+    bool debug;
 
     int std_median_order;
     /** max median order width*/
@@ -294,6 +295,12 @@ public:
 
    /****************************************************************/
    double f(yarp::sig::Vector &x, yarp::sig::Vector &point_cloud);
+
+   /***********************************************************************/
+   yarp::sig::Vector computeOneShot(const std::deque<yarp::sig::Vector> &p);
+
+   /***********************************************************************/
+   void computeOneShotMultiple(const std::deque<yarp::sig::Vector> &p);
 
 };
 

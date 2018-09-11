@@ -61,7 +61,7 @@ service superquadricModel_IDL
     * the superquadric center; and "orientation" (x8, x9, 10, x11) is the axis-angle representation
     * obtained from the Euler angles.
     */
-    Property get_superq();
+    Property get_superq(1:list<Vector> point_cloud);
         /**Property get_superq(1:list<Vector> point_cloud);**/
 
      /**
@@ -165,6 +165,11 @@ service superquadricModel_IDL
 
 
 	bool set_single_superq(1:string single)
+
+	bool set_debug(1:string single)
+
+
+	
 
 
 

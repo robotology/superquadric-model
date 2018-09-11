@@ -80,6 +80,7 @@ protected:
     bool reset;
     bool save_points;
     bool merge_model;
+    bool debug;
 
     // Optimization parameters
     double tol, sum;
@@ -171,7 +172,7 @@ protected:
     * @return  a property with the estimated superquadric
     */
     /**********************************************************************/
-    yarp::os::Property get_superq();
+    yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> &p);
      //yarp::os::Property get_superq(const std::vector<yarp::sig::Vector> &blob);
 
     /** Get the point cloud for computing the superquadric
@@ -323,6 +324,10 @@ public:
 
     /**********************************************************************/
     bool set_single_superq(const std::string &s);
+
+    /**********************************************************************/
+    bool set_debug(const std::string &d);
+
 };
 
 #endif

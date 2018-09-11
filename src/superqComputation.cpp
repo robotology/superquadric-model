@@ -461,6 +461,8 @@ void SuperqComputation::setPar(const string &par_name, const string &value)
         ob_class=value;
     else if (par_name=="single_superq")
         single_superq=(value=="on");
+    else if (par_name=="debug")
+        debug=(value=="on");
 }
 
 /***********************************************************************/
@@ -516,10 +518,10 @@ void SuperqComputation::run()
 
             if (single_superq)
             {
-                if ((filter_points==true) && (points.size()>0))
-                {
-                    filter();
-                }
+                //if ((filter_points==true) && (points.size()>0))
+                //{
+                //    filter();
+                //}
                 if (points.size()>0)
                 {
                     yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
@@ -544,8 +546,6 @@ void SuperqComputation::run()
 
                 yInfo()<<">>>>>>>>>>>>>> Computation time of multiple superquadrics model: "<<t_in;
 
-                if (superq_tree->root!=NULL)
-                    superq_tree->printTree(superq_tree->root);
 
                 yDebug()<<"[SuperqComputation]: The superquadric has been computed "<<superq_computed;
 
@@ -555,7 +555,7 @@ void SuperqComputation::run()
             {
                 yError("[SuperqComputation]: Not found a suitable superquadric! ");
             }
-            else if (go_on==true && norm(x)>0.0 && (points.size()>0))
+            /*else if (go_on==true && norm(x)>0.0 && (points.size()>0))
             {
                 if (filter_superq)
                     filterSuperq();
@@ -565,7 +565,8 @@ void SuperqComputation::run()
             else
             {
                 x_filtered.resize(11,0.0);
-            }
+            }*/
+
 
             mutex.unlock();
         }
@@ -781,8 +782,43 @@ void SuperqComputation::filter()
 }
 
 /***********************************************************************/
-bool SuperqComputation::computeSuperq()
+Vector SuperqComputation::computeOneShot(const deque<Vector> &p)
 {
+    yDebug()<<"[SuperqComputation]: Clearning points "<<points.size();
+
+    points.clear();
+
+    for (int i=0; i<p.size(); i++)
+    {
+        points.push_back(p[i]);
+    }
+    yDebug()<<"New points "<<points.size();
+
+    yInfo()<<"[SuperqComputation]: Thread initing ... ";
+
+    if (filter_points==true)
+        setPointsFilterPar(filter_points_par, true);
+
+    if (filter_superq==true)
+        setSuperqFilterPar(filter_superq_par, true);
+
+    setIpoptPar(ipopt_par, true);
+
+    configFilterSuperq();
+    config3Dpoints();
+
+    bounds_automatic=true;
+    one_shot=false;
+
+    superq_computed=false;
+
+    yDebug()<<"[SuperqComputation]: Resize of x";
+    x.resize(11,0.00);
+    x_filtered.resize(11,0.0);
+    yDebug()<<"[SuperqComputation]: After resize of x";
+
+    count_file=0;
+
     Vector colors(3,0.0);
     colors[1]=255;
 
@@ -823,6 +859,119 @@ bool SuperqComputation::computeSuperq()
         x=superQ_nlp->get_result();
         yInfo("[SuperqComputation]: Solution of the optimization problem: %s", x.toString(3,3).c_str());
         yInfo("[SuperqComputation]: Execution time : %f", t_s);
+        return x;
+    }
+    else if(status==Ipopt::Maximum_CpuTime_Exceeded)
+    {
+        x=superQ_nlp->get_result();
+        yWarning("[SuperqComputation]: Solution after maximum time exceeded: %s", x.toString(3,3).c_str());
+        return x;
+    }
+    else
+    {
+        x.resize(11,0.0);
+        return x;
+    }
+}
+
+/***********************************************************************/
+void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
+{
+    yDebug()<<"[SuperqComputation]: Clearning points "<<points.size();
+
+    points.clear();
+
+    for (int i=0; i<p.size(); i++)
+    {
+        points.push_back(p[i]);
+    }
+    yDebug()<<"New points "<<points.size();
+
+    yInfo()<<"[SuperqComputation]: Thread initing ... ";
+
+    if (filter_points==true)
+        setPointsFilterPar(filter_points_par, true);
+
+    if (filter_superq==true)
+        setSuperqFilterPar(filter_superq_par, true);
+
+    setIpoptPar(ipopt_par, true);
+
+    configFilterSuperq();
+    config3Dpoints();
+
+    bounds_automatic=true;
+    one_shot=false;
+
+    superq_computed=false;
+
+    x.resize(11,0.00);
+    x_filtered.resize(11,0.0);
+
+    count_file=0;
+
+    double t0_in, t_in;
+    t0_in=Time::now();
+
+    iterativeModeling();
+
+    superq_tree->printTree(superq_tree->root);
+
+    if (merge_model)
+        go_on=superq_computed=mergeModeling(superq_tree->root);
+    else
+        go_on=superq_computed=true;
+
+    t_in=Time::now() - t0_in;
+
+    yInfo()<<"[SuperqComputation]: Computation time of multiple superquadrics model: "<<t_in;
+
+    yDebug()<<"[SuperqComputation]: The superquadric has been computed "<<superq_computed;
+
+}
+
+/***********************************************************************/
+bool SuperqComputation::computeSuperq()
+{
+    Vector colors(3,0.0);
+    colors[1]=255;
+
+    savePoints("/3Dpoints-"+tag_file, colors);
+
+    Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
+    app->Options()->SetNumericValue("tol",tol);
+    app->Options()->SetIntegerValue("acceptable_iter",acceptable_iter);
+    app->Options()->SetStringValue("mu_strategy",mu_strategy);
+    app->Options()->SetIntegerValue("max_iter",max_iter);
+    app->Options()->SetNumericValue("max_cpu_time",max_cpu_time);
+    app->Options()->SetStringValue("nlp_scaling_method",nlp_scaling_method);
+    app->Options()->SetStringValue("hessian_approximation","limited-memory");
+    app->Options()->SetIntegerValue("print_level",0);
+    app->Initialize();
+
+    Ipopt::SmartPtr<SuperQuadric_NLP> superQ_nlp= new SuperQuadric_NLP;
+
+    superQ_nlp->init();
+    superQ_nlp->configure(this->rf,bounds_automatic, ob_class);
+
+
+    superQ_nlp->setPoints(points, optimizer_points);
+
+    double t0_superq=Time::now();
+
+    yDebug()<<"[SuperqComputation]: Start IPOPT ";
+
+    Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(superQ_nlp));
+
+    yDebug()<<"[SuperqComputation]: Finish IPOPT ";
+
+    double t_s=Time::now()-t0_superq;
+
+    if (status==Ipopt::Solve_Succeeded)
+    {
+        x=superQ_nlp->get_result();
+        yInfo("[SuperqComputation]: Solution of the optimization problem: %s", x.toString(3,3).c_str());
+        yInfo("[SuperqComputation]: Execution time : %f", t_s);
         return true;
     }
     else if(status==Ipopt::Maximum_CpuTime_Exceeded)
@@ -836,9 +985,6 @@ bool SuperqComputation::computeSuperq()
         x.resize(11,0.0);
         return false;
     }
-    //}
-    //else
-    //    return false;
 }
 
 /***********************************************************************/
@@ -846,8 +992,6 @@ Vector SuperqComputation::computeMultipleSuperq(const deque<Vector> &points_spli
 {
     Vector colors(3,0.0);
     colors[1]=255;
-    
-    //savePoints("/3Dpoints-"+tag_file, colors);
 
     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
     app->Options()->SetNumericValue("tol",tol);
@@ -1043,7 +1187,8 @@ void SuperqComputation::computeNestedSuperq(node *newnode)
             //    h_tree=newnode->height;
             //}
 
-            yDebug()<<"H "<<h_tree;
+            if(debug)
+                yDebug()<<"H "<<h_tree;
         }
 
         computeNestedSuperq(newnode->left);
@@ -1057,11 +1202,11 @@ bool SuperqComputation::splitMore(node * node)
     double threshold=0.02;
     double f_value=evaluateLoss(node->superq, *node->point_cloud);
 
-    yDebug()<<"f value "<<f_value;
+    if (debug)
+        yDebug()<<"f value "<<f_value;
 
     if (abs(f_value) > threshold)
     {
-        yDebug()<<"SPLIT MORE";
         return true;
     }
     else
@@ -1191,8 +1336,11 @@ void SuperqComputation::splitPoints(bool merging, node *leaf)
                 points_splitted2.push_back(point);
         }
 
-        yDebug()<<"[SuperqComputation]: points_splitted 1 "<<points_splitted1.size();
-        yDebug()<<"[SuperqComputation]: points_splitted 2 "<<points_splitted2.size();
+        if (debug)
+        {
+            yDebug()<<"[SuperqComputation]: points_splitted 1 "<<points_splitted1.size();
+            yDebug()<<"[SuperqComputation]: points_splitted 2 "<<points_splitted2.size();
+        }
     }
 }
 
@@ -1276,8 +1424,11 @@ void SuperqComputation::superqUsingPlane(node *node, Vector &plane)
             points_splitted2.push_back(point);
     }
 
-    yDebug()<<"[SuperqComputation]: New points_splitted 1 "<<points_splitted1.size();
-    yDebug()<<"[SuperqComputation]: New points_splitted 2 "<<points_splitted2.size();
+    if (debug)
+    {
+        yDebug()<<"[SuperqComputation]: New points_splitted 1 "<<points_splitted1.size();
+        yDebug()<<"[SuperqComputation]: New points_splitted 2 "<<points_splitted2.size();
+    }
 
     superq1=computeMultipleSuperq(points_splitted1);
     superq2=computeMultipleSuperq(points_splitted2);
@@ -1380,8 +1531,12 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
 
     Vector dim_rot=relations*dim2;
 
-    //yDebug()<<"     Dim 1 "<<dim1.toString();
-    //yDebug()<<"     Dim 2 rot "<<dim_rot.toString();
+    if(debug)
+    {
+        yDebug()<<"     Dim 1 "<<dim1.toString();
+        yDebug()<<"     Dim 2 rot "<<dim_rot.toString();
+    }
+
 
     bool equal=false;
 
