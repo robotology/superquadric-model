@@ -320,6 +320,9 @@ public:
      /** In offline mode, read the point cloud from a txt file */
     /***********************************************************************/
     bool readPointCloud();
+
+    /**********************************************************************/
+    bool set_single_superq(const std::string &s);
 };
 
 #endif

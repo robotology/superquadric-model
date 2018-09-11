@@ -164,6 +164,9 @@ service superquadricModel_IDL
     bool set_object_class(1:string objclass)
 
 
+	bool set_single_superq(1:string single)
+
+
 
 }
 

@@ -96,6 +96,23 @@ bool SuperqModule::set_visualization(const string &e)
 }
 
 /**********************************************************************/
+bool SuperqModule::set_single_superq(const string &s)
+{
+    if ((s=="on") || (s=="off"))
+    {
+        LockGuard lg(mutex);
+
+        superqCom->setPar("single_superq", s);
+        //superqCom->setPar("object_class", "default");
+
+        return true;
+
+    }
+    else
+        return false;
+}
+
+/**********************************************************************/
 Property SuperqModule::get_superq()
 {
     // NB: Temporary fix for sync problems!
