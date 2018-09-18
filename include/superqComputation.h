@@ -302,6 +302,13 @@ public:
    /***********************************************************************/
    void computeOneShotMultiple(const std::deque<yarp::sig::Vector> &p);
 
+   /****************************************************************/
+   bool computeEdges(node *node, std::deque<yarp::sig::Vector> &edges, yarp::sig::Matrix &relations);
+
+   /****************************************************************/
+   bool edgesClose(node *node1, node *node2, yarp::sig::Matrix &relations);
+
+
 };
 
 #endif
