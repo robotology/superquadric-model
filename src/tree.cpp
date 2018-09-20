@@ -29,6 +29,7 @@ superqTree::superqTree()
     root->axis_z.resize(3,0.0);
     root->R;
     root->plane_important=false;
+    root->uncle_close=NULL;
 }
 
 /***********************************************************************/
@@ -58,6 +59,12 @@ void superqTree::destroy_tree(node *leaf)
         destroy_tree(leaf->right);
         delete leaf;
     }
+}
+
+/***********************************************************************/
+void superqTree::insert_uncle(node *leaf,  node *uncle)
+{
+    leaf->uncle_close=uncle;
 }
 
 /***********************************************************************/

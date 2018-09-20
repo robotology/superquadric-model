@@ -25,6 +25,7 @@ struct node
     yarp::sig::Vector axis_z;
     yarp::sig::Matrix R;
     bool plane_important;
+    node *uncle_close;
 
 };
 
@@ -82,6 +83,9 @@ public:
 
     /***********************************************************************/
     void insert(nodeContent &node_content1, nodeContent &node_content2, node *leaf);
+
+    /***********************************************************************/
+    void insert_uncle(node *leaf,  node *uncle);
 };
 
 #endif

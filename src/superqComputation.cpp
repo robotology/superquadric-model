@@ -1179,6 +1179,10 @@ void SuperqComputation::computeNestedSuperq(node *newnode)
 
             superq_tree->insert(node_c1, node_c2, newnode);
 
+            // Axis are computed here for all the tree, we don't need to that later (check)
+            //computeSuperqAxis(newnode->left);
+            //computeSuperqAxis(newnode->right);
+
             //bool left=splitMore(newnode->left);
             //bool right=splitMore(newnode->right);
 
@@ -1345,59 +1349,96 @@ void SuperqComputation::splitPoints(bool merging, node *leaf)
 }
 
 /****************************************************************/
-bool SuperqComputation::mergeModeling(node *node)
+bool SuperqComputation::mergeModeling(node *current_node)
 {
-    if (node->height < h_tree)
+    if (current_node->height < h_tree)
     {
         cout<<endl;
         yDebug()<<"LEFT ";
-        mergeModeling(node->left);
+        mergeModeling(current_node->left);
          cout<<endl;
         yDebug()<<"RIGHT ";
-        mergeModeling(node->right);
+        mergeModeling(current_node->right);
     }
 
-    if (node->height > 1)
+    if (current_node->height > 1)
     {
-        computeSuperqAxis(node->left);
-        computeSuperqAxis(node->right);
+        computeSuperqAxis(current_node->left);
+        computeSuperqAxis(current_node->right);
 
         Matrix relations(3,3);
 
         if (debug)
-            yDebug()<<"node->height "<<node->height;
+            yDebug()<<"node->height "<<current_node->height;
 
 
-        if (axisParallel(node->left, node->right, relations) && sectionEqual(node->left, node->right, relations)) // && edgesClose(node->left, node->right, relations))
+        if (axisParallel(current_node->left, current_node->right, relations) && sectionEqual(current_node->left, current_node->right, relations))
         {
             if (debug)
                 yDebug()<<"To be merged ";
-            node->left=NULL;
-            node->right=NULL;
+            current_node->left=NULL;
+            current_node->right=NULL;
         }
         else
         {
-            computeSuperqAxis(node->father->left);
-            computeSuperqAxis(node->father->right);
+            computeSuperqAxis(current_node->father->left);
+            computeSuperqAxis(current_node->father->right);
 
-            bool first_comparison=(axisParallel(node->left, (node==node->father->right)?node->father->left:node->father->right, relations));// &&
-                    //edgesClose(node->left, (node==node->father->right)?node->father->left:node->father->right, relations));
-            bool second_comparison=(axisParallel(node->left, (node==node->father->right)?node->father->left:node->father->right, relations));// &&
-                    //dgesClose(node->left, (node==node->father->right)?node->father->left:node->father->right, relations));
+            // Check which among newnode's children is close to newnode brother
 
-            if( first_comparison || second_comparison)
+            node *node_uncle=((current_node==current_node->father->right)?current_node->father->left:current_node->father->right);
+
+            computeSuperqAxis(node_uncle);
+
+            double distance_right = edgesClose(current_node->right, node_uncle);
+            double distance_left = edgesClose(current_node->left, node_uncle);
+
+            if (debug)
             {
-                yDebug()<<"plane important ";
-                node->plane_important=true;
+                yDebug()<<"distance right "<<distance_right;
+                yDebug()<<"distance left "<<distance_left;
             }
 
-            if ((node->left->plane_important==true) && (node->right->plane_important==true))
+            // Check if tolerance is needed
+            if(distance_right < distance_left)
+                current_node->right->uncle_close=node_uncle;
+            else
+                current_node->left->uncle_close=node_uncle;
+
+            // Instead of checking if all the nephews are parallel to the uncle, check only the close one
+
+            bool parallel_to_uncle;
+
+            if (current_node->left->uncle_close!=NULL)
+            {
+                parallel_to_uncle=(axisParallel(current_node->left, current_node->left->uncle_close, relations)
+                                   && sectionEqual(current_node->left, current_node->left->uncle_close, relations));
+                if (debug)
+                    yDebug()<<"Left is parallel and with same dimensions of its uncle";
+            }
+            else if (current_node->right->uncle_close!=NULL)
+            {
+                parallel_to_uncle=(axisParallel(current_node->right, current_node->right->uncle_close, relations)
+                                   && sectionEqual(current_node->right, current_node->right->uncle_close, relations));
+                if (debug)
+                    yDebug()<<"Right is parallel and with same dimensions of its uncle";
+            }
+
+
+
+            if(parallel_to_uncle)
+            {
+                yDebug()<<"plane important ";
+                current_node->plane_important=true;
+            }
+
+            if ((current_node->left->plane_important==true) && (current_node->right->plane_important==true))
             {
                 return true;
             }
-            else if ((node->left->plane_important==true) || (node->right->plane_important==true))
+            else if ((current_node->left->plane_important==true) || (current_node->right->plane_important==true))
             {
-                superqUsingPlane(node, node->left->plane_important?node->left->plane:node->right->plane);
+                superqUsingPlane(current_node, current_node->left->plane_important?current_node->left->plane:current_node->right->plane);
             }
         }
 
@@ -1405,18 +1446,18 @@ bool SuperqComputation::mergeModeling(node *node)
     else
     {
         if (debug)
-            yDebug()<<"node->height "<<node->height;
+            yDebug()<<"node->height "<<current_node->height;
 
 
-        if ((node->left->plane_important==true) && (node->right->plane_important==true))
+        if ((current_node->left->plane_important==true) && (current_node->right->plane_important==true))
         {
              yDebug()<<"plane important ";
             return true;
         }
-        else if ((node->left->plane_important==true) || (node->right->plane_important==true))
+        else if ((current_node->left->plane_important==true) || (current_node->right->plane_important==true))
         {
              yDebug()<<"plane important ";
-            superqUsingPlane(node, node->left->plane_important?node->left->plane:node->right->plane);
+            superqUsingPlane(current_node, current_node->left->plane_important?current_node->left->plane:current_node->right->plane);
         }
     }
 
@@ -1476,6 +1517,7 @@ void SuperqComputation::superqUsingPlane(node *node, Vector &plane)
 /****************************************************************/
 void SuperqComputation::computeSuperqAxis(node *node)
 {
+    yDebug()<<"superq "<<node->superq.toString();
     Matrix R=euler2dcm(node->superq.subVector(8,10));
     //node->R=R;
     node->axis_x = R.getCol(0);
@@ -1582,20 +1624,20 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
 
 
 /****************************************************************/
-bool SuperqComputation::edgesClose(node *node1, node *node2, Matrix &relations)
+double SuperqComputation::edgesClose(node *node1, node *node2)
 {
     yDebug()<<"Check distance";
     cout<<endl;
-    double threshold=0.03;
 
     deque<Vector> edges_1;
     deque<Vector> edges_2;
 
-    computeEdges(node1, edges_1, relations);
-    computeEdges(node2, edges_2, relations);
+
+    computeEdges(node1, edges_1);
+    computeEdges(node2, edges_2);
 
 
-    bool closeness=false;
+    double distance_min=1000.0;
 
     for (size_t i=0; i<edges_1.size(); i++)
     {
@@ -1606,51 +1648,45 @@ bool SuperqComputation::edgesClose(node *node1, node *node2, Matrix &relations)
            if (debug)
                yDebug()<<"distance between "<<i<< "and "<<j<<distance;
 
-           if (distance < threshold)
-               closeness=(closeness || true);
+
+
+           if (distance < distance_min)
+           {
+               distance_min=distance;
+               yDebug()<<"distance min"<<distance_min;
+            }
        }
 
     }
 
-    yDebug()<<"closeness "<<closeness;
-    return closeness;
+    return distance_min;
+
 }
 
 /****************************************************************/
-bool SuperqComputation::computeEdges(node *node, deque<Vector> &edges, Matrix &relations)
+bool SuperqComputation::computeEdges(node *node, deque<Vector> &edges)
 {
     edges.clear();
 
-    //if ((norm(relations.getRow(0)) > 0.0))
-    //{
-        Vector point(3,0.0);
+    Vector point(3,0.0);
 
-        point = node->superq.subVector(5,7) + node->superq[0] * node->axis_x.subVector(0,2);
-        edges.push_back(point);
+    point = node->superq.subVector(5,7) + node->superq[0] * node->axis_x.subVector(0,2);
+    edges.push_back(point);
 
-        point = node->superq.subVector(5,7) - node->superq[0] * node->axis_x.subVector(0,2);
-        edges.push_back(point);
-   // }
+    point = node->superq.subVector(5,7) - node->superq[0] * node->axis_x.subVector(0,2);
+    edges.push_back(point);
 
-    //else if ((norm(relations.getRow(1)) > 0.0))
-    //{
-        //Vector point(3,0.0);
-        point = node->superq.subVector(5,7) + node->superq[1] * node->axis_y.subVector(0,2);
-        edges.push_back(point);
+    point = node->superq.subVector(5,7) + node->superq[1] * node->axis_y.subVector(0,2);
+    edges.push_back(point);
 
-        point = node->superq.subVector(5,7) - node->superq[1] * node->axis_y.subVector(0,2);
-        edges.push_back(point);
-    //}
-   // else if ((norm(relations.getRow(2)) > 0.0))
-    //{
-        //Vector point(3,0.0);
+    point = node->superq.subVector(5,7) - node->superq[1] * node->axis_y.subVector(0,2);
+    edges.push_back(point);
 
-        point = node->superq.subVector(5,7) + node->superq[2] * node->axis_z.subVector(0,2);
-        edges.push_back(point);
+    point = node->superq.subVector(5,7) + node->superq[2] * node->axis_z.subVector(0,2);
+    edges.push_back(point);
 
-        point = node->superq.subVector(5,7) - node->superq[2] * node->axis_z.subVector(0,2);
-        edges.push_back(point);
-    //}
+    point = node->superq.subVector(5,7) - node->superq[2] * node->axis_z.subVector(0,2);
+    edges.push_back(point);
 
     if (debug)
     {
@@ -1658,6 +1694,8 @@ bool SuperqComputation::computeEdges(node *node, deque<Vector> &edges, Matrix &r
         for (size_t i=0; i< edges.size(); i++)
             yDebug()<<edges[i].toString();
     }
+
+    return true;
 
 
 }
