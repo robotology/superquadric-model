@@ -114,7 +114,9 @@ public:
     bool single_superq;
     bool superq_computed;
 
+    superqTree *superq_tree_new;
     superqTree *superq_tree;
+
 
     bool merge;
     bool debug;
@@ -267,13 +269,13 @@ public:
     void iterativeModeling();
 
     /***********************************************************************/
-    bool mergeModeling(node *node);
+    bool findImportantPlanes(node *node1);
 
     /****************************************************************/
-    void superqUsingPlane(node *node, yarp::sig::Vector &plane);
+    void superqUsingPlane(node *node1, std::deque<yarp::sig::Vector> *points_splitted, yarp::sig::Vector &plane, node *newnode);
 
     /****************************************************************/
-    void computeSuperqAxis(node *node);
+    void computeSuperqAxis(node *node1);
 
     /****************************************************************/
     bool axisParallel(node *node1, node *node2, yarp::sig::Matrix &relations);
@@ -288,7 +290,7 @@ public:
    void computeNestedSuperq(node *newnode);
 
    /***********************************************************************/
-   bool splitMore(node * node);
+   bool splitMore(node * node1);
 
    /****************************************************************/
    double evaluateLoss(yarp::sig::Vector &superq, std::deque<yarp::sig::Vector> &points_splitted);
@@ -303,10 +305,13 @@ public:
    void computeOneShotMultiple(const std::deque<yarp::sig::Vector> &p);
 
    /****************************************************************/
-   bool computeEdges(node *node, std::deque<yarp::sig::Vector> &edges);
+   bool computeEdges(node *node1, std::deque<yarp::sig::Vector> &edges);
 
    /****************************************************************/
    double edgesClose(node *node1, node *node2);
+
+   /***********************************************************************/
+   bool generateFinalTree(node *node1, node *newnode);
 
 
 

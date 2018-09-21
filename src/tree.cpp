@@ -28,8 +28,27 @@ superqTree::superqTree()
     root->axis_y.resize(3,0.0);
     root->axis_z.resize(3,0.0);
     root->R;
-    root->plane_important=false;
+    root->plane_important=true;
     root->uncle_close=NULL;
+}
+
+/***********************************************************************/
+void superqTree::reset()
+{
+    root= new node;
+    root->superq.resize(11,0.0);
+    root->plane.resize(4,0.0);
+    root->f_penalized=0;
+    root->left=NULL;
+    root->right=NULL;
+    root->height=1;
+    root->axis_x.resize(3,0.0);
+    root->axis_y.resize(3,0.0);
+    root->axis_z.resize(3,0.0);
+    root->R;
+    root->plane_important=true;
+    root->uncle_close=NULL;
+
 }
 
 /***********************************************************************/
@@ -70,15 +89,15 @@ void superqTree::insert_uncle(node *leaf,  node *uncle)
 /***********************************************************************/
 void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2,  node *leaf)
 {
-    double f_v1=node_content1.f_value;
-    double f_v2=node_content2.f_value;
+    //double f_v1=node_content1.f_value;
+    //double f_v2=node_content2.f_value;
 
-    if (f_v1 < f_v2)
-    {
+    //if (f_v1 < f_v2)
+    //{
         if (leaf->right==NULL)
             leaf->right=new node;
 
-        leaf->right->f_value=f_v1;
+        //leaf->right->f_value=f_v1;
         leaf->right->superq=node_content1.superq;
         leaf->right->plane=node_content1.plane;
         leaf->right->point_cloud=node_content1.point_cloud;
@@ -86,13 +105,13 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
         leaf->right->right=NULL;
         leaf->right->father=leaf;
         leaf->right->height=node_content1.height;
-        leaf->right->plane_important=false;
+        leaf->right->plane_important=true;
 
         if (leaf->left==NULL)
             leaf->left=new node;
 
 
-        leaf->left->f_value=f_v2;
+        //leaf->left->f_value=f_v2;
         leaf->left->superq=node_content2.superq;
         leaf->left->plane=node_content2.plane;
         leaf->left->point_cloud=node_content2.point_cloud;
@@ -100,11 +119,11 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
         leaf->left->right=NULL;
         leaf->left->father=leaf;
         leaf->left->height=node_content1.height;
-        leaf->left->plane_important=false;
+        leaf->left->plane_important=true;
 
 
-        yDebug()<<"First case";
-    }
+       // yDebug()<<"First case";
+   /* }
     else
     {
         if (leaf->left==NULL)
@@ -118,7 +137,7 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
         leaf->left->right=NULL;
         leaf->left->father=leaf;
         leaf->left->height=node_content1.height;
-        leaf->left->plane_important=false;
+        leaf->left->plane_important=true;
 
 
         if (leaf->right==NULL)
@@ -132,8 +151,8 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
         leaf->right->right=NULL;
         leaf->right->father=leaf;
         leaf->right->height=node_content1.height;
-        leaf->right->plane_important=false;
-    }
+        leaf->right->plane_important=true;
+    }*/
 }
 
 /***********************************************************************/

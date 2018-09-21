@@ -569,7 +569,9 @@ bool SuperqModule::updateModule()
             {
                 t_mult=Time::now();
                 superqCom->iterativeModeling();
-                superqCom->mergeModeling(superq_tree->root);
+                superq_tree_new= new superqTree();
+                superqCom->generateFinalTree(superq_tree->root, superq_tree_new->root);
+                superq_tree->root=superq_tree_new->root;
                 t_mult=Time::now()-t_mult;
                 superq_tree->printTree(superq_tree->root);
                 yInfo()<<"             Execution Time           :"<<t_mult;

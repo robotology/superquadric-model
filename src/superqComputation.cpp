@@ -518,10 +518,6 @@ void SuperqComputation::run()
 
             if (single_superq)
             {
-                //if ((filter_points==true) && (points.size()>0))
-                //{
-                //    filter();
-                //}
                 if (points.size()>0)
                 {
                     yInfo()<<"[SuperqComputation]: number of points acquired:"<< points.size();
@@ -535,10 +531,17 @@ void SuperqComputation::run()
 
                 iterativeModeling();
 
-                superq_tree->printTree(superq_tree->root);
+                if (debug)
+                    superq_tree->printTree(superq_tree->root);
 
                 if (merge_model)
-                    go_on=superq_computed=mergeModeling(superq_tree->root);
+                {
+                    go_on=superq_computed=findImportantPlanes(superq_tree->root);
+                    superq_tree_new= new superqTree();
+
+                    go_on=superq_computed=generateFinalTree(superq_tree->root, superq_tree_new->root);
+                    superq_tree->root=superq_tree_new->root;
+                }
                 else
                     go_on=superq_computed=true;
 
@@ -555,18 +558,6 @@ void SuperqComputation::run()
             {
                 yError("[SuperqComputation]: Not found a suitable superquadric! ");
             }
-            /*else if (go_on==true && norm(x)>0.0 && (points.size()>0))
-            {
-                if (filter_superq)
-                    filterSuperq();
-                else
-                    x_filtered=x;
-            }
-            else
-            {
-                x_filtered.resize(11,0.0);
-            }*/
-
 
             mutex.unlock();
         }
@@ -840,8 +831,6 @@ Vector SuperqComputation::computeOneShot(const deque<Vector> &p)
     superQ_nlp->init();
     superQ_nlp->configure(this->rf,bounds_automatic, ob_class);
 
-    //if (points.size()>0)
-    //{
     superQ_nlp->setPoints(points, optimizer_points);
 
     double t0_superq=Time::now();
@@ -913,12 +902,23 @@ void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
     double t0_in, t_in;
     t0_in=Time::now();
 
+    superq_tree->reset();
+
     iterativeModeling();
 
-    superq_tree->printTree(superq_tree->root);
+    if (debug)
+        superq_tree->printTree(superq_tree->root);
 
     if (merge_model)
-        go_on=superq_computed=mergeModeling(superq_tree->root);
+    {
+        go_on=superq_computed=findImportantPlanes(superq_tree->root);
+
+        superq_tree_new= new superqTree();
+
+        go_on=superq_computed=generateFinalTree(superq_tree->root, superq_tree_new->root);
+
+        superq_tree->root=superq_tree_new->root;
+    }
     else
         go_on=superq_computed=true;
 
@@ -1178,21 +1178,6 @@ void SuperqComputation::computeNestedSuperq(node *newnode)
             node_c2.height=newnode->height + 1;
 
             superq_tree->insert(node_c1, node_c2, newnode);
-
-            // Axis are computed here for all the tree, we don't need to that later (check)
-            //computeSuperqAxis(newnode->left);
-            //computeSuperqAxis(newnode->right);
-
-            //bool left=splitMore(newnode->left);
-            //bool right=splitMore(newnode->right);
-
-            //if (left==false && right==false)
-            //{
-            //    h_tree=newnode->height;
-            //}
-
-            if(debug)
-                yDebug()<<"H "<<h_tree;
         }
 
         computeNestedSuperq(newnode->left);
@@ -1201,10 +1186,10 @@ void SuperqComputation::computeNestedSuperq(node *newnode)
 }
 
 /***********************************************************************/
-bool SuperqComputation::splitMore(node * node)
+bool SuperqComputation::splitMore(node * node1)
 {
     double threshold=0.02;
-    double f_value=evaluateLoss(node->superq, *node->point_cloud);
+    double f_value=evaluateLoss(node1->superq, *node1->point_cloud);
 
     if (debug)
         yDebug()<<"f value "<<f_value;
@@ -1349,19 +1334,22 @@ void SuperqComputation::splitPoints(bool merging, node *leaf)
 }
 
 /****************************************************************/
-bool SuperqComputation::mergeModeling(node *current_node)
+bool SuperqComputation::findImportantPlanes(node *current_node)
 {
     if (current_node->height < h_tree)
     {
         cout<<endl;
-        yDebug()<<"LEFT ";
-        mergeModeling(current_node->left);
+        yDebug()<<"|| Find important plane LEFT ";
+        if (current_node->left !=NULL)
+            findImportantPlanes(current_node->left);
          cout<<endl;
-        yDebug()<<"RIGHT ";
-        mergeModeling(current_node->right);
+        yDebug()<<"|| Find important plane RIGHT ";
+        if (current_node->right !=NULL)
+            findImportantPlanes(current_node->right);
     }
 
-    if (current_node->height > 1)
+    // if nothing is changed plane important for root is always true
+    if (current_node->height > 1 && current_node->plane_important==true)
     {
         computeSuperqAxis(current_node->left);
         computeSuperqAxis(current_node->right);
@@ -1374,98 +1362,210 @@ bool SuperqComputation::mergeModeling(node *current_node)
 
         if (axisParallel(current_node->left, current_node->right, relations) && sectionEqual(current_node->left, current_node->right, relations))
         {
-            if (debug)
-                yDebug()<<"To be merged ";
+            //if (debug)
+            yDebug()<<"|| To be merged, no plane important ";
+            cout<<endl;
+
             current_node->left=NULL;
             current_node->right=NULL;
+            current_node->plane_important=false;
         }
         else
         {
-            computeSuperqAxis(current_node->father->left);
-            computeSuperqAxis(current_node->father->right);
+            yDebug()<<"Plane current node importat";
+            cout<<endl;
+            current_node->plane_important=true;
+
+            //computeSuperqAxis(current_node->father->left);  // Actually you should compute it only for one (uncle)
+            //computeSuperqAxis(current_node->father->right);
 
             // Check which among newnode's children is close to newnode brother
 
             node *node_uncle=((current_node==current_node->father->right)?current_node->father->left:current_node->father->right);
 
-            computeSuperqAxis(node_uncle);
-
-            double distance_right = edgesClose(current_node->right, node_uncle);
-            double distance_left = edgesClose(current_node->left, node_uncle);
-
-            if (debug)
+            if (node_uncle!=NULL)
             {
-                yDebug()<<"distance right "<<distance_right;
-                yDebug()<<"distance left "<<distance_left;
-            }
+                computeSuperqAxis(node_uncle);
 
-            // Check if tolerance is needed
-            if(distance_right < distance_left)
-                current_node->right->uncle_close=node_uncle;
-            else
-                current_node->left->uncle_close=node_uncle;
 
-            // Instead of checking if all the nephews are parallel to the uncle, check only the close one
+                double distance_right = edgesClose(current_node->right, node_uncle);
+                double distance_left = edgesClose(current_node->left, node_uncle);
 
-            bool parallel_to_uncle;
-
-            if (current_node->left->uncle_close!=NULL)
-            {
-                parallel_to_uncle=(axisParallel(current_node->left, current_node->left->uncle_close, relations)
-                                   && sectionEqual(current_node->left, current_node->left->uncle_close, relations));
                 if (debug)
-                    yDebug()<<"Left is parallel and with same dimensions of its uncle";
-            }
-            else if (current_node->right->uncle_close!=NULL)
-            {
-                parallel_to_uncle=(axisParallel(current_node->right, current_node->right->uncle_close, relations)
-                                   && sectionEqual(current_node->right, current_node->right->uncle_close, relations));
-                if (debug)
-                    yDebug()<<"Right is parallel and with same dimensions of its uncle";
-            }
+                {
+                    yDebug()<<"distance right "<<distance_right;
+                    yDebug()<<"distance left "<<distance_left;
+                }
 
 
+                // Check if tolerance is needed
+                if(distance_right < distance_left)
+                    current_node->right->uncle_close=node_uncle;
+                else
+                    current_node->left->uncle_close=node_uncle;
 
-            if(parallel_to_uncle)
-            {
-                yDebug()<<"plane important ";
-                current_node->plane_important=true;
+
+                // Instead of checking if all the nephews are parallel to the uncle, check only the close one
+                bool parallel_to_uncle;
+
+                if (current_node->left->uncle_close!=NULL)
+                {
+                    parallel_to_uncle=(axisParallel(current_node->left, node_uncle, relations)
+                                       && sectionEqual(current_node->left, node_uncle, relations));
+                    if (parallel_to_uncle && debug)
+                        yDebug()<<"Left is parallel and with same dimensions of its uncle";
+
+                }
+                else if (current_node->right->uncle_close!=NULL)
+                {
+                    parallel_to_uncle=(axisParallel(current_node->right, node_uncle, relations)
+                                       && sectionEqual(current_node->right, node_uncle, relations));
+                    if (parallel_to_uncle && debug)
+                        yDebug()<<"Right is parallel and with same dimensions of its uncle";
+                }
+
+                yDebug()<<" || Parallel to uncle "<<parallel_to_uncle;
+
+                if(parallel_to_uncle==false)
+                {
+                    yDebug()<<"|| Plane  father important ";
+                    current_node->father->plane_important=true;
+                }
+                else
+                {
+                    current_node->father->plane_important=false;
+                }
             }
 
-            if ((current_node->left->plane_important==true) && (current_node->right->plane_important==true))
-            {
-                return true;
-            }
-            else if ((current_node->left->plane_important==true) || (current_node->right->plane_important==true))
-            {
-                superqUsingPlane(current_node, current_node->left->plane_important?current_node->left->plane:current_node->right->plane);
-            }
         }
 
     }
-    else
-    {
-        if (debug)
-            yDebug()<<"node->height "<<current_node->height;
 
-
-        if ((current_node->left->plane_important==true) && (current_node->right->plane_important==true))
-        {
-             yDebug()<<"plane important ";
-            return true;
-        }
-        else if ((current_node->left->plane_important==true) || (current_node->right->plane_important==true))
-        {
-             yDebug()<<"plane important ";
-            superqUsingPlane(current_node, current_node->left->plane_important?current_node->left->plane:current_node->right->plane);
-        }
-    }
+    if (current_node->height==1)
+        yDebug()<<"|| Plane of root is important:  "<<current_node->plane_important;
 
     return true;
 }
 
+/***********************************************************************/
+bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
+{
+    if (old_node!=NULL && old_node->height < h_tree)
+    {
+        cout<<endl;
+        yDebug()<<"node height in merging"<<old_node->height;
+
+        if (old_node->height > 1)
+        {
+            yDebug()<<"|| old_node->plane_important"<<old_node->plane_important;
+            yDebug()<<"|| old_node->plane_important"<<old_node->father->plane_important;
+            if (old_node->plane_important==true && old_node->father->plane_important==false)
+            {
+                yDebug()<<"|| Current and father's plane are important";
+                superqUsingPlane(old_node,old_node->father->point_cloud, old_node->plane, newnode);
+
+                generateFinalTree(old_node->left, newnode->left);
+                generateFinalTree(old_node->right, newnode->right);
+            }
+            else if (old_node->plane_important==true && old_node->father->plane_important==true)
+            {
+                yDebug()<<"|| Current plane is important";
+                superqUsingPlane(old_node,old_node->point_cloud, old_node->plane, newnode);
+                generateFinalTree(old_node->left, newnode->left);
+                generateFinalTree(old_node->right, newnode->right);
+            }
+            else if (old_node->left!=NULL && old_node->right!=NULL)
+            {
+                if(old_node->left->plane_important==true && old_node->right->plane_important==true)
+                {
+                    nodeContent node_c1;
+                    nodeContent node_c2;
+
+
+                    node_c1.superq=old_node->left->superq;
+                    node_c2.superq=old_node->right->superq;
+
+                    node_c1.point_cloud= new deque<Vector>;
+                    node_c2.point_cloud= new deque<Vector>;
+
+
+                    node_c1.point_cloud=old_node->left->point_cloud;
+                    node_c2.point_cloud=old_node->right->point_cloud;
+
+                    node_c1.height=newnode->height + 1;
+                    node_c2.height=newnode->height + 1;
+
+                    // aCTUALLY THEY ARE NOT NEEDED
+                    node_c1.plane_important=old_node->left->plane_important;
+                    node_c2.plane_important=old_node->right->plane_important;
+
+                    superq_tree_new->insert(node_c1, node_c2, newnode);
+
+                    generateFinalTree(old_node->left, newnode->left);
+                    generateFinalTree(old_node->right, newnode->right);
+                }
+                else
+                {
+                    if (old_node->left->plane_important==true)
+                        generateFinalTree(old_node->left, newnode);
+                    else if (old_node->right->plane_important==true)
+                        generateFinalTree(old_node->right, newnode);
+                }
+            }
+
+        }
+        else
+        {
+            if (old_node->plane_important==true)
+            {
+                superqUsingPlane(old_node, old_node->point_cloud, old_node->plane, newnode);
+                generateFinalTree(old_node->left, newnode->left);
+                generateFinalTree(old_node->right, newnode->right);
+            }
+            else if (old_node->left->plane_important==true && old_node->right->plane_important==true)
+            {
+                nodeContent node_c1;
+                nodeContent node_c2;
+
+
+                node_c1.superq=old_node->left->superq;
+                node_c2.superq=old_node->right->superq;
+
+                node_c1.point_cloud= new deque<Vector>;
+                node_c2.point_cloud= new deque<Vector>;
+
+                node_c1.point_cloud=old_node->left->point_cloud;
+                node_c2.point_cloud=old_node->right->point_cloud;
+
+                node_c1.height=newnode->height + 1;
+                node_c2.height=newnode->height + 1;
+
+                // aCTUALLY THEY ARE NOT NEEDED
+                node_c1.plane_important=old_node->left->plane_important;
+                node_c2.plane_important=old_node->right->plane_important;
+
+                superq_tree_new->insert(node_c1, node_c2, newnode);
+
+                generateFinalTree(old_node->left, newnode->left);
+                generateFinalTree(old_node->right, newnode->right);
+            }
+            else
+            {
+                if (old_node->left->plane_important==true)
+                    generateFinalTree(old_node->left, newnode);
+                else if (old_node->right->plane_important==true)
+                    generateFinalTree(old_node->right, newnode);
+            }
+
+        }
+    }
+
+    return true;
+
+}
+
 /****************************************************************/
-void SuperqComputation::superqUsingPlane(node *node, Vector &plane)
+void SuperqComputation::superqUsingPlane(node *old_node, deque<Vector> *points, Vector &plane, node *newnode)
 {
     // Let's see if we need to save the new plane in father
     //leaf->plane=plane;
@@ -1475,7 +1575,7 @@ void SuperqComputation::superqUsingPlane(node *node, Vector &plane)
 
     Vector superq1, superq2;
 
-    deque<Vector> points_splitted=*node->point_cloud;
+    deque<Vector> points_splitted=*points;
 
     for (size_t j=0; j<points_splitted.size(); j++)
     {
@@ -1506,23 +1606,25 @@ void SuperqComputation::superqUsingPlane(node *node, Vector &plane)
     *node_c1.point_cloud=points_splitted1;
     *node_c2.point_cloud=points_splitted2;
 
-    node_c1.height=node->height + 1;
-    node_c2.height=node->height + 1;
-    node_c1.plane_important=node->left->plane_important;
-    node_c2.plane_important=node->right->plane_important;
+    node_c1.height=newnode->height + 1;
+    node_c2.height=newnode->height + 1;
 
-    superq_tree->insert(node_c1, node_c2, node);
+    // aCTUALLY THEY ARE NOT NEEDED
+    //node_c1.plane_important=old_node->left->plane_important;
+    //node_c2.plane_important=old_node->right->plane_important;
+
+    superq_tree_new->insert(node_c1, node_c2, newnode);
+
 }
 
 /****************************************************************/
 void SuperqComputation::computeSuperqAxis(node *node)
 {
-    yDebug()<<"superq "<<node->superq.toString();
     Matrix R=euler2dcm(node->superq.subVector(8,10));
     //node->R=R;
-    node->axis_x = R.getCol(0);
-    node->axis_y = R.getCol(1);
-    node->axis_z = R.getCol(2);
+    node->axis_x = R.getCol(0).subVector(0,2);
+    node->axis_y = R.getCol(1).subVector(0,2);
+    node->axis_z = R.getCol(2).subVector(0,2);
 
     //yDebug()<<"              Axis "<<R.toString();
 }
@@ -1531,57 +1633,48 @@ void SuperqComputation::computeSuperqAxis(node *node)
 bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations)
 {
 
-    double threshold=0.2;
-    if (abs(dot(node1->axis_x, node2->axis_x)) < threshold)
+    double threshold=0.8;
+
+    if (abs(dot(node1->axis_x, node2->axis_x)) > threshold)
     {
-       // yDebug()<<"Cosines "<<dot(node1->axis_x, node2->axis_x);
         relations(0,0) = 1;
     }
-    else if  (abs(dot(node1->axis_x, node2->axis_y)) < threshold)
+    else if  (abs(dot(node1->axis_x, node2->axis_y)) > threshold)
     {
-        //yDebug()<<"Cosines "<<dot(node1->axis_x, node2->axis_y);
         relations(0,1) = 1;
     }
-    else if  (abs(dot(node1->axis_x, node2->axis_z)) < threshold)
+    else if  (abs(dot(node1->axis_x, node2->axis_z)) > threshold)
     {
         relations(0,2) = 1;
-        //yDebug()<<"Cosines "<<dot(node1->axis_x, node2->axis_z);
     }
-    else if (abs(dot(node1->axis_y, node2->axis_x)) < threshold)
+    else if (abs(dot(node1->axis_y, node2->axis_x)) > threshold)
     {
         relations(1,0) = 1;
-        //yDebug()<<"Cosines "<<dot(node1->axis_y, node2->axis_x);
     }
-    else if  (abs(dot(node1->axis_y, node2->axis_y)) < threshold)
+    else if  (abs(dot(node1->axis_y, node2->axis_y)) > threshold)
     {
         relations(1,1) = 1;
-        //yDebug()<<"Cosines "<<dot(node1->axis_y, node2->axis_y);
     }
-    else if  (abs(dot(node1->axis_y, node2->axis_z))< threshold)
+    else if  (abs(dot(node1->axis_y, node2->axis_z))> threshold)
     {
         relations(1,2) = 1;
-        //yDebug()<<"Cosines "<<dot(node1->axis_y, node2->axis_z);
     }
-    else if (abs(dot(node1->axis_z, node2->axis_x)) < threshold)
+    else if (abs(dot(node1->axis_z, node2->axis_x)) > threshold)
     {
         relations(2,0) = 1;
-        //yDebug()<<"Cosines "<<dot(node1->axis_z, node2->axis_x);
     }
-    else if  (abs(dot(node1->axis_z, node2->axis_y)) < threshold)
+    else if  (abs(dot(node1->axis_z, node2->axis_y)) > threshold)
     {
         relations(2,1) = 1;
-        //yDebug()<<"Cosines "<<dot(node1->axis_z, node2->axis_y);
     }
-    else if  (abs(dot(node1->axis_z, node2->axis_z)) < threshold)
+    else if  (abs(dot(node1->axis_z, node2->axis_z)) > threshold)
     {
         relations(2,2) = 1;
-        //yDebug()<<"Cosines "<<dot(node1->axis_z, node2->axis_z);
     }
 
     if (debug)
         yDebug()<<"rel "<<relations.toString();
 
-    //yDebug()<<"(norm(relations, 0)"<<norm(relations.getRow(0));
 
     if ((norm(relations.getRow(0)) > 0.0) || (norm(relations.getRow(1)) > 0.0) || (norm(relations.getRow(2)) > 0.0))
         return true;
@@ -1592,7 +1685,7 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
 /****************************************************************/
 bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations)
 {
-    double threshold=0.025;
+    double threshold=0.02;
     Vector dim1=node1->superq.subVector(0,2);
     Vector dim2=node2->superq.subVector(0,2);
 
@@ -1626,16 +1719,11 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
 /****************************************************************/
 double SuperqComputation::edgesClose(node *node1, node *node2)
 {
-    yDebug()<<"Check distance";
-    cout<<endl;
-
     deque<Vector> edges_1;
     deque<Vector> edges_2;
 
-
     computeEdges(node1, edges_1);
     computeEdges(node2, edges_2);
-
 
     double distance_min=1000.0;
 
@@ -1645,15 +1733,9 @@ double SuperqComputation::edgesClose(node *node1, node *node2)
        {
            double distance=norm(edges_1[i]-edges_2[j]);
 
-           if (debug)
-               yDebug()<<"distance between "<<i<< "and "<<j<<distance;
-
-
-
            if (distance < distance_min)
            {
                distance_min=distance;
-               yDebug()<<"distance min"<<distance_min;
             }
        }
 
