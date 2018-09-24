@@ -17,8 +17,6 @@ struct node
     node *left;
     node *right;
     node *father;
-    double f_penalized;
-    double f_value;
     int height;
     yarp::sig::Vector axis_x;
     yarp::sig::Vector axis_y;
@@ -34,7 +32,6 @@ struct nodeContent
     std::deque<yarp::sig::Vector> *point_cloud;
     yarp::sig::Vector superq;
     yarp::sig::Vector plane;
-    double f_value;
     int height;
     bool plane_important;
 };
@@ -44,9 +41,6 @@ class superqTree
 {
     /***********************************************************************/
     void destroy_tree(node *leaf);
-
-    /***********************************************************************/
-    node *search(double f_value, node *leaf);
 
 public:
 
@@ -62,9 +56,6 @@ public:
 
     /***********************************************************************/
     ~superqTree();
-
-    /***********************************************************************/
-    node *search(double f_value);
 
     /***********************************************************************/
     void destroy_tree();

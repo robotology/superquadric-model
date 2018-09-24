@@ -284,19 +284,10 @@ public:
     bool sectionEqual(node *node1, node *node2, yarp::sig::Matrix &relations);
 
     /***********************************************************************/
-    void splitPoints(bool merging, node *leaf);
+    void splitPoints(node *leaf);
 
    /***********************************************************************/
    void computeNestedSuperq(node *newnode);
-
-   /***********************************************************************/
-   bool splitMore(node * node1);
-
-   /****************************************************************/
-   double evaluateLoss(yarp::sig::Vector &superq, std::deque<yarp::sig::Vector> &points_splitted);
-
-   /****************************************************************/
-   double f(yarp::sig::Vector &x, yarp::sig::Vector &point_cloud);
 
    /***********************************************************************/
    yarp::sig::Vector computeOneShot(const std::deque<yarp::sig::Vector> &p);

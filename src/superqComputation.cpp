@@ -536,7 +536,7 @@ void SuperqComputation::run()
 
                 if (merge_model)
                 {
-                    double t0_in, t_merge;
+                    double t_merge;
                     t_merge=Time::now();
                     go_on=superq_computed=findImportantPlanes(superq_tree->root);
                     superq_tree_new= new superqTree();
@@ -546,7 +546,7 @@ void SuperqComputation::run()
 
                     t_merge=Time::now() - t_merge;
 
-                    yInfo()<<">>>>>>>>>>>>>> Computation time for merging model: "<<t_in;
+                    yInfo()<<">>>>>>>>>>>>>> Computation time for merging model: "<<t_merge;
                 }
                 else
                     go_on=superq_computed=true;
@@ -872,15 +872,12 @@ Vector SuperqComputation::computeOneShot(const deque<Vector> &p)
 /***********************************************************************/
 void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
 {
-    yDebug()<<"[SuperqComputation]: Clearning points "<<points.size();
-
     points.clear();
 
     for (int i=0; i<p.size(); i++)
     {
         points.push_back(p[i]);
     }
-    yDebug()<<"New points "<<points.size();
 
     yInfo()<<"[SuperqComputation]: Thread initing ... ";
 
@@ -917,7 +914,7 @@ void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
 
     if (merge_model)
     {
-        double  t_merge;
+        double t_merge;
         t_merge=Time::now();
 
         go_on=superq_computed=findImportantPlanes(superq_tree->root);
@@ -928,7 +925,8 @@ void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
 
         superq_tree->root=superq_tree_new->root;
 
-        superq_tree->printTree(superq_tree->root);
+        if (debug)
+            superq_tree->printTree(superq_tree->root);
 
         t_merge=Time::now() - t_merge;
 
@@ -941,7 +939,7 @@ void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
 
     yInfo()<<"[SuperqComputation]: Computation time of multiple superquadrics model: "<<t_in;
 
-    yDebug()<<"[SuperqComputation]: The superquadric has been computed "<<superq_computed;
+    yDebug()<<"[SuperqComputation]: The superquadric has been computed: "<<superq_computed;
 
 }
 
@@ -968,7 +966,6 @@ bool SuperqComputation::computeSuperq()
 
     superQ_nlp->init();
     superQ_nlp->configure(this->rf,bounds_automatic, ob_class);
-
 
     superQ_nlp->setPoints(points, optimizer_points);
 
@@ -1176,7 +1173,7 @@ void SuperqComputation::computeNestedSuperq(node *newnode)
 
         if ((newnode->height <= h_tree))
         {
-            splitPoints(false, newnode);
+            splitPoints(newnode);
 
             superq1=computeMultipleSuperq(points_splitted1);
             superq2=computeMultipleSuperq(points_splitted2);
@@ -1201,69 +1198,7 @@ void SuperqComputation::computeNestedSuperq(node *newnode)
 }
 
 /***********************************************************************/
-bool SuperqComputation::splitMore(node * node1)
-{
-    double threshold=0.02;
-    double f_value=evaluateLoss(node1->superq, *node1->point_cloud);
-
-    if (debug)
-        yDebug()<<"f value "<<f_value;
-
-    if (abs(f_value) > threshold)
-    {
-        return true;
-    }
-    else
-        return false;
-}
-
-/****************************************************************/
-double SuperqComputation::evaluateLoss(Vector &superq, deque<Vector> &points_splitted)
-{
-    double value=0.0;
-    int count_subsample=0.0;
-    int c;
-
-    double inside_penalty=1;
-    c=points_splitted.size()/optimizer_points;
-
-    if (c==0)
-        c=1;
-
-    for(size_t i=0;i<points_splitted.size();i+=c)
-    {
-        double tmp=pow(f(superq,points_splitted[i]),superq[3])-1;
-        double penalty=(tmp<0.0?inside_penalty:1.0);
-        value+=tmp*tmp*penalty;
-        count_subsample++;
-    }
-
-    value/=count_subsample;
-    return value;
-}
-
-/****************************************************************/
-double SuperqComputation::f(Vector &x, Vector &point_cloud)
-{
-    Vector euler(3,0.0);
-    euler[0]=x[8];
-    euler[1]=x[9];
-    euler[2]=x[10];
-    Matrix R=euler2dcm(euler);
-
-    // Because it's in the calculous
-    R = R.transposed();
-
-    double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
-    double num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[5]*R(1,0)-x[6]*R(1,1)-x[7]*R(1,2);
-    double num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[5]*R(2,0)-x[6]*R(2,1)-x[7]*R(2,2);
-    double tmp=pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
-
-    return pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]));
-}
-
-/***********************************************************************/
-void SuperqComputation::splitPoints(bool merging, node *leaf)
+void SuperqComputation::splitPoints(node *leaf)
 {
     deque<Vector> points_splitted;
 
@@ -1272,79 +1207,76 @@ void SuperqComputation::splitPoints(bool merging, node *leaf)
     points_splitted1.clear();
     points_splitted2.clear();
 
-    if (!merging)
+    Vector center(3,0.0);
+
+    for (size_t k=0; k<points_splitted.size();k++)
     {
-        Vector center(3,0.0);
+        Vector &point=points_splitted[k];
+        center[0]+=point[0];
+        center[1]+=point[1];
+        center[2]+=point[2];
+    }
 
-        for (size_t k=0; k<points_splitted.size();k++)
-        {
-            Vector &point=points_splitted[k];
-            center[0]+=point[0];
-            center[1]+=point[1];
-            center[2]+=point[2];
-        }
+    center[0]/=points_splitted.size();
+    center[1]/=points_splitted.size();
+    center[2]/=points_splitted.size();
 
-        center[0]/=points_splitted.size();
-        center[1]/=points_splitted.size();
-        center[2]/=points_splitted.size();
+    Matrix M=zeros(3,3);
+    Matrix u(3,3);
+    Matrix v(3,3);
 
-        Matrix M=zeros(3,3);
-        Matrix u(3,3);
-        Matrix v(3,3);
+    Vector s(3,0.0);
+    Vector n(3,0.0);
+    Vector o(3,0.0);
+    Vector a(3,0.0);
 
-        Vector s(3,0.0);
-        Vector n(3,0.0);
-        Vector o(3,0.0);
-        Vector a(3,0.0);
+    for (size_t i=0;i<points_splitted.size(); i++)
+    {
+        Vector &point=points_splitted[i];
+        M(0,0)= M(0,0) + (point[1]-center[1])*(point[1]-center[1]) + (point[2]-center[2])*(point[2]-center[2]);
+        M(0,1)= M(0,1) - (point[1]-center[1])*(point[0]-center[0]);
+        M(0,2)= M(0,2) - (point[2]-center[2])*(point[0]-center[0]);
+        M(1,1)= M(1,1) + (point[0]-center[0])*(point[0]-center[0]) + (point[2]-center[2])*(point[2]-center[2]);
+        M(2,2)= M(2,2) + (point[1]-center[1])*(point[1]-center[1]) + (point[0]-center[0])*(point[0]-center[0]);
+        M(1,2)= M(1,2) - (point[2]-center[2])*(point[1]-center[1]);
+    }
 
-        for (size_t i=0;i<points_splitted.size(); i++)
-        {
-            Vector &point=points_splitted[i];
-            M(0,0)= M(0,0) + (point[1]-center[1])*(point[1]-center[1]) + (point[2]-center[2])*(point[2]-center[2]);
-            M(0,1)= M(0,1) - (point[1]-center[1])*(point[0]-center[0]);
-            M(0,2)= M(0,2) - (point[2]-center[2])*(point[0]-center[0]);
-            M(1,1)= M(1,1) + (point[0]-center[0])*(point[0]-center[0]) + (point[2]-center[2])*(point[2]-center[2]);
-            M(2,2)= M(2,2) + (point[1]-center[1])*(point[1]-center[1]) + (point[0]-center[0])*(point[0]-center[0]);
-            M(1,2)= M(1,2) - (point[2]-center[2])*(point[1]-center[1]);
-        }
+    M(0,0)= M(0,0)/points_splitted.size();
+    M(0,1)= M(0,1)/points_splitted.size();
+    M(0,2)= M(0,2)/points_splitted.size();
+    M(1,1)= M(1,1)/points_splitted.size();
+    M(2,2)= M(2,2)/points_splitted.size();
+    M(1,2)= M(1,2)/points_splitted.size();
 
-        M(0,0)= M(0,0)/points_splitted.size();
-        M(0,1)= M(0,1)/points_splitted.size();
-        M(0,2)= M(0,2)/points_splitted.size();
-        M(1,1)= M(1,1)/points_splitted.size();
-        M(2,2)= M(2,2)/points_splitted.size();
-        M(1,2)= M(1,2)/points_splitted.size();
+    M(1,0)= M(0,1);
+    M(2,0)= M(0,2);
+    M(2,1)= M(1,2);
 
-        M(1,0)= M(0,1);
-        M(2,0)= M(0,2);
-        M(2,1)= M(1,2);
+    SVDJacobi(M,u,s,v);
+    n=u.getCol(2);
 
-        SVDJacobi(M,u,s,v);
-        n=u.getCol(2);
+    Vector plane(4,0.0);
 
-        Vector plane(4,0.0);
+    plane[0]=n[0];
+    plane[1]=n[1];
+    plane[2]=n[2];
+    plane[3]=(plane[0]*center[0]+plane[1]*center[1]+plane[2]*center[2]);
 
-        plane[0]=n[0];
-        plane[1]=n[1];
-        plane[2]=n[2];
-        plane[3]=(plane[0]*center[0]+plane[1]*center[1]+plane[2]*center[2]);
+    leaf->plane=plane;
 
-        leaf->plane=plane;
+    for (size_t j=0; j<points_splitted.size(); j++)
+    {
+        Vector point=points_splitted[j];
+        if (plane[0]*point[0]+plane[1]*point[1]+plane[2]*point[2]- plane[3] > 0)
+            points_splitted1.push_back(point);
+        else
+            points_splitted2.push_back(point);
+    }
 
-        for (size_t j=0; j<points_splitted.size(); j++)
-        {
-            Vector point=points_splitted[j];
-            if (plane[0]*point[0]+plane[1]*point[1]+plane[2]*point[2]- plane[3] > 0)
-                points_splitted1.push_back(point);
-            else
-                points_splitted2.push_back(point);
-        }
-
-        if (debug)
-        {
-            yDebug()<<"[SuperqComputation]: points_splitted 1 "<<points_splitted1.size();
-            yDebug()<<"[SuperqComputation]: points_splitted 2 "<<points_splitted2.size();
-        }
+    if (debug)
+    {
+        yDebug()<<"[SuperqComputation]: points_splitted 1 "<<points_splitted1.size();
+        yDebug()<<"[SuperqComputation]: points_splitted 2 "<<points_splitted2.size();
     }
 }
 
@@ -1391,17 +1323,11 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
             cout<<endl;
             current_node->plane_important=true;
 
-            //computeSuperqAxis(current_node->father->left);  // Actually you should compute it only for one (uncle)
-            //computeSuperqAxis(current_node->father->right);
-
-            // Check which among newnode's children is close to newnode brother
-
             node *node_uncle=((current_node==current_node->father->right)?current_node->father->left:current_node->father->right);
 
             if (node_uncle!=NULL)
             {
                 computeSuperqAxis(node_uncle);
-
 
                 double distance_right = edgesClose(current_node->right, node_uncle);
                 double distance_left = edgesClose(current_node->left, node_uncle);
@@ -1510,14 +1436,10 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
             }
             else if (old_node->plane_important==true && old_node->father->plane_important==true)
             {
-
-
                 yDebug()<<"|| Current and father's plane are important";
 
                 // Since here I would compute again the superqs using the point cloud and the plane of the node
                 // I can just copy the superq -> faster
-                //superqUsingPlane(old_node,old_node->point_cloud, old_node->plane, newnode);
-
                 copySuperqChildren(old_node, newnode);
 
                 generateFinalTree(old_node->left, newnode->left);
@@ -1548,13 +1470,10 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
             }
 
         }
-        //if (old_node->height==1)
         else
         {
             if (old_node->plane_important==true)
             {
-                //superqUsingPlane(old_node, old_node->point_cloud, old_node->plane, newnode);
-
                 copySuperqChildren(old_node, newnode);
                 generateFinalTree(old_node->left, newnode->left);
                 generateFinalTree(old_node->right, newnode->right);
@@ -1584,9 +1503,6 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
 /****************************************************************/
 void SuperqComputation::superqUsingPlane(node *old_node, deque<Vector> *points, Vector &plane, node *newnode)
 {
-    // Let's see if we need to save the new plane in father
-    //leaf->plane=plane;
-
     points_splitted1.clear();
     points_splitted2.clear();
 
@@ -1626,10 +1542,6 @@ void SuperqComputation::superqUsingPlane(node *old_node, deque<Vector> *points, 
     node_c1.height=newnode->height + 1;
     node_c2.height=newnode->height + 1;
 
-    // aCTUALLY THEY ARE NOT NEEDED
-    //node_c1.plane_important=old_node->left->plane_important;
-    //node_c2.plane_important=old_node->right->plane_important;
-
     superq_tree_new->insert(node_c1, node_c2, newnode);
 
 }
@@ -1649,7 +1561,9 @@ void SuperqComputation::computeSuperqAxis(node *node)
 /****************************************************************/
 bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations)
 {
-
+    // No noise
+    //double threshold=0.8;
+    // Noisy
     double threshold=0.7;
 
     if (abs(dot(node1->axis_x, node2->axis_x)) > threshold)
@@ -1728,10 +1642,8 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
         }
     }
 
-    //yDebug()<<" Dimensions equal "<<equal;
     return equal;
 } 
-
 
 /****************************************************************/
 double SuperqComputation::edgesClose(node *node1, node *node2)
@@ -1753,7 +1665,7 @@ double SuperqComputation::edgesClose(node *node1, node *node2)
            if (distance < distance_min)
            {
                distance_min=distance;
-            }
+           }
        }
 
     }

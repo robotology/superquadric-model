@@ -20,7 +20,6 @@ superqTree::superqTree()
     root= new node;
     root->superq.resize(11,0.0);
     root->plane.resize(4,0.0);
-    root->f_penalized=0;
     root->left=NULL;
     root->right=NULL;
     root->height=1;
@@ -38,7 +37,6 @@ void superqTree::reset()
     root= new node;
     root->superq.resize(11,0.0);
     root->plane.resize(4,0.0);
-    root->f_penalized=0;
     root->left=NULL;
     root->right=NULL;
     root->height=1;
@@ -89,92 +87,30 @@ void superqTree::insert_uncle(node *leaf,  node *uncle)
 /***********************************************************************/
 void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2,  node *leaf)
 {
-    //double f_v1=node_content1.f_value;
-    //double f_v2=node_content2.f_value;
+    if (leaf->right==NULL)
+        leaf->right=new node;
 
-    //if (f_v1 < f_v2)
-    //{
-        if (leaf->right==NULL)
-            leaf->right=new node;
+    leaf->right->superq=node_content1.superq;
+    leaf->right->plane=node_content1.plane;
+    leaf->right->point_cloud=node_content1.point_cloud;
+    leaf->right->left=NULL;
+    leaf->right->right=NULL;
+    leaf->right->father=leaf;
+    leaf->right->height=node_content1.height;
+    leaf->right->plane_important=true;
 
-        //leaf->right->f_value=f_v1;
-        leaf->right->superq=node_content1.superq;
-        leaf->right->plane=node_content1.plane;
-        leaf->right->point_cloud=node_content1.point_cloud;
-        leaf->right->left=NULL;
-        leaf->right->right=NULL;
-        leaf->right->father=leaf;
-        leaf->right->height=node_content1.height;
-        leaf->right->plane_important=true;
-
-        if (leaf->left==NULL)
-            leaf->left=new node;
+    if (leaf->left==NULL)
+        leaf->left=new node;
 
 
-        //leaf->left->f_value=f_v2;
-        leaf->left->superq=node_content2.superq;
-        leaf->left->plane=node_content2.plane;
-        leaf->left->point_cloud=node_content2.point_cloud;
-        leaf->left->left=NULL;
-        leaf->left->right=NULL;
-        leaf->left->father=leaf;
-        leaf->left->height=node_content1.height;
-        leaf->left->plane_important=true;
-
-
-       // yDebug()<<"First case";
-   /* }
-    else
-    {
-        if (leaf->left==NULL)
-            leaf->left=new node;
-
-        leaf->left->f_value=f_v1;
-        leaf->left->superq=node_content1.superq;
-        leaf->left->plane=node_content1.plane;
-        leaf->left->point_cloud=node_content1.point_cloud;
-        leaf->left->left=NULL;
-        leaf->left->right=NULL;
-        leaf->left->father=leaf;
-        leaf->left->height=node_content1.height;
-        leaf->left->plane_important=true;
-
-
-        if (leaf->right==NULL)
-            leaf->right=new node;
-
-        leaf->right->f_value=f_v2;
-        leaf->right->superq=node_content2.superq;
-        leaf->right->plane=node_content2.plane;
-        leaf->right->point_cloud=node_content2.point_cloud;
-        leaf->right->left=NULL;
-        leaf->right->right=NULL;
-        leaf->right->father=leaf;
-        leaf->right->height=node_content1.height;
-        leaf->right->plane_important=true;
-    }*/
-}
-
-/***********************************************************************/
-node *superqTree::search(double f_value, node *leaf)
-{
-    if(leaf!=NULL)
-    {
-        if(f_value==leaf->f_value)
-          return leaf;
-        if(f_value<leaf->f_value)
-          return search(f_value, leaf->left);
-        else
-          return search(f_value, leaf->right);
-    }
-    else
-        return NULL;
-}
-
-/***********************************************************************/
-node *superqTree::search(double f_value)
-{
-    return search(f_value, root);
+    leaf->left->superq=node_content2.superq;
+    leaf->left->plane=node_content2.plane;
+    leaf->left->point_cloud=node_content2.point_cloud;
+    leaf->left->left=NULL;
+    leaf->left->right=NULL;
+    leaf->left->father=leaf;
+    leaf->left->height=node_content1.height;
+    leaf->left->plane_important=true;
 }
 
 /***********************************************************************/
@@ -186,7 +122,6 @@ void superqTree::printNode(node *leaf)
         //yInfo()<<"point_cloud size:"<<leaf->point_cloud->size();
         yInfo()<<"superquadric    :"<<leaf->superq.toString();
         //yInfo()<<"plane           :"<<leaf->plane.toString();
-        //yInfo()<<"f value         :"<<leaf->f_value;
         //yDebug()<<"print right";
         yDebug()<<"print left";
         if (leaf->left!=NULL)
@@ -195,10 +130,6 @@ void superqTree::printNode(node *leaf)
         yDebug()<<"print right";
         if (leaf->right!=NULL)
             printNode(leaf->right);
-
-
-
-
     }
     else
         yDebug()<<"Finished";
@@ -225,9 +156,7 @@ void superqTree::saveNode(ofstream &fout, node *leaf)
         fout<<"Point cloud size "<<endl;
         fout<<" "<<leaf->point_cloud->size()<<endl;
         fout<<"Plane"<<endl;
-        fout<<" "<<leaf->plane.toString(3,3)<<endl;
-        fout<<"Finale value"<<endl;
-        fout<<" "<<leaf->f_value<<endl;
+        fout<<" "<<leaf->plane.toString(3,3)<<endl;  
         fout<<endl;
 
         if (leaf->right!=NULL)
