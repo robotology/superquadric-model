@@ -536,11 +536,17 @@ void SuperqComputation::run()
 
                 if (merge_model)
                 {
+                    double t0_in, t_merge;
+                    t_merge=Time::now();
                     go_on=superq_computed=findImportantPlanes(superq_tree->root);
                     superq_tree_new= new superqTree();
 
                     go_on=superq_computed=generateFinalTree(superq_tree->root, superq_tree_new->root);
                     superq_tree->root=superq_tree_new->root;
+
+                    t_merge=Time::now() - t_merge;
+
+                    yInfo()<<">>>>>>>>>>>>>> Computation time for merging model: "<<t_in;
                 }
                 else
                     go_on=superq_computed=true;
@@ -911,6 +917,9 @@ void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
 
     if (merge_model)
     {
+        double  t_merge;
+        t_merge=Time::now();
+
         go_on=superq_computed=findImportantPlanes(superq_tree->root);
 
         superq_tree_new= new superqTree();
@@ -918,6 +927,12 @@ void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
         go_on=superq_computed=generateFinalTree(superq_tree->root, superq_tree_new->root);
 
         superq_tree->root=superq_tree_new->root;
+
+        superq_tree->printTree(superq_tree->root);
+
+        t_merge=Time::now() - t_merge;
+
+        yInfo()<<">>>>>>>>>>>>>> Computation time for merging model: "<<t_merge;
     }
     else
         go_on=superq_computed=true;
@@ -1356,7 +1371,7 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
 
         Matrix relations(3,3);
 
-        if (debug)
+        //if (debug)
             yDebug()<<"node->height "<<current_node->height;
 
 
@@ -1448,9 +1463,35 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
 }
 
 /***********************************************************************/
+void SuperqComputation::copySuperqChildren(node *old_node, node *newnode)
+{
+    nodeContent node_c1;
+    nodeContent node_c2;
+
+    node_c1.superq=old_node->left->superq;
+    node_c2.superq=old_node->right->superq;
+
+    node_c1.point_cloud= new deque<Vector>;
+    node_c2.point_cloud= new deque<Vector>;
+
+
+    node_c1.point_cloud=old_node->left->point_cloud;
+    node_c2.point_cloud=old_node->right->point_cloud;
+
+    node_c1.height=newnode->height + 1;
+    node_c2.height=newnode->height + 1;
+
+    // aCTUALLY THEY ARE NOT NEEDED
+    node_c1.plane_important=old_node->left->plane_important;
+    node_c2.plane_important=old_node->right->plane_important;
+
+    superq_tree_new->insert(node_c2, node_c1, newnode);
+}
+
+/***********************************************************************/
 bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
 {
-    if (old_node!=NULL && old_node->height < h_tree)
+    if (old_node!=NULL && old_node->height <= h_tree)
     {
         cout<<endl;
         yDebug()<<"node height in merging"<<old_node->height;
@@ -1458,10 +1499,10 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
         if (old_node->height > 1)
         {
             yDebug()<<"|| old_node->plane_important"<<old_node->plane_important;
-            yDebug()<<"|| old_node->plane_important"<<old_node->father->plane_important;
+            yDebug()<<"|| old_node->plane_important father"<<old_node->father->plane_important;
             if (old_node->plane_important==true && old_node->father->plane_important==false)
             {
-                yDebug()<<"|| Current and father's plane are important";
+                yDebug()<<"|| Current plane is important";
                 superqUsingPlane(old_node,old_node->father->point_cloud, old_node->plane, newnode);
 
                 generateFinalTree(old_node->left, newnode->left);
@@ -1469,37 +1510,24 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
             }
             else if (old_node->plane_important==true && old_node->father->plane_important==true)
             {
-                yDebug()<<"|| Current plane is important";
-                superqUsingPlane(old_node,old_node->point_cloud, old_node->plane, newnode);
+
+
+                yDebug()<<"|| Current and father's plane are important";
+
+                // Since here I would compute again the superqs using the point cloud and the plane of the node
+                // I can just copy the superq -> faster
+                //superqUsingPlane(old_node,old_node->point_cloud, old_node->plane, newnode);
+
+                copySuperqChildren(old_node, newnode);
+
                 generateFinalTree(old_node->left, newnode->left);
                 generateFinalTree(old_node->right, newnode->right);
             }
             else if (old_node->left!=NULL && old_node->right!=NULL)
             {
-                if(old_node->left->plane_important==true && old_node->right->plane_important==true)
+                if (old_node->left->plane_important==true && old_node->right->plane_important==true)
                 {
-                    nodeContent node_c1;
-                    nodeContent node_c2;
-
-
-                    node_c1.superq=old_node->left->superq;
-                    node_c2.superq=old_node->right->superq;
-
-                    node_c1.point_cloud= new deque<Vector>;
-                    node_c2.point_cloud= new deque<Vector>;
-
-
-                    node_c1.point_cloud=old_node->left->point_cloud;
-                    node_c2.point_cloud=old_node->right->point_cloud;
-
-                    node_c1.height=newnode->height + 1;
-                    node_c2.height=newnode->height + 1;
-
-                    // aCTUALLY THEY ARE NOT NEEDED
-                    node_c1.plane_important=old_node->left->plane_important;
-                    node_c2.plane_important=old_node->right->plane_important;
-
-                    superq_tree_new->insert(node_c1, node_c2, newnode);
+                    copySuperqChildren(old_node, newnode);
 
                     generateFinalTree(old_node->left, newnode->left);
                     generateFinalTree(old_node->right, newnode->right);
@@ -1507,44 +1535,33 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
                 else
                 {
                     if (old_node->left->plane_important==true)
+                    {
+                        yDebug()<<"only left important";
                         generateFinalTree(old_node->left, newnode);
+                    }
                     else if (old_node->right->plane_important==true)
+                    {
+                        yDebug()<<"only right important";
                         generateFinalTree(old_node->right, newnode);
+                    }
                 }
             }
 
         }
+        //if (old_node->height==1)
         else
         {
             if (old_node->plane_important==true)
             {
-                superqUsingPlane(old_node, old_node->point_cloud, old_node->plane, newnode);
+                //superqUsingPlane(old_node, old_node->point_cloud, old_node->plane, newnode);
+
+                copySuperqChildren(old_node, newnode);
                 generateFinalTree(old_node->left, newnode->left);
                 generateFinalTree(old_node->right, newnode->right);
             }
             else if (old_node->left->plane_important==true && old_node->right->plane_important==true)
             {
-                nodeContent node_c1;
-                nodeContent node_c2;
-
-
-                node_c1.superq=old_node->left->superq;
-                node_c2.superq=old_node->right->superq;
-
-                node_c1.point_cloud= new deque<Vector>;
-                node_c2.point_cloud= new deque<Vector>;
-
-                node_c1.point_cloud=old_node->left->point_cloud;
-                node_c2.point_cloud=old_node->right->point_cloud;
-
-                node_c1.height=newnode->height + 1;
-                node_c2.height=newnode->height + 1;
-
-                // aCTUALLY THEY ARE NOT NEEDED
-                node_c1.plane_important=old_node->left->plane_important;
-                node_c2.plane_important=old_node->right->plane_important;
-
-                superq_tree_new->insert(node_c1, node_c2, newnode);
+                copySuperqChildren(old_node, newnode);
 
                 generateFinalTree(old_node->left, newnode->left);
                 generateFinalTree(old_node->right, newnode->right);

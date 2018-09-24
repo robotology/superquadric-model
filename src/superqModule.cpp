@@ -263,18 +263,21 @@ void SuperqModule::addSuperqInProp(node *leaf, int &count, Property &superq_pr)
             sup=leaf->superq;
 
             if (leaf->right!=NULL)
-            {     
+            {
+                yDebug()<<"Go on right ";
                 addSuperqInProp(leaf->right, count, superq_pr);
-                count++;
+                //count++;
             }
 
             if (leaf->left!=NULL)
             {
+                yDebug()<<"Go on left ";
                 addSuperqInProp(leaf->left, count, superq_pr);
             }
 
             if (leaf->right==NULL && leaf->left==NULL)
             {
+                count++;
                 ss<<count;
                 string count_str=ss.str();
                 Bottle bottle;
@@ -294,18 +297,22 @@ void SuperqModule::addSuperqInProp(node *leaf, int &count, Property &superq_pr)
                 Vector orient=dcm2axis(euler2dcm(sup.subVector(8,10)));
                 b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
                 superq_pr.put("orientation_"+count_str, bottle.get(3));
+
+
              }
         }
         else
         {
-            count++;
+            //count++;
             if (leaf->right!=NULL)
             {
+                yDebug()<<"Go on right (root) ";
                 addSuperqInProp(leaf->right, count, superq_pr);
-                count++;
+                //count++;
             }
             if (leaf->left!=NULL)
             {
+                yDebug()<<"Go on left (root) ";
                 addSuperqInProp(leaf->left, count, superq_pr);               
             }
         }

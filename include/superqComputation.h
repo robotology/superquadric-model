@@ -313,6 +313,9 @@ public:
    /***********************************************************************/
    bool generateFinalTree(node *node1, node *newnode);
 
+   /***********************************************************************/
+   void copySuperqChildren(node *old_node, node *newnode);
+
 
 
 };
