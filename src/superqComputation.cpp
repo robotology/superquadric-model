@@ -1650,7 +1650,7 @@ void SuperqComputation::computeSuperqAxis(node *node)
 bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations)
 {
 
-    double threshold=0.8;
+    double threshold=0.7;
 
     if (abs(dot(node1->axis_x, node2->axis_x)) > threshold)
     {
