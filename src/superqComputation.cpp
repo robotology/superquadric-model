@@ -1283,6 +1283,8 @@ void SuperqComputation::splitPoints(node *leaf)
 /****************************************************************/
 bool SuperqComputation::findImportantPlanes(node *current_node)
 {
+    Matrix relations(3,3);
+
     if (current_node->height < h_tree)
     {
         cout<<endl;
@@ -1296,16 +1298,13 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
     }
 
     // if nothing is changed plane important for root is always true
-    if (current_node->height > 1 && current_node->plane_important==true)
+    if (current_node->height > 1 && current_node->plane_important==false)
     {
         computeSuperqAxis(current_node->left);
         computeSuperqAxis(current_node->right);
 
-        Matrix relations(3,3);
-
         //if (debug)
             yDebug()<<"node->height "<<current_node->height;
-
 
         if (axisParallel(current_node->left, current_node->right, relations) && sectionEqual(current_node->left, current_node->right, relations))
         {
@@ -1313,9 +1312,13 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
             yDebug()<<"|| To be merged, no plane important ";
             cout<<endl;
 
-            current_node->left=NULL;
-            current_node->right=NULL;
             current_node->plane_important=false;
+
+            if (!superq_tree->searchPlaneImportant(current_node->left))
+                current_node->left=NULL;
+            if (!superq_tree->searchPlaneImportant(current_node->right))
+                current_node->right=NULL;
+
         }
         else
         {
@@ -1376,14 +1379,32 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
                 {
                     current_node->father->plane_important=false;
                 }
+
+                yDebug()<<__LINE__;
             }
+
+            yDebug()<<__LINE__;
 
         }
 
     }
 
     if (current_node->height==1)
+    {
+        computeSuperqAxis(current_node->left);
+        computeSuperqAxis(current_node->right);
+
+        if (!(axisParallel(current_node->left, current_node->right, relations) && sectionEqual(current_node->left, current_node->right, relations)))
+            current_node->plane_important=true;
+
+        if ((superq_tree->searchPlaneImportant(current_node->left)==false
+                && superq_tree->searchPlaneImportant(current_node->right)==false))
+            current_node->plane_important=true;
+
+        yDebug()<<__LINE__;
+
         yDebug()<<"|| Plane of root is important:  "<<current_node->plane_important;
+    }
 
     return true;
 }
@@ -1447,7 +1468,8 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
             }
             else if (old_node->left!=NULL && old_node->right!=NULL)
             {
-                if (old_node->left->plane_important==true && old_node->right->plane_important==true)
+                //if (old_node->left->plane_important==true && old_node->right->plane_important==true)
+                if (superq_tree->searchPlaneImportant(old_node->left)==true && superq_tree->searchPlaneImportant(old_node->right)==true)
                 {
                     copySuperqChildren(old_node, newnode);
 
@@ -1456,12 +1478,14 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
                 }
                 else
                 {
-                    if (old_node->left->plane_important==true)
+                    //if (old_node->left->plane_important==true)
+                    if (superq_tree->searchPlaneImportant(old_node->left))
                     {
                         yDebug()<<"only left important";
                         generateFinalTree(old_node->left, newnode);
                     }
-                    else if (old_node->right->plane_important==true)
+                    //else if (old_node->right->plane_important==true)
+                    else if (superq_tree->searchPlaneImportant(old_node->right))
                     {
                         yDebug()<<"only right important";
                         generateFinalTree(old_node->right, newnode);
@@ -1478,7 +1502,8 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
                 generateFinalTree(old_node->left, newnode->left);
                 generateFinalTree(old_node->right, newnode->right);
             }
-            else if (old_node->left->plane_important==true && old_node->right->plane_important==true)
+            //else if (old_node->left->plane_important==true && old_node->right->plane_important==true)
+            else if (superq_tree->searchPlaneImportant(old_node->left)==true && superq_tree->searchPlaneImportant(old_node->right)==true)
             {
                 copySuperqChildren(old_node, newnode);
 
@@ -1487,9 +1512,9 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
             }
             else
             {
-                if (old_node->left->plane_important==true)
+                if (superq_tree->searchPlaneImportant(old_node->left)==true)
                     generateFinalTree(old_node->left, newnode);
-                else if (old_node->right->plane_important==true)
+                else if (superq_tree->searchPlaneImportant(old_node->right)==true)
                     generateFinalTree(old_node->right, newnode);
             }
 
@@ -1611,8 +1636,8 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
         return true;
     else
         return false;
-}
 
+}
 /****************************************************************/
 bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations)
 {

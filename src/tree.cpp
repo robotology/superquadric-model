@@ -27,7 +27,7 @@ superqTree::superqTree()
     root->axis_y.resize(3,0.0);
     root->axis_z.resize(3,0.0);
     root->R;
-    root->plane_important=true;
+    root->plane_important=false;
     root->uncle_close=NULL;
 }
 
@@ -44,7 +44,7 @@ void superqTree::reset()
     root->axis_y.resize(3,0.0);
     root->axis_z.resize(3,0.0);
     root->R;
-    root->plane_important=true;
+    root->plane_important=false;
     root->uncle_close=NULL;
 
 }
@@ -97,7 +97,7 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
     leaf->right->right=NULL;
     leaf->right->father=leaf;
     leaf->right->height=node_content1.height;
-    leaf->right->plane_important=true;
+    leaf->right->plane_important=false;
 
     if (leaf->left==NULL)
         leaf->left=new node;
@@ -110,7 +110,25 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
     leaf->left->right=NULL;
     leaf->left->father=leaf;
     leaf->left->height=node_content1.height;
-    leaf->left->plane_important=true;
+    leaf->left->plane_important=false;
+}
+
+/***********************************************************************/
+bool superqTree::searchPlaneImportant(node *leaf)
+{
+    if (leaf!=NULL)
+    {
+        if (searchPlaneImportant(leaf->left))
+            return true;
+        if (searchPlaneImportant(leaf->right))
+            return true;
+
+        yDebug()<<"Searching plane true.. "<<leaf->plane_important;
+
+        return leaf->plane_important;
+    }
+
+
 }
 
 /***********************************************************************/
