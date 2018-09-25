@@ -1379,11 +1379,7 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
                 {
                     current_node->father->plane_important=false;
                 }
-
-                yDebug()<<__LINE__;
             }
-
-            yDebug()<<__LINE__;
 
         }
 
@@ -1400,6 +1396,10 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
         if ((superq_tree->searchPlaneImportant(current_node->left)==false
                 && superq_tree->searchPlaneImportant(current_node->right)==false))
             current_node->plane_important=true;
+
+        //if (current_node->left->plane_important==true
+          //      && current_node->right->plane_important==true)
+            //current_node->plane_important=true;
 
         yDebug()<<__LINE__;
 
@@ -1468,6 +1468,8 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
             }
             else if (old_node->left!=NULL && old_node->right!=NULL)
             {
+                yDebug()<<__LINE__;
+
                 //if (old_node->left->plane_important==true && old_node->right->plane_important==true)
                 if (superq_tree->searchPlaneImportant(old_node->left)==true && superq_tree->searchPlaneImportant(old_node->right)==true)
                 {
@@ -1513,9 +1515,15 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
             else
             {
                 if (superq_tree->searchPlaneImportant(old_node->left)==true)
+                {
+                    yDebug()<<"only left ";
                     generateFinalTree(old_node->left, newnode);
-                else if (superq_tree->searchPlaneImportant(old_node->right)==true)
+                }
+                if (superq_tree->searchPlaneImportant(old_node->right)==true)
+                {
+                    yDebug()<<"only right ";
                     generateFinalTree(old_node->right, newnode);
+                }
             }
 
         }
@@ -1589,7 +1597,7 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
     // No noise
     //double threshold=0.8;
     // Noisy
-    double threshold=0.7;
+    double threshold=0.9;
 
     if (abs(dot(node1->axis_x, node2->axis_x)) > threshold)
     {

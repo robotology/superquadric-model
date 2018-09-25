@@ -118,11 +118,11 @@ bool superqTree::searchPlaneImportant(node *leaf)
 {
     if (leaf!=NULL)
     {
-        if (searchPlaneImportant(leaf->left))
-            return true;
-        if (searchPlaneImportant(leaf->right))
-            return true;
+        searchPlaneImportant(leaf->left);
 
+        searchPlaneImportant(leaf->right);
+
+        yDebug()<<"height "<<leaf->height;
         yDebug()<<"Searching plane true.. "<<leaf->plane_important;
 
         return leaf->plane_important;
