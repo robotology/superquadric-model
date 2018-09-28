@@ -925,7 +925,7 @@ void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
 
         superq_tree->root=superq_tree_new->root;
 
-        if (debug)
+        //if (debug)
             superq_tree->printTree(superq_tree->root);
 
         t_merge=Time::now() - t_merge;
@@ -1314,10 +1314,16 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
 
             current_node->plane_important=false;
 
-            if (!superq_tree->searchPlaneImportant(current_node->left))
+            /*if (!superq_tree->searchPlaneImportant(current_node->left))
                 current_node->left=NULL;
             if (!superq_tree->searchPlaneImportant(current_node->right))
+                current_node->right=NULL;*/
+
+            if (!superq_tree->searchPlaneImportant(current_node->left) && !superq_tree->searchPlaneImportant(current_node->right))
+            {
+                current_node->left=NULL;
                 current_node->right=NULL;
+            }
 
         }
         else
@@ -1390,8 +1396,11 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
         computeSuperqAxis(current_node->left);
         computeSuperqAxis(current_node->right);
 
-        if (!(axisParallel(current_node->left, current_node->right, relations) && sectionEqual(current_node->left, current_node->right, relations)))
+        if (!(axisParallel(current_node->left, current_node->right, relations) && !sectionEqual(current_node->left, current_node->right, relations)))
+        {
+             yDebug()<<__LINE__;
             current_node->plane_important=true;
+        }
 
         if ((superq_tree->searchPlaneImportant(current_node->left)==false
                 && superq_tree->searchPlaneImportant(current_node->right)==false))
