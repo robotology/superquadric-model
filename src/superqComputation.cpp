@@ -1461,8 +1461,17 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
                 yDebug()<<"|| Current plane is important";
                 superqUsingPlane(old_node,old_node->father->point_cloud, old_node->plane, newnode);
 
-                generateFinalTree(old_node->left, newnode->left);
-                generateFinalTree(old_node->right, newnode->right);
+                //if (newnode->right->superq==old_node->right->superq || newnode->right->superq==old_node->left->superq)
+                //{
+                    generateFinalTree(old_node->left, newnode->left);
+                    generateFinalTree(old_node->right, newnode->right);
+                //}
+                //else if (newnode->left->superq==old_node->right->superq || newnode->left->superq==old_node->left->superq)
+                //{
+                 //   generateFinalTree(old_node->left, newnode->left);
+                 //   generateFinalTree(old_node->right, newnode->left);
+                //}
+
             }
             else if (old_node->plane_important==true && old_node->father->plane_important==true)
             {
@@ -1606,7 +1615,7 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
     // No noise
     //double threshold=0.8;
     // Noisy
-    double threshold=0.9;
+    double threshold=0.7;
 
     if (abs(dot(node1->axis_x, node2->axis_x)) > threshold)
     {
