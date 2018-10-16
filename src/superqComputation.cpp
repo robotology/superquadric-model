@@ -1667,7 +1667,7 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
 /****************************************************************/
 bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations)
 {
-    double threshold=0.02;
+    double threshold=0.03;
     Vector dim1=node1->superq.subVector(0,2);
     Vector dim2=node2->superq.subVector(0,2);
 
