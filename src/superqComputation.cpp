@@ -536,26 +536,23 @@ void SuperqComputation::run()
                 if (debug)
                     superq_tree->printTree(superq_tree->root);
 
+                double t_merge;
+                t_merge=Time::now();
+
+                createGraphFromTree();
+
                 if (merge_model)
                 {
-                    double t_merge;
-                    t_merge=Time::now();
-                    //go_on=superq_computed=findImportantPlanes(superq_tree->root);
-                    //superq_tree_new= new superqTree();
-
-                    //go_on=superq_computed=generateFinalTree(superq_tree->root, superq_tree_new->root);
-                    //superq_tree->root=superq_tree_new->root;
-
                     t_merge=Time::now() - t_merge;
 
-                    yInfo()<<">>>>>>>>>>>>>> Computation time for merging model: "<<t_merge;
+                    yInfo()<<"[SuperqComputation]: Computation time for merging model: "<<t_merge;
                 }
                 else
                     go_on=superq_computed=true;
 
                 t_in=Time::now() - t0_in;
 
-                yInfo()<<">>>>>>>>>>>>>> Computation time of multiple superquadrics model: "<<t_in;
+                yInfo()<<"[SuperqComputation]: Computation time of multiple superquadrics model: "<<t_in;
 
 
                 yDebug()<<"[SuperqComputation]: The superquadric has been computed "<<superq_computed;
@@ -914,27 +911,16 @@ void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
     if (debug)
         superq_tree->printTree(superq_tree->root);
 
+    double t_merge;
+    t_merge=Time::now();
+
+    createGraphFromTree();
+
     if (merge_model)
     {
-        double t_merge;
-        t_merge=Time::now();
-
-        createGraphFromTree();
-
-        //go_on=superq_computed=findImportantPlanes(superq_tree->root);
-
-        //superq_tree_new= new superqTree();
-
-       // go_on=superq_computed=generateFinalTree(superq_tree->root, superq_tree_new->root);
-
-        //superq_tree->root=superq_tree_new->root;
-
-        //if (debug)
-            superq_tree->printTree(superq_tree->root);
-
+        cutGraph();
         t_merge=Time::now() - t_merge;
-
-        yInfo()<<">>>>>>>>>>>>>> Computation time for merging model: "<<t_merge;
+        yInfo()<<"[SuperqComputation]:  Computation time for merging model: "<<t_merge;
     }
     else
         go_on=superq_computed=true;
@@ -1202,7 +1188,6 @@ void SuperqComputation::splitPointCloud(node *newnode)
     }
 }
 
-
 /***********************************************************************/
 void SuperqComputation::splitPoints(node *leaf)
 {
@@ -1374,7 +1359,6 @@ void SuperqComputation::createGraphFromTree()
 
                 v=next_edge;
 
-
                 cost+=min_weigth;
             }
             count ++;
@@ -1400,11 +1384,34 @@ void SuperqComputation::createGraphFromTree()
 
     }
 
-    yDebug()<<"Final selected matrix is no "<<min_i<<"with cost "<<min_cost;
+    yDebug()<<"Final selected matrix is no "<<min_i<<"with minimum cost "<<min_cost;
     adj_matrix=all_adj_matrs[min_i];
 
 }
 
+
+/****************************************************************/
+void SuperqComputation::cutGraph()
+{
+
+    for (size_t i=0; i<adj_matrix.rows(); i++)
+    {
+        for (size_t j=0; j<adj_matrix.cols(); j++)
+        {
+            if (adj_matrix(i,j)==1)
+            {
+                Matrix relations(3,3);
+                if (axisParallel(vertex_content[i], vertex_content[j], relations)==false || sectionEqual(vertex_content[i], vertex_content[j], relations)==false)
+                {
+                    yDebug()<<"To be separated!";
+                    adj_matrix(i,j)=0;
+                }
+
+            }
+        }
+    }
+
+}
 
 /**********************************************************************/
 void SuperqComputation::addSuperqInGraph(node *leaf)
@@ -1467,55 +1474,53 @@ void SuperqComputation::addSuperqInGraph(node *leaf)
 void SuperqComputation::computeSuperqAxis(int &l)
 {
     Matrix R=euler2dcm(vertex_content[l].superq.subVector(8,10));
-    //node->R=R;
+
     vertex_content[l].axis_x = R.getCol(0).subVector(0,2);
     vertex_content[l].axis_y = R.getCol(1).subVector(0,2);
     vertex_content[l].axis_z = R.getCol(2).subVector(0,2);
-
-    //yDebug()<<"              Axis "<<R.toString();
 }
 
 /****************************************************************/
-bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations)
+bool SuperqComputation::axisParallel(vertex_struct &v1, vertex_struct &v2, Matrix &relations)
 {
     // No noise
-    //double threshold=0.8;
-    // Noisy
     double threshold=0.7;
+    // Noisy
+    //double threshold=0.7;
 
-    if (abs(dot(node1->axis_x, node2->axis_x)) > threshold)
+    if (abs(dot(v1.axis_x, v2.axis_x)) > threshold)
     {
         relations(0,0) = 1;
     }
-    else if  (abs(dot(node1->axis_x, node2->axis_y)) > threshold)
+    else if  (abs(dot(v1.axis_x, v2.axis_y)) > threshold)
     {
         relations(0,1) = 1;
     }
-    else if  (abs(dot(node1->axis_x, node2->axis_z)) > threshold)
+    else if  (abs(dot(v1.axis_x, v2.axis_z)) > threshold)
     {
         relations(0,2) = 1;
     }
-    else if (abs(dot(node1->axis_y, node2->axis_x)) > threshold)
+    else if (abs(dot(v1.axis_y, v2.axis_x)) > threshold)
     {
         relations(1,0) = 1;
     }
-    else if  (abs(dot(node1->axis_y, node2->axis_y)) > threshold)
+    else if  (abs(dot(v1.axis_y, v2.axis_y)) > threshold)
     {
         relations(1,1) = 1;
     }
-    else if  (abs(dot(node1->axis_y, node2->axis_z))> threshold)
+    else if  (abs(dot(v1.axis_y, v2.axis_z))> threshold)
     {
         relations(1,2) = 1;
     }
-    else if (abs(dot(node1->axis_z, node2->axis_x)) > threshold)
+    else if (abs(dot(v1.axis_z, v2.axis_x)) > threshold)
     {
         relations(2,0) = 1;
     }
-    else if  (abs(dot(node1->axis_z, node2->axis_y)) > threshold)
+    else if  (abs(dot(v1.axis_z, v2.axis_y)) > threshold)
     {
         relations(2,1) = 1;
     }
-    else if  (abs(dot(node1->axis_z, node2->axis_z)) > threshold)
+    else if  (abs(dot(v1.axis_z, v2.axis_z)) > threshold)
     {
         relations(2,2) = 1;
     }
@@ -1531,11 +1536,11 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
 
 }
 /****************************************************************/
-bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations)
+bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matrix &relations)
 {
-    double threshold=0.03;
-    Vector dim1=node1->superq.subVector(0,2);
-    Vector dim2=node2->superq.subVector(0,2);
+    double threshold=0.02;
+    Vector dim1=v1.superq.subVector(0,2);
+    Vector dim2=v2.superq.subVector(0,2);
 
     Vector dim_rot=relations*dim2;
 

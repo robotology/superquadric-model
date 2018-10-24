@@ -283,10 +283,10 @@ public:
     void computeSuperqAxis(int &l);
 
     /****************************************************************/
-    bool axisParallel(node *node1, node *node2, yarp::sig::Matrix &relations);
+    bool axisParallel(vertex_struct &v1, vertex_struct &v2, yarp::sig::Matrix &relations);
 
     /****************************************************************/
-    bool sectionEqual(node *node1, node *node2, yarp::sig::Matrix &relations);
+    bool sectionEqual(vertex_struct &v1, vertex_struct &v2, yarp::sig::Matrix &relations);
 
     /***********************************************************************/
     void splitPoints(node *leaf);
@@ -311,6 +311,9 @@ public:
 
    /**********************************************************************/
    void addSuperqInGraph(node *leaf);
+
+   /****************************************************************/
+   void cutGraph();
 
 };
 
