@@ -22,6 +22,13 @@ struct Vector
    yarp.includefile="yarp/sig/Vector.h"
   )
 
+struct Matrix
+{
+} (
+   yarp.name = "yarp::sig::Matrix"
+   yarp.includefile="yarp/sig/Matrix.h"
+  )
+
 struct Bottle
 {
 } (
@@ -167,6 +174,8 @@ service superquadricModel_IDL
 	bool set_single_superq(1:string single)
 
 	bool set_debug(1:string single)
+
+	Matrix get_adjacency_matrix()
 
 
 	

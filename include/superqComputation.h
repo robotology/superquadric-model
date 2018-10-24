@@ -123,15 +123,10 @@ public:
 
 
     // Graph elements
-    std::vector<vertex_struct> vertex_content;
-    typedef boost::adjacency_list < boost::vecS, boost::vecS, boost::undirectedS,
-       boost::property<boost::vertex_distance_t, int>, boost::property < boost::edge_weight_t, int > > Graph;
-    typedef std::pair < int, int >E;
-    boost::property_map<Graph, boost::edge_weight_t>::type weightmap;
-    boost::property_map<Graph, boost::vertex_distance_t>::type distance;
-    boost::property_map<Graph, boost::vertex_index_t>::type indexmap;
+    std::vector<vertex_struct> &vertex_content;
+    yarp::sig::Matrix adj_matrix;
     int num_vertices;
-    Graph g;
+
 
     bool merge;
     bool debug;
@@ -153,7 +148,8 @@ public:
     /***********************************************************************/
     SuperqComputation(yarp::os::Mutex &mutex_shared, int _rate, bool _filter_points, bool single_superq, bool _filter_superq, bool _fixed_window, std::deque<yarp::sig::Vector> &_points, yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn,
                       std::string _tag_file, double _threshold_median, const yarp::os::Property &filters_points_par, yarp::sig::Vector &_x, yarp::sig::Vector &_x_filtered,
-                      const yarp::os::Property &filters_superq_par, const yarp::os::Property &optimizer_par, const std::string &_homeContextPath, bool _save_points, yarp::os::ResourceFinder *rf, superqTree *superq_tree, bool _merge_model, int _h_tree);
+                      const yarp::os::Property &filters_superq_par, const yarp::os::Property &optimizer_par, const std::string &_homeContextPath, bool _save_points, yarp::os::ResourceFinder *rf, superqTree *superq_tree, bool _merge_model, int _h_tree
+                      ,std::vector<vertex_struct> &vertex_content);
 
     /** Set options for filtering the point cloud
     * @param newOptions is a Property with the new options to set

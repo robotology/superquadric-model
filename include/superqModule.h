@@ -137,6 +137,8 @@ protected:
     superqTree *superq_tree;
     superqTree *superq_tree_new;
 
+    std::vector<vertex_struct> vertex_content;
+
     yarp::sig::ImageOf<yarp::sig::PixelRgb> *imgIn;
 
     /************************************************************************/
@@ -207,10 +209,10 @@ protected:
     * @return true/false on success/failure
     */
     /**********************************************************************/
-    yarp::os::Property fillMultipleSolutions(node *leaf);
+    yarp::os::Property fillMultipleSolutions();
 
     /**********************************************************************/
-    void addSuperqInProp(node *leaf, int &count, yarp::os::Property &superq_pr);
+    void addSuperqInProp(std::vector<vertex_struct> &graph, yarp::os::Property &superq_pr);
 
     /**********************************************************************/
     bool set_points_filtering(const std::string &entry);
@@ -328,6 +330,9 @@ public:
 
     /**********************************************************************/
     bool set_debug(const std::string &d);
+
+    /**********************************************************************/
+    yarp::sig::Matrix get_adjacency_matrix();
 
 };
 

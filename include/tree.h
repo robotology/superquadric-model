@@ -34,6 +34,8 @@ struct vertex_struct
     yarp::sig::Vector axis_x;
     yarp::sig::Vector axis_y;
     yarp::sig::Vector axis_z;
+    std::vector<std::pair<int, double>> weigthed_edges;
+    bool visited;
 };
 
 struct nodeContent

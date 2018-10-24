@@ -153,7 +153,7 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
         superqCom->setPar("object_class", object_class);
         superqCom->computeOneShotMultiple(p_aux);
 
-        superq=fillMultipleSolutions(superq_tree->root);
+        superq=fillMultipleSolutions();
     }
 
     superqCom->setPar("one_shot", "off");
@@ -163,6 +163,27 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
     yDebug()<<"Sent superq "<<superq.toString();
 
     return superq;
+}
+
+/**********************************************************************/
+Matrix SuperqModule::get_adjacency_matrix()
+{
+   /*Property matrix;
+    Bottle bottle;
+    Bottle &b1=bottle.addList();
+    for (size_t i=0; i<superqCom->adj_matrix.rows(); i++)
+    {
+        for (size_t j=0; j<superqCom->adj_matrix.cols(); j++)
+        {
+            b1.addDouble(superqCom->adj_matrix(i,j));
+        }
+    }
+
+    matrix.put("matrix", bottle.get(0));*/
+
+    yDebug()<<"Matrix to be sent "<<superqCom->adj_matrix.toString();
+
+    return superqCom->adj_matrix;
 }
 
 /**********************************************************************/
@@ -239,87 +260,47 @@ Property SuperqModule::fillProperty(const Vector &sol)
 
 
 /**********************************************************************/
-Property SuperqModule::fillMultipleSolutions(node *leaf)
+Property SuperqModule::fillMultipleSolutions()
 {
     int count=0;
     Property sup;
 
-    addSuperqInProp(leaf, count, sup);
+    addSuperqInProp(vertex_content,sup);
 
     return sup;
 }
 
 /**********************************************************************/
-void SuperqModule::addSuperqInProp(node *leaf, int &count, Property &superq_pr)
+void SuperqModule::addSuperqInProp(vector<vertex_struct> &graph,  Property &superq_pr)
 {
     Vector sup(11,0.0);
 
-    if (leaf!=NULL)
+    yDebug()<<"graph size "<<graph.size();
+    for (size_t i=0; i<graph.size(); i++)
     {
-        if (norm(leaf->superq.subVector(0,2))>0.0)
-        {            
-            stringstream ss;
- 
-            sup=leaf->superq;
+        sup=graph[i].superq;
+        stringstream ss;
+        ss<<i+1;
+        string count_str=ss.str();
+        Bottle bottle;
+        Bottle &b1=bottle.addList();
+        b1.addDouble(sup[0]); b1.addDouble(sup[1]); b1.addDouble(sup[2]);
+        superq_pr.put("dimensions_"+count_str, bottle.get(0));
 
-            if (leaf->right!=NULL)
-            {
-                yDebug()<<"Go on right ";
-                addSuperqInProp(leaf->right, count, superq_pr);
-                //count++;
-            }
+        Bottle &b2=bottle.addList();
+        b2.addDouble(sup[3]); b2.addDouble(sup[4]);
+        superq_pr.put("exponent_"+count_str, bottle.get(1));
 
-            if (leaf->left!=NULL)
-            {
-                yDebug()<<"Go on left ";
-                addSuperqInProp(leaf->left, count, superq_pr);
-            }
+        Bottle &b3=bottle.addList();
+        b3.addDouble(sup[5]); b3.addDouble(sup[6]); b3.addDouble(sup[7]);
+        superq_pr.put("center_"+count_str, bottle.get(2));
 
-            if (leaf->right==NULL && leaf->left==NULL)
-            {
-                count++;
-                ss<<count;
-                string count_str=ss.str();
-                Bottle bottle;
-                Bottle &b1=bottle.addList();
-                b1.addDouble(sup[0]); b1.addDouble(sup[1]); b1.addDouble(sup[2]);
-                superq_pr.put("dimensions_"+count_str, bottle.get(0));
-
-                Bottle &b2=bottle.addList();
-                b2.addDouble(sup[3]); b2.addDouble(sup[4]);
-                superq_pr.put("exponent_"+count_str, bottle.get(1));
-
-                Bottle &b3=bottle.addList();
-                b3.addDouble(sup[5]); b3.addDouble(sup[6]); b3.addDouble(sup[7]);
-                superq_pr.put("center_"+count_str, bottle.get(2));
-
-                Bottle &b4=bottle.addList();
-                Vector orient=dcm2axis(euler2dcm(sup.subVector(8,10)));
-                b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
-                superq_pr.put("orientation_"+count_str, bottle.get(3));
-
-
-             }
-        }
-        else
-        {
-            //count++;
-            if (leaf->right!=NULL)
-            {
-                yDebug()<<"Go on right (root) ";
-                addSuperqInProp(leaf->right, count, superq_pr);
-                //count++;
-            }
-            if (leaf->left!=NULL)
-            {
-                yDebug()<<"Go on left (root) ";
-                addSuperqInProp(leaf->left, count, superq_pr);               
-            }
-        }
-
+        Bottle &b4=bottle.addList();
+        Vector orient=dcm2axis(euler2dcm(sup.subVector(8,10)));
+        b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
+        superq_pr.put("orientation_"+count_str, bottle.get(3));
     }
-    else
-        yDebug()<<"[SuperqModule]:Finished property fill!";
+
 }
 
 /**********************************************************************/
@@ -634,7 +615,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
 
     superqCom= new SuperqComputation(mutex_shared,rate, filter_points, filter_superq, single_superq, fixed_window, points, imgIn, tag_file,
                                      threshold_median,filter_points_par, x, x_filtered, filter_superq_par, ipopt_par, homeContextPath, save_points, this->rf, superq_tree,
-                                     merge_model, h_tree);
+                                     merge_model, h_tree, vertex_content);
 
     if (mode_online)
     {

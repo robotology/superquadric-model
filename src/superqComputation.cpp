@@ -70,10 +70,10 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 /***********************************************************************/
 SuperqComputation::SuperqComputation(Mutex &_mutex_shared, int _rate, bool _filter_points, bool _filter_superq, bool _single_superq, bool _fixed_window,deque<yarp::sig::Vector> &_points, ImageOf<PixelRgb> *_imgIn, string _tag_file, double _threshold_median,
                                 const Property &_filter_points_par, Vector &_x, Vector &_x_filtered, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points, ResourceFinder *_rf, superqTree *_superq_tree,
-                                bool _merge_model, int _h_tree):
+                                bool _merge_model, int _h_tree, vector<vertex_struct> &_vertex_content):
                                 mutex_shared(_mutex_shared),filter_points(_filter_points), filter_superq(_filter_superq), single_superq(_single_superq),fixed_window( _fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points), imgIn(_imgIn),
                                 filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), Thread(), homeContextPath(_homeContextPath), x(_x), x_filtered(_x_filtered), points(_points), rf(_rf), superq_tree(_superq_tree),
-                                merge_model(_merge_model), h_tree(_h_tree)
+                                merge_model(_merge_model), h_tree(_h_tree), vertex_content(_vertex_content)
 {
 }
 
@@ -1289,6 +1289,7 @@ void SuperqComputation::splitPoints(node *leaf)
 /****************************************************************/
 void SuperqComputation::createGraphFromTree()
 {
+    vertex_content.clear();
     addSuperqInGraph(superq_tree->root);
 
     if (debug)
@@ -1296,74 +1297,111 @@ void SuperqComputation::createGraphFromTree()
         for (size_t i=0; i<vertex_content.size(); i++)
         {
             yDebug()<<"Vertex "<< i << "Superq "<<vertex_content[i].superq.toString()<<" point cloud size "<<  vertex_content[i].point_cloud->size();
+            vertex_content[i].visited=false;
         }
     }
 
     num_vertices=vertex_content.size();
 
-    vector<E> edges;
-    vector<double> weights;
+
     for (size_t i=0; i<num_vertices; i++)
     {
-        for (size_t j=i+1; j<num_vertices; j++)
-        {
-            if (i!=j)
-            {
-                edges.push_back(E(i,j));
+       for (int j=0; j<num_vertices; j++)
+       {
+           if (i!=j)
+           {
+               double w=edgesClose(i,j);
+               pair<int, double> p=make_pair(j,w);
+               vertex_content[i].weigthed_edges.push_back(p);
 
-                double w=edgesClose(i,j);
-                weights.push_back(w);
+           }
+      }
+
+    }
+
+    for (size_t i=0; i<num_vertices; i++)
+    {
+        for (size_t j=0; j<vertex_content[i].weigthed_edges.size(); j++)
+        {
+            yDebug()<<"Vertex"<< i<<"connection with "<<vertex_content[i].weigthed_edges[j].first<<"weight "<<vertex_content[i].weigthed_edges[j].second;
+        }
+    }
+
+
+
+    deque<Matrix> all_adj_matrs;
+    deque<double> all_costs;
+
+    for (size_t starting=0; starting<num_vertices; starting++)
+    {
+        yDebug()<<"V "<<starting;
+        int next_edge=0;
+        int count=0;
+        adj_matrix.resize(num_vertices, num_vertices);
+        adj_matrix.zero();
+
+        double cost=0.0;
+
+        int v=starting;
+
+        for (size_t i=0; i<num_vertices; i++)
+            vertex_content[i].visited=false;
+
+        while (count<num_vertices)
+        {
+            double min_weigth=1000000;
+
+            vertex_content[v].visited=true;
+            for (size_t j=0; j<vertex_content[v].weigthed_edges.size(); j++)
+            {
+                if (vertex_content[vertex_content[v].weigthed_edges[j].first].visited==false)
+                {
+                    if (vertex_content[v].weigthed_edges[j].second < min_weigth)
+                    {
+                        min_weigth=vertex_content[v].weigthed_edges[j].second;
+
+                        next_edge=vertex_content[v].weigthed_edges[j].first;
+                    }
+                }
 
             }
+
+            if (min_weigth<1000000)
+            {
+                cout<<"next edge "<<next_edge;
+                cout<<"min_weigth "<<min_weigth;
+                adj_matrix(v,next_edge)=1;
+
+                v=next_edge;
+
+
+                cost+=min_weigth;
+            }
+            count ++;
+
+        }
+
+        yDebug()<<"Matrix of connections based on distance "<<adj_matrix.toString(1,1);
+        yDebug()<<"Minimum weight "<<cost;
+
+        all_adj_matrs.push_back(adj_matrix);
+        all_costs.push_back(cost);
+    }
+
+    double min_cost=all_costs[0];
+    int min_i=0;
+    for (size_t i=0; i<num_vertices; i++)
+    {
+        if (all_costs[i]<min_cost)
+        {
+            min_cost=all_costs[i];
+            min_i=i;
         }
 
     }
 
-    if (debug)
-    {
-        for (auto it=edges.begin(); it!=edges.end(); ++it)
-            yDebug()<<"Edges "<<it->first<<it->second;
-        for (auto it=weights.begin(); it!=weights.end(); ++it)
-            yDebug()<<"weights "<<*it;
-    }
-
-
-    yDebug()<<__LINE__;
-    for (size_t i=0; i<num_vertices; i++)
-        add_vertex(i,g);
-
-
-    yDebug()<<__LINE__;
-    weightmap = get(edge_weight, g);
-    //for (auto it=edges.begin(); it!=edges.end(); ++it)
-    for (std::size_t j = 0; j < edges.size(); ++j)
-    {
-        graph_traits<Graph>::edge_descriptor e;
-        bool inserted;
-        yDebug()<<"edge "<<edges[j].first<<edges[j].second;
-        //boost::tie(e, inserted) = add_edge(it->first, it->second, g);
-        boost::tie(e, inserted) = add_edge(edges[j].first, edges[j].second, g);
-        weightmap[e] = weights[j];
-
-        yDebug()<<"with weigth "<<weights[j];
-
-    }
-
-    yDebug()<<__LINE__;
-
-    vector < graph_traits < Graph >::vertex_descriptor > p(num_vertices);
-
-    distance = get(vertex_distance, g);
-    indexmap = get(vertex_index, g);
-    prim_minimum_spanning_tree(g, *vertices(g).first, &p[0], distance, weightmap, indexmap, default_dijkstra_visitor());
-
-    for (std::size_t i = 0; i != p.size(); ++i)
-    {
-        if (p[i] != i)
-         yDebug() << "parent[" << i << "] = " << p[i];
-        else
-         yDebug() << "parent[" << i << "] = no parent";
-    }
+    yDebug()<<"Final selected matrix is no "<<min_i<<"with cost "<<min_cost;
+    adj_matrix=all_adj_matrs[min_i];
 
 }
 
@@ -1545,9 +1583,11 @@ double SuperqComputation::edgesClose(int i, int j)
            {
                distance_min=distance;
            }
+           //distance_min+=distance;
        }
 
     }
+    //distance_min/=(edges_1.size() * edges_2.size());
 
     return distance_min;
 
@@ -1575,7 +1615,7 @@ bool SuperqComputation::computeEdges(int l, deque<Vector> &edges)
 
     //yDebug()<<"superq in copute edge "<<superq.toString();
 
-
+    edges.push_back(superq.subVector(5,7));
     point = superq.subVector(5,7) + superq[0] * axis_x.subVector(0,2);
     edges.push_back(point);
 
