@@ -110,7 +110,7 @@ void SuperQuadric_NLP::computeBounds()
     bounds(9,1)=M_PI;
     bounds(10,1)=2*M_PI;
 
-    yDebug()<<"Bounds "<<bounds.toString();
+    //yDebug()<<"Bounds "<<bounds.toString();
 }
 
 /****************************************************************/

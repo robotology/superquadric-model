@@ -27,11 +27,13 @@
 #include "superqComputation.h"
 
 using namespace std;
+using namespace boost;
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
 using namespace iCub::ctrl;
+
 
 /*******************************************************************************/
 vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radius, const int maxResults, deque<Vector> &points)
@@ -538,11 +540,11 @@ void SuperqComputation::run()
                 {
                     double t_merge;
                     t_merge=Time::now();
-                    go_on=superq_computed=findImportantPlanes(superq_tree->root);
-                    superq_tree_new= new superqTree();
+                    //go_on=superq_computed=findImportantPlanes(superq_tree->root);
+                    //superq_tree_new= new superqTree();
 
-                    go_on=superq_computed=generateFinalTree(superq_tree->root, superq_tree_new->root);
-                    superq_tree->root=superq_tree_new->root;
+                    //go_on=superq_computed=generateFinalTree(superq_tree->root, superq_tree_new->root);
+                    //superq_tree->root=superq_tree_new->root;
 
                     t_merge=Time::now() - t_merge;
 
@@ -917,13 +919,15 @@ void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
         double t_merge;
         t_merge=Time::now();
 
-        go_on=superq_computed=findImportantPlanes(superq_tree->root);
+        createGraphFromTree();
 
-        superq_tree_new= new superqTree();
+        //go_on=superq_computed=findImportantPlanes(superq_tree->root);
 
-        go_on=superq_computed=generateFinalTree(superq_tree->root, superq_tree_new->root);
+        //superq_tree_new= new superqTree();
 
-        superq_tree->root=superq_tree_new->root;
+       // go_on=superq_computed=generateFinalTree(superq_tree->root, superq_tree_new->root);
+
+        //superq_tree->root=superq_tree_new->root;
 
         //if (debug)
             superq_tree->printTree(superq_tree->root);
@@ -1156,17 +1160,15 @@ void SuperqComputation::iterativeModeling()
 
     superq_tree->setPoints(&points);
 
-    computeNestedSuperq(superq_tree->root);
+    splitPointCloud(superq_tree->root);
 }
 
 /***********************************************************************/
-void SuperqComputation::computeNestedSuperq(node *newnode)
+void SuperqComputation::splitPointCloud(node *newnode)
 {
     if ((newnode!=NULL))
     {
         cout<<endl;
-        Vector superq1(11,0.0);
-        Vector superq2(11,0.0);
 
         nodeContent node_c1;
         nodeContent node_c2;
@@ -1175,11 +1177,6 @@ void SuperqComputation::computeNestedSuperq(node *newnode)
         {
             splitPoints(newnode);
 
-            superq1=computeMultipleSuperq(points_splitted1);
-            superq2=computeMultipleSuperq(points_splitted2);
-
-            node_c1.superq=superq1;
-            node_c2.superq=superq2;
             node_c1.point_cloud= new deque<Vector>;
             node_c2.point_cloud= new deque<Vector>;
 
@@ -1190,12 +1187,21 @@ void SuperqComputation::computeNestedSuperq(node *newnode)
             node_c2.height=newnode->height + 1;
 
             superq_tree->insert(node_c1, node_c2, newnode);
+
+            splitPointCloud(newnode->left);
+            splitPointCloud(newnode->right);
+        }
+        else if (newnode->height == h_tree + 1)
+        {
+            Vector superq(11,0.0);
+            superq=computeMultipleSuperq(*newnode->point_cloud);
+
+            newnode->superq=superq;
         }
 
-        computeNestedSuperq(newnode->left);
-        computeNestedSuperq(newnode->right);
     }
 }
+
 
 /***********************************************************************/
 void SuperqComputation::splitPoints(node *leaf)
@@ -1281,330 +1287,152 @@ void SuperqComputation::splitPoints(node *leaf)
 }
 
 /****************************************************************/
-bool SuperqComputation::findImportantPlanes(node *current_node)
+void SuperqComputation::createGraphFromTree()
 {
-    Matrix relations(3,3);
+    addSuperqInGraph(superq_tree->root);
 
-    if (current_node->height < h_tree)
+    if (debug)
     {
-        cout<<endl;
-        yDebug()<<"|| Find important plane LEFT ";
-        if (current_node->left !=NULL)
-            findImportantPlanes(current_node->left);
-         cout<<endl;
-        yDebug()<<"|| Find important plane RIGHT ";
-        if (current_node->right !=NULL)
-            findImportantPlanes(current_node->right);
-    }
-
-    // if nothing is changed plane important for root is always true
-    if (current_node->height > 1 && current_node->plane_important==false)
-    {
-        computeSuperqAxis(current_node->left);
-        computeSuperqAxis(current_node->right);
-
-        //if (debug)
-            yDebug()<<"node->height "<<current_node->height;
-
-        if (axisParallel(current_node->left, current_node->right, relations) && sectionEqual(current_node->left, current_node->right, relations))
+        for (size_t i=0; i<vertex_content.size(); i++)
         {
-            //if (debug)
-            yDebug()<<"|| To be merged, no plane important ";
-            cout<<endl;
-
-            current_node->plane_important=false;
-
-            /*if (!superq_tree->searchPlaneImportant(current_node->left))
-                current_node->left=NULL;
-            if (!superq_tree->searchPlaneImportant(current_node->right))
-                current_node->right=NULL;*/
-
-            if (!superq_tree->searchPlaneImportant(current_node->left) && !superq_tree->searchPlaneImportant(current_node->right))
-            {
-                current_node->left=NULL;
-                current_node->right=NULL;
-            }
-
-        }
-        else
-        {
-            yDebug()<<"Plane current node importat";
-            cout<<endl;
-            current_node->plane_important=true;
-
-            node *node_uncle=((current_node==current_node->father->right)?current_node->father->left:current_node->father->right);
-
-            if (node_uncle!=NULL)
-            {
-                computeSuperqAxis(node_uncle);
-
-                double distance_right = edgesClose(current_node->right, node_uncle);
-                double distance_left = edgesClose(current_node->left, node_uncle);
-
-                if (debug)
-                {
-                    yDebug()<<"distance right "<<distance_right;
-                    yDebug()<<"distance left "<<distance_left;
-                }
-
-
-                // Check if tolerance is needed
-                if(distance_right < distance_left)
-                    current_node->right->uncle_close=node_uncle;
-                else
-                    current_node->left->uncle_close=node_uncle;
-
-
-                // Instead of checking if all the nephews are parallel to the uncle, check only the close one
-                bool parallel_to_uncle;
-
-                if (current_node->left->uncle_close!=NULL)
-                {
-                    parallel_to_uncle=(axisParallel(current_node->left, node_uncle, relations)
-                                       && sectionEqual(current_node->left, node_uncle, relations));
-                    if (parallel_to_uncle && debug)
-                        yDebug()<<"Left is parallel and with same dimensions of its uncle";
-
-                }
-                else if (current_node->right->uncle_close!=NULL)
-                {
-                    parallel_to_uncle=(axisParallel(current_node->right, node_uncle, relations)
-                                       && sectionEqual(current_node->right, node_uncle, relations));
-                    if (parallel_to_uncle && debug)
-                        yDebug()<<"Right is parallel and with same dimensions of its uncle";
-                }
-
-                yDebug()<<" || Parallel to uncle "<<parallel_to_uncle;
-
-                if(parallel_to_uncle==false)
-                {
-                    yDebug()<<"|| Plane  father important ";
-                    current_node->father->plane_important=true;
-                }
-                else
-                {
-                    current_node->father->plane_important=false;
-                }
-            }
-
-        }
-
-    }
-
-    if (current_node->height==1)
-    {
-        computeSuperqAxis(current_node->left);
-        computeSuperqAxis(current_node->right);
-
-        if (!(axisParallel(current_node->left, current_node->right, relations) && !sectionEqual(current_node->left, current_node->right, relations)))
-        {
-             yDebug()<<__LINE__;
-            current_node->plane_important=true;
-        }
-
-        if ((superq_tree->searchPlaneImportant(current_node->left)==false
-                && superq_tree->searchPlaneImportant(current_node->right)==false))
-            current_node->plane_important=true;
-
-        //if (current_node->left->plane_important==true
-          //      && current_node->right->plane_important==true)
-            //current_node->plane_important=true;
-
-        yDebug()<<__LINE__;
-
-        yDebug()<<"|| Plane of root is important:  "<<current_node->plane_important;
-    }
-
-    return true;
-}
-
-/***********************************************************************/
-void SuperqComputation::copySuperqChildren(node *old_node, node *newnode)
-{
-    nodeContent node_c1;
-    nodeContent node_c2;
-
-    node_c1.superq=old_node->left->superq;
-    node_c2.superq=old_node->right->superq;
-
-    node_c1.point_cloud= new deque<Vector>;
-    node_c2.point_cloud= new deque<Vector>;
-
-
-    node_c1.point_cloud=old_node->left->point_cloud;
-    node_c2.point_cloud=old_node->right->point_cloud;
-
-    node_c1.height=newnode->height + 1;
-    node_c2.height=newnode->height + 1;
-
-    // aCTUALLY THEY ARE NOT NEEDED
-    node_c1.plane_important=old_node->left->plane_important;
-    node_c2.plane_important=old_node->right->plane_important;
-
-    superq_tree_new->insert(node_c2, node_c1, newnode);
-}
-
-/***********************************************************************/
-bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
-{
-    if (old_node!=NULL && old_node->height <= h_tree)
-    {
-        cout<<endl;
-        yDebug()<<"node height in merging"<<old_node->height;
-
-        if (old_node->height > 1)
-        {
-            yDebug()<<"|| old_node->plane_important"<<old_node->plane_important;
-            yDebug()<<"|| old_node->plane_important father"<<old_node->father->plane_important;
-            if (old_node->plane_important==true && old_node->father->plane_important==false)
-            {
-                yDebug()<<"|| Current plane is important";
-                superqUsingPlane(old_node,old_node->father->point_cloud, old_node->plane, newnode);
-
-                //if (newnode->right->superq==old_node->right->superq || newnode->right->superq==old_node->left->superq)
-                //{
-                    generateFinalTree(old_node->left, newnode->left);
-                    generateFinalTree(old_node->right, newnode->right);
-                //}
-                //else if (newnode->left->superq==old_node->right->superq || newnode->left->superq==old_node->left->superq)
-                //{
-                 //   generateFinalTree(old_node->left, newnode->left);
-                 //   generateFinalTree(old_node->right, newnode->left);
-                //}
-
-            }
-            else if (old_node->plane_important==true && old_node->father->plane_important==true)
-            {
-                yDebug()<<"|| Current and father's plane are important";
-
-                // Since here I would compute again the superqs using the point cloud and the plane of the node
-                // I can just copy the superq -> faster
-                copySuperqChildren(old_node, newnode);
-
-                generateFinalTree(old_node->left, newnode->left);
-                generateFinalTree(old_node->right, newnode->right);
-            }
-            else if (old_node->left!=NULL && old_node->right!=NULL)
-            {
-                yDebug()<<__LINE__;
-
-                //if (old_node->left->plane_important==true && old_node->right->plane_important==true)
-                if (superq_tree->searchPlaneImportant(old_node->left)==true && superq_tree->searchPlaneImportant(old_node->right)==true)
-                {
-                    copySuperqChildren(old_node, newnode);
-
-                    generateFinalTree(old_node->left, newnode->left);
-                    generateFinalTree(old_node->right, newnode->right);
-                }
-                else
-                {
-                    //if (old_node->left->plane_important==true)
-                    if (superq_tree->searchPlaneImportant(old_node->left))
-                    {
-                        yDebug()<<"only left important";
-                        generateFinalTree(old_node->left, newnode);
-                    }
-                    //else if (old_node->right->plane_important==true)
-                    else if (superq_tree->searchPlaneImportant(old_node->right))
-                    {
-                        yDebug()<<"only right important";
-                        generateFinalTree(old_node->right, newnode);
-                    }
-                }
-            }
-
-        }
-        else
-        {
-            if (old_node->plane_important==true)
-            {
-                copySuperqChildren(old_node, newnode);
-                generateFinalTree(old_node->left, newnode->left);
-                generateFinalTree(old_node->right, newnode->right);
-            }
-            //else if (old_node->left->plane_important==true && old_node->right->plane_important==true)
-            else if (superq_tree->searchPlaneImportant(old_node->left)==true && superq_tree->searchPlaneImportant(old_node->right)==true)
-            {
-                copySuperqChildren(old_node, newnode);
-
-                generateFinalTree(old_node->left, newnode->left);
-                generateFinalTree(old_node->right, newnode->right);
-            }
-            else
-            {
-                if (superq_tree->searchPlaneImportant(old_node->left)==true)
-                {
-                    yDebug()<<"only left ";
-                    generateFinalTree(old_node->left, newnode);
-                }
-                if (superq_tree->searchPlaneImportant(old_node->right)==true)
-                {
-                    yDebug()<<"only right ";
-                    generateFinalTree(old_node->right, newnode);
-                }
-            }
-
+            yDebug()<<"Vertex "<< i << "Superq "<<vertex_content[i].superq.toString()<<" point cloud size "<<  vertex_content[i].point_cloud->size();
         }
     }
 
-    return true;
+    num_vertices=vertex_content.size();
 
-}
-
-/****************************************************************/
-void SuperqComputation::superqUsingPlane(node *old_node, deque<Vector> *points, Vector &plane, node *newnode)
-{
-    points_splitted1.clear();
-    points_splitted2.clear();
-
-    Vector superq1, superq2;
-
-    deque<Vector> points_splitted=*points;
-
-    for (size_t j=0; j<points_splitted.size(); j++)
+    vector<E> edges;
+    vector<double> weights;
+    for (size_t i=0; i<num_vertices; i++)
     {
-        Vector point=points_splitted[j];
-        if (plane[0]*point[0]+plane[1]*point[1]+plane[2]*point[2]- plane[3] > 0)
-            points_splitted1.push_back(point);
-        else
-            points_splitted2.push_back(point);
+        for (size_t j=i+1; j<num_vertices; j++)
+        {
+            if (i!=j)
+            {
+                edges.push_back(E(i,j));
+
+                double w=edgesClose(i,j);
+                weights.push_back(w);
+
+            }
+        }
+
     }
 
     if (debug)
     {
-        yDebug()<<"[SuperqComputation]: New points_splitted 1 "<<points_splitted1.size();
-        yDebug()<<"[SuperqComputation]: New points_splitted 2 "<<points_splitted2.size();
+        for (auto it=edges.begin(); it!=edges.end(); ++it)
+            yDebug()<<"Edges "<<it->first<<it->second;
+        for (auto it=weights.begin(); it!=weights.end(); ++it)
+            yDebug()<<"weights "<<*it;
     }
 
-    superq1=computeMultipleSuperq(points_splitted1);
-    superq2=computeMultipleSuperq(points_splitted2);
 
-    nodeContent node_c1;
-    nodeContent node_c2;
+    yDebug()<<__LINE__;
+    for (size_t i=0; i<num_vertices; i++)
+        add_vertex(i,g);
 
-    node_c1.superq=superq1;
-    node_c2.superq=superq2;
-    node_c1.point_cloud= new deque<Vector>;
-    node_c2.point_cloud= new deque<Vector>;
 
-    *node_c1.point_cloud=points_splitted1;
-    *node_c2.point_cloud=points_splitted2;
+    yDebug()<<__LINE__;
+    weightmap = get(edge_weight, g);
+    //for (auto it=edges.begin(); it!=edges.end(); ++it)
+    for (std::size_t j = 0; j < edges.size(); ++j)
+    {
+        graph_traits<Graph>::edge_descriptor e;
+        bool inserted;
+        yDebug()<<"edge "<<edges[j].first<<edges[j].second;
+        //boost::tie(e, inserted) = add_edge(it->first, it->second, g);
+        boost::tie(e, inserted) = add_edge(edges[j].first, edges[j].second, g);
+        weightmap[e] = weights[j];
 
-    node_c1.height=newnode->height + 1;
-    node_c2.height=newnode->height + 1;
+        yDebug()<<"with weigth "<<weights[j];
 
-    superq_tree_new->insert(node_c1, node_c2, newnode);
+    }
+
+    yDebug()<<__LINE__;
+
+    vector < graph_traits < Graph >::vertex_descriptor > p(num_vertices);
+
+    distance = get(vertex_distance, g);
+    indexmap = get(vertex_index, g);
+    prim_minimum_spanning_tree(g, *vertices(g).first, &p[0], distance, weightmap, indexmap, default_dijkstra_visitor());
+
+    for (std::size_t i = 0; i != p.size(); ++i)
+    {
+        if (p[i] != i)
+         yDebug() << "parent[" << i << "] = " << p[i];
+        else
+         yDebug() << "parent[" << i << "] = no parent";
+    }
 
 }
 
-/****************************************************************/
-void SuperqComputation::computeSuperqAxis(node *node)
+
+/**********************************************************************/
+void SuperqComputation::addSuperqInGraph(node *leaf)
 {
-    Matrix R=euler2dcm(node->superq.subVector(8,10));
+    Vector sup(11,0.0);
+
+    if (leaf!=NULL)
+    {
+        if (norm(leaf->superq.subVector(0,2))>0.0)
+        {
+            stringstream ss;
+
+            sup=leaf->superq;
+
+            if (leaf->right!=NULL)
+            {
+                yDebug()<<"Go on right ";
+                addSuperqInGraph(leaf->right);
+            }
+
+            if (leaf->left!=NULL)
+            {
+                yDebug()<<"Go on left ";
+                addSuperqInGraph(leaf->left);
+            }
+
+            if (leaf->right==NULL && leaf->left==NULL)
+            {
+                vertex_struct vertex_c;
+
+                vertex_c.superq=sup;
+                vertex_c.point_cloud=leaf->point_cloud;
+
+                vertex_content.push_back(vertex_c);
+
+             }
+        }
+        else
+        {
+            if (leaf->right!=NULL)
+            {
+                yDebug()<<"Go on right (root) ";
+                addSuperqInGraph(leaf->right);
+
+            }
+            if (leaf->left!=NULL)
+            {
+                yDebug()<<"Go on left (root) ";
+                addSuperqInGraph(leaf->left);
+            }
+        }
+
+    }
+    else
+        yDebug()<<"[SuperqModule]:Finished property fill!";
+}
+
+
+/****************************************************************/
+void SuperqComputation::computeSuperqAxis(int &l)
+{
+    Matrix R=euler2dcm(vertex_content[l].superq.subVector(8,10));
     //node->R=R;
-    node->axis_x = R.getCol(0).subVector(0,2);
-    node->axis_y = R.getCol(1).subVector(0,2);
-    node->axis_z = R.getCol(2).subVector(0,2);
+    vertex_content[l].axis_x = R.getCol(0).subVector(0,2);
+    vertex_content[l].axis_y = R.getCol(1).subVector(0,2);
+    vertex_content[l].axis_z = R.getCol(2).subVector(0,2);
 
     //yDebug()<<"              Axis "<<R.toString();
 }
@@ -1697,13 +1525,13 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
 } 
 
 /****************************************************************/
-double SuperqComputation::edgesClose(node *node1, node *node2)
+double SuperqComputation::edgesClose(int i, int j)
 {
     deque<Vector> edges_1;
     deque<Vector> edges_2;
 
-    computeEdges(node1, edges_1);
-    computeEdges(node2, edges_2);
+    computeEdges(i, edges_1);
+    computeEdges(j, edges_2);
 
     double distance_min=1000.0;
 
@@ -1726,28 +1554,44 @@ double SuperqComputation::edgesClose(node *node1, node *node2)
 }
 
 /****************************************************************/
-bool SuperqComputation::computeEdges(node *node, deque<Vector> &edges)
+bool SuperqComputation::computeEdges(int l, deque<Vector> &edges)
 {
     edges.clear();
 
     Vector point(3,0.0);
 
-    point = node->superq.subVector(5,7) + node->superq[0] * node->axis_x.subVector(0,2);
+    Vector superq(11,0.0);
+    superq=vertex_content[l].superq;
+
+    computeSuperqAxis(l);
+
+    Vector axis_x(3,0.0);
+    Vector axis_y(3,0.0);
+    Vector axis_z(3,0.0);
+
+    axis_x=vertex_content[l].axis_x;
+    axis_y=vertex_content[l].axis_y;
+    axis_z=vertex_content[l].axis_z;
+
+    //yDebug()<<"superq in copute edge "<<superq.toString();
+
+
+    point = superq.subVector(5,7) + superq[0] * axis_x.subVector(0,2);
     edges.push_back(point);
 
-    point = node->superq.subVector(5,7) - node->superq[0] * node->axis_x.subVector(0,2);
+    point = superq.subVector(5,7) - superq[0] * axis_x.subVector(0,2);
     edges.push_back(point);
 
-    point = node->superq.subVector(5,7) + node->superq[1] * node->axis_y.subVector(0,2);
+    point = superq.subVector(5,7) + superq[1] * axis_y.subVector(0,2);
     edges.push_back(point);
 
-    point = node->superq.subVector(5,7) - node->superq[1] * node->axis_y.subVector(0,2);
+    point = superq.subVector(5,7) - superq[1] * axis_y.subVector(0,2);
     edges.push_back(point);
 
-    point = node->superq.subVector(5,7) + node->superq[2] * node->axis_z.subVector(0,2);
+    point = superq.subVector(5,7) + superq[2] * axis_z.subVector(0,2);
     edges.push_back(point);
 
-    point = node->superq.subVector(5,7) - node->superq[2] * node->axis_z.subVector(0,2);
+    point = superq.subVector(5,7) - superq[2] * axis_z.subVector(0,2);
     edges.push_back(point);
 
     if (debug)

@@ -6,10 +6,17 @@ cmake_minimum_required(VERSION 2.8)
 
 project(superquadric-model)
 
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED 11)
+
 find_package(YARP REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 include(YarpIDL)
 include(YarpInstallationHelpers)
+
+FIND_PACKAGE(Boost 1.40 REQUIRED COMPONENTS graph)
+INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 
 find_package(OpenCV REQUIRED)
 find_package(ICUB REQUIRED)

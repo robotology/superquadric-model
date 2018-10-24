@@ -28,6 +28,10 @@
 #include "superquadric.h"
 #include "tree.h"
 
+#include <boost/config.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/prim_minimum_spanning_tree.hpp>
+
 /**
   * This class filters the point cloud according to its density
   */
@@ -117,6 +121,17 @@ public:
     superqTree *superq_tree_new;
     superqTree *superq_tree;
 
+
+    // Graph elements
+    std::vector<vertex_struct> vertex_content;
+    typedef boost::adjacency_list < boost::vecS, boost::vecS, boost::undirectedS,
+       boost::property<boost::vertex_distance_t, int>, boost::property < boost::edge_weight_t, int > > Graph;
+    typedef std::pair < int, int >E;
+    boost::property_map<Graph, boost::edge_weight_t>::type weightmap;
+    boost::property_map<Graph, boost::vertex_distance_t>::type distance;
+    boost::property_map<Graph, boost::vertex_index_t>::type indexmap;
+    int num_vertices;
+    Graph g;
 
     bool merge;
     bool debug;
@@ -268,14 +283,8 @@ public:
     /***********************************************************************/
     void iterativeModeling();
 
-    /***********************************************************************/
-    bool findImportantPlanes(node *node1);
-
     /****************************************************************/
-    void superqUsingPlane(node *node1, std::deque<yarp::sig::Vector> *points_splitted, yarp::sig::Vector &plane, node *newnode);
-
-    /****************************************************************/
-    void computeSuperqAxis(node *node1);
+    void computeSuperqAxis(int &l);
 
     /****************************************************************/
     bool axisParallel(node *node1, node *node2, yarp::sig::Matrix &relations);
@@ -287,7 +296,7 @@ public:
     void splitPoints(node *leaf);
 
    /***********************************************************************/
-   void computeNestedSuperq(node *newnode);
+   void splitPointCloud(node *newnode);
 
    /***********************************************************************/
    yarp::sig::Vector computeOneShot(const std::deque<yarp::sig::Vector> &p);
@@ -296,18 +305,16 @@ public:
    void computeOneShotMultiple(const std::deque<yarp::sig::Vector> &p);
 
    /****************************************************************/
-   bool computeEdges(node *node1, std::deque<yarp::sig::Vector> &edges);
+   bool computeEdges(int i, std::deque<yarp::sig::Vector> &edges);
 
    /****************************************************************/
-   double edgesClose(node *node1, node *node2);
+   double edgesClose(int i, int j);
 
-   /***********************************************************************/
-   bool generateFinalTree(node *node1, node *newnode);
+   /****************************************************************/
+   void createGraphFromTree();
 
-   /***********************************************************************/
-   void copySuperqChildren(node *old_node, node *newnode);
-
-
+   /**********************************************************************/
+   void addSuperqInGraph(node *leaf);
 
 };
 

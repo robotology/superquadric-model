@@ -27,6 +27,15 @@ struct node
 
 };
 
+struct vertex_struct
+{
+    std::deque<yarp::sig::Vector> *point_cloud;
+    yarp::sig::Vector superq;
+    yarp::sig::Vector axis_x;
+    yarp::sig::Vector axis_y;
+    yarp::sig::Vector axis_z;
+};
+
 struct nodeContent
 {
     std::deque<yarp::sig::Vector> *point_cloud;
