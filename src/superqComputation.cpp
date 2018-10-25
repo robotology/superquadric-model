@@ -1704,12 +1704,13 @@ bool SuperqComputation::sphereLike(vertex_struct &v1, vertex_struct &v2)
     yDebug()<<"ratios 2 "<<ratio02_2<<ratio01_2<<ratio12_2;
 
 
-    if ( (ratio02_1 > 1/threshold ) && (ratio02_1 < 1* threshold )  &&
+    if ( (ratio02_1 > 1/threshold ) && (ratio02_1 < 1* threshold )  &&                      // NUmber 1 is sphere like
             (ratio01_1 > 1/threshold ) && (ratio01_1 < 1* threshold ) &&
                 (ratio12_1 > 1/threshold ) && (ratio12_1 < 1* threshold ) &&
-         (ratio02_2 > 1/threshold ) && (ratio02_2 < 1* threshold )  &&
+         (ratio02_2 > 1/threshold ) && (ratio02_2 < 1* threshold )  &&                      // NUmber 2 is sphere like
                      (ratio01_2> 1/threshold ) && (ratio01_2 < 1* threshold ) &&
-                         (ratio12_2 > 1/threshold ) && (ratio12_2 < 1* threshold ))
+                         (ratio12_2 > 1/threshold ) && (ratio12_2 < 1* threshold )
+         && (dim1[0]/dim2[0])> 1/threshold && (dim1[0]/dim2[0])< 1*threshold)       // They are similar in dimensions
         return true;
     else
         return false;
