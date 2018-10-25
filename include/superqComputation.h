@@ -124,6 +124,7 @@ public:
 
     // Graph elements
     std::vector<vertex_struct> &vertex_content;
+    std::vector<vertex_struct> vertex_content_merged;
     yarp::sig::Matrix adj_matrix;
     int num_vertices;
 
@@ -317,6 +318,9 @@ public:
 
    /****************************************************************/
    void cutGraph();
+
+   /**********************************************************************/
+   std::deque<yarp::sig::Vector> mergePointClouds(vertex_struct &v1, vertex_struct &v2);
 
 };
 

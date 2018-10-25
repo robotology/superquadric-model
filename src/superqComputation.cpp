@@ -919,6 +919,12 @@ void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
     if (merge_model)
     {
         cutGraph();
+        //vertex_content=vertex_content_merged;
+
+        for (size_t i=0; i<vertex_content.size(); i++)
+        {
+            yDebug()<<"Vertex "<< i << "Superq "<<vertex_content[i].superq.toString()<<" point cloud size "<<  vertex_content[i].point_cloud->size();
+        }
         t_merge=Time::now() - t_merge;
         yInfo()<<"[SuperqComputation]:  Computation time for merging model: "<<t_merge;
     }
@@ -1393,46 +1399,80 @@ void SuperqComputation::createGraphFromTree()
 /****************************************************************/
 void SuperqComputation::cutGraph()
 {
+    deque<Vector> merged_point_cloud;
+    Vector new_superq(11,0.0);
+
+    int vertex;
 
     for (size_t i=0; i<adj_matrix.rows(); i++)
     {
-        for (size_t j=0; j<adj_matrix.cols(); j++)
+        for (int j=0; j<adj_matrix.cols(); j++)
         {
-            if (adj_matrix(i,j)==1)
+            if (adj_matrix(i,j)==1 && norm(adj_matrix.getCol(i))==0)
+            {
+                vertex=i;
+            }
+        }
+    }
+
+    yDebug()<<"starting_vertex "<<vertex;
+    int count=0;
+
+    while (count < vertex_content.size() )
+    {
+        for (int j=0; j<vertex_content.size(); j++)
+        {
+            if (adj_matrix(vertex,j)==1)
             {
                 Matrix relations(3,3);
                 relations.zero();
-                if (sphereLike(vertex_content[i], vertex_content[j])==false)
+                if (sphereLike(vertex_content[vertex], vertex_content[j])==false)
                 {
                     cout<<endl;
-                    yInfo()<<i<<j<<"||    Condition 1: False - No sphere like objects";
+                    yInfo()<<vertex<<j<<"||    Condition 1: False - No sphere like objects";
                     cout<<endl;
 
-                    if (axisParallel(vertex_content[i], vertex_content[j], relations)==false)
+                    if (axisParallel(vertex_content[vertex], vertex_content[j], relations)==false)
                     {
                         cout<<endl;
-                        yDebug()<<i<<j<<"||    Condition 2: False: No all axis parallel - to be separated!";
+                        yDebug()<<vertex<<j<<"||    Condition 2: False: No all axis parallel - to be separated!";
                         cout<<endl;
-                        adj_matrix(i,j)=0;
+                        //adj_matrix(vertex,j)=0;
+                        //vertex_content_merged.push_back(vertex_content[vertex]);
                     }
                     else
                     {
                         cout<<endl;
-                        yDebug()<<i<<j<<"||    Condition 2: True: All axis parallel";
+                        yDebug()<<vertex<<j<<"||    Condition 2: True: All axis parallel";
                         cout<<endl;
 
-                        if (sectionEqual(vertex_content[i], vertex_content[j], relations)==false)
+                        if (sectionEqual(vertex_content[vertex], vertex_content[j], relations)==false)
                         {
                             cout<<endl;
-                            yDebug()<<i<<j<<"||    Condition 3: False: No similar dimensions - to be separated!";
+                            yDebug()<<vertex<<j<<"||    Condition 3: False: No similar dimensions - to be separated!";
                             cout<<endl;
-                            adj_matrix(i,j)=0;
+                            //adj_matrix(vertex,j)=0;
+                            //vertex_content_merged.push_back(vertex_content[vertex]);
                         }
                         else
                         {
                             cout<<endl;
-                            yDebug()<<i<<j<<"||    Condition 3: True: Similar dimensions - to be merged!";
+                            yDebug()<<vertex<<j<<"||    Condition 3: True: Similar dimensions - to be merged!";
                             cout<<endl;
+                            merged_point_cloud=mergePointClouds(vertex_content[vertex], vertex_content[j]);
+                            new_superq=computeMultipleSuperq(merged_point_cloud);
+
+
+                            vertex_struct vertex_c;
+
+                            vertex_c.superq=new_superq;
+                            vertex_c.point_cloud=&merged_point_cloud;
+
+                            //vertex_content_merged.push_back(vertex_c);
+                            vertex_content[j]=vertex_c;
+
+                            computeSuperqAxis(j);
+
                         }
 
                     }
@@ -1440,12 +1480,65 @@ void SuperqComputation::cutGraph()
                 else
                 {
                     cout<<endl;
-                    yInfo()<<i<<j<<"||    Condition 1: True - Sphere like objects - to be merged!";
+                    yInfo()<<vertex<<j<<"||    Condition 1: True - Sphere like objects - to be merged!";
                     cout<<endl;
+
+                    merged_point_cloud=mergePointClouds(vertex_content[vertex], vertex_content[j]);
+                    new_superq=computeMultipleSuperq(merged_point_cloud);
+
+                    vertex_struct vertex_c;
+
+                    vertex_c.superq=new_superq;
+                    vertex_c.point_cloud=&merged_point_cloud;
+
+
+                    //vertex_content_merged.push_back(vertex_c);
+                    vertex_content[j]=vertex_c;
+
+                    computeSuperqAxis(j);
+
+
+
                 }
+                vertex=j;
+
+
             }
+
+
         }
+
+        count++;
+
     }
+
+}
+
+
+/**********************************************************************/
+deque<Vector> SuperqComputation::mergePointClouds(vertex_struct &v1, vertex_struct &v2)
+{
+    deque<Vector> merged_point_cloud;
+    yDebug()<<__LINE__;
+
+    deque<Vector> point_cloud1=*v1.point_cloud;
+    deque<Vector> point_cloud2=*v2.point_cloud;
+    yDebug()<<"POINT CLOUD 1 SIZE "<<point_cloud1.size();
+
+    for (size_t i=0; i<point_cloud1.size(); i++)
+    {
+
+        merged_point_cloud.push_back(point_cloud1[i]);
+    }
+
+    yDebug()<<__LINE__;
+
+    for (size_t i=0; i<point_cloud2.size(); i++)
+    {
+        merged_point_cloud.push_back(point_cloud2[i]);
+    }
+
+    return merged_point_cloud;
 
 }
 
@@ -1520,7 +1613,7 @@ void SuperqComputation::computeSuperqAxis(int &l)
 bool SuperqComputation::axisParallel(vertex_struct &v1, vertex_struct &v2, Matrix &relations)
 {
     // No noise
-    double threshold=0.87;
+    double threshold=0.7;
     // Noisy
     //double threshold=0.7;
 
@@ -1589,7 +1682,7 @@ bool SuperqComputation::axisParallel(vertex_struct &v1, vertex_struct &v2, Matri
 /****************************************************************/
 bool SuperqComputation::sphereLike(vertex_struct &v1, vertex_struct &v2)
 {
-    double threshold=2;
+    double threshold=1.2;
     Vector dim1=v1.superq.subVector(0,2);
     Vector dim2=v2.superq.subVector(0,2);
 
@@ -1627,8 +1720,8 @@ bool SuperqComputation::sphereLike(vertex_struct &v1, vertex_struct &v2)
 /****************************************************************/
 bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matrix &relations)
 {
-    double threshold1=0.8;
-    double threshold2=0.025;
+    double threshold1=0.9;
+    double threshold2=2.0;
 
     Matrix R1(3,3);
     R1.setRow(0,v1.axis_x);
@@ -1640,11 +1733,22 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
     R2.setRow(1,v2.axis_y);
     R2.setRow(2,v2.axis_z);
 
+    cout<<endl;
+    yDebug()<<"R2 ";
+    yDebug()<<R2.toString();
+    yDebug()<<"relations ";
+    yDebug()<<relations.toString();
+
+
     if (norm(R2.getCol(0))>1 || norm(R2.getCol(1))>1 || norm(R2.getCol(2))>1)
         yError()<< "Something wrong in one column!!";
 
     Matrix R2_rot(3,3);
     R2_rot=relations*R2;
+
+    yDebug()<<"R2 rot";
+    yDebug()<<R2_rot.toString();
+    cout<<endl;
 
     Vector dim1=v1.superq.subVector(0,2);
     Vector dim2=v2.superq.subVector(0,2);
@@ -1653,11 +1757,11 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
 
     yDebug()<<"super q "<<v2.superq.toString();
 
-    if(debug)
-    {
-        yDebug()<<"     Dim 1 "<<dim1.toString();
+    //if(debug)
+    //{
+        yDebug()<<"     Dim 2 "<<dim2.toString();
         yDebug()<<"     Dim 2 rot "<<dim2_rot.toString();
-    }
+   // }
 
 
     Vector p1,p2,p3,p4;
@@ -1667,6 +1771,8 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
     p4.resize(3,0.0);
 
     deque<bool> equals;
+
+    equals.clear();
 
     for (size_t i=0; i<3; i++)
     {
@@ -1706,7 +1812,8 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
         yDebug()<<"ratio "<<ratio;
         cout<<endl;
 
-        if (ratio >  threshold1)
+        //if (ratio <  1*threshold1 && ratio > 1/threshold1)
+        if (ratio > threshold1)
         {
             equal=true;
 
@@ -1715,10 +1822,10 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
                 cout<<endl;
                 if ( i != j && dim2_rot[j]!= 0.0)
                 {
-                    yDebug()<<"dimensions "<<i<< "and "<<j;
-                    yDebug()<<abs(dim1[i] - dim2_rot[j]);
+                    yDebug()<<"dimensions "<<j<< "and "<<j;
+                    yDebug()<<dim1[j]/dim2_rot[j];
 
-                    if ((abs(dim1[i] - dim2_rot[j]) < threshold2))
+                    if ( (dim1[j]/dim2_rot[j] < 1*threshold2) && (dim1[j]/dim2_rot[j] > 1/threshold2))
                     {
                         equal=equal && true;
                     }
@@ -1736,9 +1843,9 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
             if ( dim2_rot[i]!= 0.0)
             {
                 yDebug()<<"dimensions "<<i<< "and "<<i;
-                yDebug()<<abs(dim1[i] - dim2_rot[i]);
+                yDebug()<<dim1[i]/dim2_rot[i];
 
-                if ((abs(dim1[i] - dim2_rot[i]) < threshold2))
+                if ((dim1[i]/ dim2_rot[i] < 1*threshold2) && (dim1[i]/ dim2_rot[i] > 1/threshold2))
                 {
                     equal=true;
                 }
@@ -1749,7 +1856,7 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
         equals.push_back(equal);
     }
 
-
+    yDebug()<<"Similarity between axis"<<equals[0] << equals[1] << equals[2];
     return equals[0] && equals[1] && equals[2];
 } 
 
