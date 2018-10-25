@@ -1301,7 +1301,7 @@ void SuperqComputation::createGraphFromTree()
        {
            if (i!=j)
            {
-               double w=edgesClose(i,j);
+               double w=edgesClose(vertex_content[i],vertex_content[j]);
                pair<int, double> p=make_pair(j,w);
                vertex_content[i].weigthed_edges.push_back(p);
 
@@ -1471,7 +1471,7 @@ void SuperqComputation::cutGraph()
                             //vertex_content_merged.push_back(vertex_c);
                             vertex_content[j]=vertex_c;
 
-                            computeSuperqAxis(j);
+                            computeSuperqAxis(vertex_content[j]);
 
                         }
 
@@ -1495,7 +1495,7 @@ void SuperqComputation::cutGraph()
                     //vertex_content_merged.push_back(vertex_c);
                     vertex_content[j]=vertex_c;
 
-                    computeSuperqAxis(j);
+                    computeSuperqAxis(vertex_content[j]);
 
 
 
@@ -1600,13 +1600,13 @@ void SuperqComputation::addSuperqInGraph(node *leaf)
 
 
 /****************************************************************/
-void SuperqComputation::computeSuperqAxis(int &l)
+void SuperqComputation::computeSuperqAxis(vertex_struct &v1)
 {
-    Matrix R=euler2dcm(vertex_content[l].superq.subVector(8,10));
+    Matrix R=euler2dcm(v1.superq.subVector(8,10));
 
-    vertex_content[l].axis_x = R.getCol(0).subVector(0,2);
-    vertex_content[l].axis_y = R.getCol(1).subVector(0,2);
-    vertex_content[l].axis_z = R.getCol(2).subVector(0,2);
+    v1.axis_x = R.getCol(0).subVector(0,2);
+    v1.axis_y = R.getCol(1).subVector(0,2);
+    v1.axis_z = R.getCol(2).subVector(0,2);
 }
 
 /****************************************************************/
@@ -1721,7 +1721,7 @@ bool SuperqComputation::sphereLike(vertex_struct &v1, vertex_struct &v2)
 /****************************************************************/
 bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matrix &relations)
 {
-    double threshold1=0.9;
+    double threshold1=1.1;
     double threshold2=2.0;
 
     Matrix R1(3,3);
@@ -1760,27 +1760,63 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
 
     //if(debug)
     //{
+        yDebug()<<"     Dim 1 "<<dim1.toString();
         yDebug()<<"     Dim 2 "<<dim2.toString();
         yDebug()<<"     Dim 2 rot "<<dim2_rot.toString();
    // }
 
 
-    Vector p1,p2,p3,p4;
+    /*Vector p1,p2,p3,p4;
     p1.resize(3,0.0);
     p2.resize(3,0.0);
     p3.resize(3,0.0);
-    p4.resize(3,0.0);
+    p4.resize(3,0.0);*/
 
     deque<bool> equals;
 
     equals.clear();
+
+    deque<Vector> edges_1;
+    deque<Vector> edges_2;
+
+    computeEdges(v1, edges_1);
+    computeEdges(v2, edges_2);
+
+    double distance_min=1000.0;
+    int i_min, axis_cont;
+    //double distance_min;
+
+    for (size_t i=0; i<edges_1.size(); i++)
+    {
+       for (size_t j=0; j<edges_2.size(); j++)
+       {
+           double distance=norm(edges_1[i]-edges_2[j]);
+
+           if (distance < distance_min)
+           {
+               distance_min=distance;
+               i_min=i;
+           }
+           //distance_min+=distance;
+       }
+
+    }
+
+    if (i_min==1 || i_min==2)
+        axis_cont=0;
+    else if (i_min==3 || i_min==4)
+        axis_cont=1;
+    else if (i_min==5 || i_min==6)
+        axis_cont=2;
+
+    yDebug()<<"axis cont "<<axis_cont;
 
     for (size_t i=0; i<3; i++)
     {
         cout<<endl;
         bool equal;
 
-        p1=v1.superq.subVector(5,7)+dim1[i]*R1.getRow(i);
+        /*p1=v1.superq.subVector(5,7)+dim1[i]*R1.getRow(i);
         p2=v1.superq.subVector(5,7)-dim1[i]*R1.getRow(i);
 
         p3=v2.superq.subVector(5,7)+dim2_rot[i]*R2_rot.getRow(i);
@@ -1797,6 +1833,10 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
         distances.push_back(norm(vectors[2]));
         distances.push_back(norm(vectors[3]));
 
+        yDebug()<<"p1p2"<<norm(p1-p2);
+         yDebug()<<"p3p4"<<norm(p3-p4);
+
+
         yDebug()<<"Distances"<<distances[0]<<distances[1]<<distances[2]<<distances[3];
 
         auto it=max_element(distances.begin(), distances.end());
@@ -1811,10 +1851,11 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
 
         cout<<endl;
         yDebug()<<"ratio "<<ratio;
-        cout<<endl;
+        cout<<endl;*/
 
         //if (ratio <  1*threshold1 && ratio > 1/threshold1)
-        if (ratio > threshold1)
+        //if (ratio < threshold1)
+        if (i==axis_cont)
         {
             equal=true;
 
@@ -1862,13 +1903,13 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
 } 
 
 /****************************************************************/
-double SuperqComputation::edgesClose(int i, int j)
+double SuperqComputation::edgesClose(vertex_struct &v1, vertex_struct &v2)
 {
     deque<Vector> edges_1;
     deque<Vector> edges_2;
 
-    computeEdges(i, edges_1);
-    computeEdges(j, edges_2);
+    computeEdges(v1, edges_1);
+    computeEdges(v2, edges_2);
 
     double distance_min=1000.0;
 
@@ -1893,24 +1934,24 @@ double SuperqComputation::edgesClose(int i, int j)
 }
 
 /****************************************************************/
-bool SuperqComputation::computeEdges(int l, deque<Vector> &edges)
+bool SuperqComputation::computeEdges(vertex_struct &vertex, deque<Vector> &edges)
 {
     edges.clear();
 
     Vector point(3,0.0);
 
     Vector superq(11,0.0);
-    superq=vertex_content[l].superq;
+    superq=vertex.superq;
 
-    computeSuperqAxis(l);
+    computeSuperqAxis(vertex);
 
     Vector axis_x(3,0.0);
     Vector axis_y(3,0.0);
     Vector axis_z(3,0.0);
 
-    axis_x=vertex_content[l].axis_x;
-    axis_y=vertex_content[l].axis_y;
-    axis_z=vertex_content[l].axis_z;
+    axis_x=vertex.axis_x;
+    axis_y=vertex.axis_y;
+    axis_z=vertex.axis_z;
 
     //yDebug()<<"superq in copute edge "<<superq.toString();
 

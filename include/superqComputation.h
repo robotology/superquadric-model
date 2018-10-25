@@ -281,7 +281,7 @@ public:
     void iterativeModeling();
 
     /****************************************************************/
-    void computeSuperqAxis(int &l);
+    void computeSuperqAxis(vertex_struct &v1);
 
     /****************************************************************/
     bool axisParallel(vertex_struct &v1, vertex_struct &v2, yarp::sig::Matrix &relations);
@@ -305,10 +305,10 @@ public:
    void computeOneShotMultiple(const std::deque<yarp::sig::Vector> &p);
 
    /****************************************************************/
-   bool computeEdges(int i, std::deque<yarp::sig::Vector> &edges);
+   bool computeEdges(vertex_struct &v1,  std::deque<yarp::sig::Vector> &edges);
 
    /****************************************************************/
-   double edgesClose(int i, int j);
+   double edgesClose(vertex_struct &v1, vertex_struct &v2);
 
    /****************************************************************/
    void createGraphFromTree();
