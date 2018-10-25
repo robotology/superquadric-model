@@ -1401,12 +1401,48 @@ void SuperqComputation::cutGraph()
             if (adj_matrix(i,j)==1)
             {
                 Matrix relations(3,3);
-                if (axisParallel(vertex_content[i], vertex_content[j], relations)==false || sectionEqual(vertex_content[i], vertex_content[j], relations)==false)
+                relations.zero();
+                if (sphereLike(vertex_content[i], vertex_content[j])==false)
                 {
-                    yDebug()<<"To be separated!";
-                    adj_matrix(i,j)=0;
-                }
+                    cout<<endl;
+                    yInfo()<<i<<j<<"||    Condition 1: False - No sphere like objects";
+                    cout<<endl;
 
+                    if (axisParallel(vertex_content[i], vertex_content[j], relations)==false)
+                    {
+                        cout<<endl;
+                        yDebug()<<i<<j<<"||    Condition 2: False: No all axis parallel - to be separated!";
+                        cout<<endl;
+                        adj_matrix(i,j)=0;
+                    }
+                    else
+                    {
+                        cout<<endl;
+                        yDebug()<<i<<j<<"||    Condition 2: True: All axis parallel";
+                        cout<<endl;
+
+                        if (sectionEqual(vertex_content[i], vertex_content[j], relations)==false)
+                        {
+                            cout<<endl;
+                            yDebug()<<i<<j<<"||    Condition 3: False: No similar dimensions - to be separated!";
+                            cout<<endl;
+                            adj_matrix(i,j)=0;
+                        }
+                        else
+                        {
+                            cout<<endl;
+                            yDebug()<<i<<j<<"||    Condition 3: True: Similar dimensions - to be merged!";
+                            cout<<endl;
+                        }
+
+                    }
+                }
+                else
+                {
+                    cout<<endl;
+                    yInfo()<<i<<j<<"||    Condition 1: True - Sphere like objects - to be merged!";
+                    cout<<endl;
+                }
             }
         }
     }
@@ -1484,9 +1520,21 @@ void SuperqComputation::computeSuperqAxis(int &l)
 bool SuperqComputation::axisParallel(vertex_struct &v1, vertex_struct &v2, Matrix &relations)
 {
     // No noise
-    double threshold=0.7;
+    double threshold=0.87;
     // Noisy
     //double threshold=0.7;
+
+    yDebug()<<"xx "<<dot(v1.axis_x, v2.axis_x);
+    yDebug()<<"xy "<<dot(v1.axis_x, v2.axis_y);
+    yDebug()<<"xz "<<dot(v1.axis_x, v2.axis_z);
+
+    yDebug()<<"yx "<<dot(v1.axis_y, v2.axis_x);
+    yDebug()<<"yy "<<dot(v1.axis_y, v2.axis_y);
+    yDebug()<<"yz "<<dot(v1.axis_y, v2.axis_z);
+
+    yDebug()<<"zx "<<dot(v1.axis_z, v2.axis_x);
+    yDebug()<<"zy "<<dot(v1.axis_z, v2.axis_y);
+    yDebug()<<"zz "<<dot(v1.axis_z, v2.axis_z);
 
     if (abs(dot(v1.axis_x, v2.axis_x)) > threshold)
     {
@@ -1500,7 +1548,8 @@ bool SuperqComputation::axisParallel(vertex_struct &v1, vertex_struct &v2, Matri
     {
         relations(0,2) = 1;
     }
-    else if (abs(dot(v1.axis_y, v2.axis_x)) > threshold)
+
+    if (abs(dot(v1.axis_y, v2.axis_x)) > threshold)
     {
         relations(1,0) = 1;
     }
@@ -1512,8 +1561,9 @@ bool SuperqComputation::axisParallel(vertex_struct &v1, vertex_struct &v2, Matri
     {
         relations(1,2) = 1;
     }
-    else if (abs(dot(v1.axis_z, v2.axis_x)) > threshold)
-    {
+
+    if (abs(dot(v1.axis_z, v2.axis_x)) > threshold)
+    {       
         relations(2,0) = 1;
     }
     else if  (abs(dot(v1.axis_z, v2.axis_y)) > threshold)
@@ -1529,42 +1579,178 @@ bool SuperqComputation::axisParallel(vertex_struct &v1, vertex_struct &v2, Matri
         yDebug()<<"rel "<<relations.toString();
 
 
-    if ((norm(relations.getRow(0)) > 0.0) || (norm(relations.getRow(1)) > 0.0) || (norm(relations.getRow(2)) > 0.0))
+    if ((norm(relations.getRow(0)) > 0.0) && (norm(relations.getRow(1)) > 0.0) && (norm(relations.getRow(2)) > 0.0))
         return true;
     else
         return false;
 
 }
+
 /****************************************************************/
-bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matrix &relations)
+bool SuperqComputation::sphereLike(vertex_struct &v1, vertex_struct &v2)
 {
-    double threshold=0.02;
+    double threshold=2;
     Vector dim1=v1.superq.subVector(0,2);
     Vector dim2=v2.superq.subVector(0,2);
-
-    Vector dim_rot=relations*dim2;
 
     if(debug)
     {
         yDebug()<<"     Dim 1 "<<dim1.toString();
-        yDebug()<<"     Dim 2 rot "<<dim_rot.toString();
+        yDebug()<<"     Dim 2 "<<dim2.toString();
+    }
+
+    double ratio02_1=dim1[0]/dim1[2];
+    double ratio01_1=dim1[0]/dim1[1];
+    double ratio12_1=dim1[1]/dim1[2];
+
+    double ratio02_2=dim2[0]/dim2[2];
+    double ratio01_2=dim2[0]/dim2[1];
+    double ratio12_2=dim2[1]/dim2[2];
+
+    yDebug()<<"ratios 1 "<<ratio02_1<<ratio01_1<<ratio12_1;
+    yDebug()<<"ratios 2 "<<ratio02_2<<ratio01_2<<ratio12_2;
+
+
+    if ( (ratio02_1 > 1/threshold ) && (ratio02_1 < 1* threshold )  &&
+            (ratio01_1 > 1/threshold ) && (ratio01_1 < 1* threshold ) &&
+                (ratio12_1 > 1/threshold ) && (ratio12_1 < 1* threshold ) &&
+         (ratio02_2 > 1/threshold ) && (ratio02_2 < 1* threshold )  &&
+                     (ratio01_2> 1/threshold ) && (ratio01_2 < 1* threshold ) &&
+                         (ratio12_2 > 1/threshold ) && (ratio12_2 < 1* threshold ))
+        return true;
+    else
+        return false;
+
+
+}
+
+/****************************************************************/
+bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matrix &relations)
+{
+    double threshold1=0.8;
+    double threshold2=0.025;
+
+    Matrix R1(3,3);
+    R1.setRow(0,v1.axis_x);
+    R1.setRow(1,v1.axis_y);
+    R1.setRow(2,v1.axis_z);
+
+    Matrix R2(3,3);
+    R2.setRow(0,v2.axis_x);
+    R2.setRow(1,v2.axis_y);
+    R2.setRow(2,v2.axis_z);
+
+    if (norm(R2.getCol(0))>1 || norm(R2.getCol(1))>1 || norm(R2.getCol(2))>1)
+        yError()<< "Something wrong in one column!!";
+
+    Matrix R2_rot(3,3);
+    R2_rot=relations*R2;
+
+    Vector dim1=v1.superq.subVector(0,2);
+    Vector dim2=v2.superq.subVector(0,2);
+
+    Vector dim2_rot=relations*dim2;
+
+    yDebug()<<"super q "<<v2.superq.toString();
+
+    if(debug)
+    {
+        yDebug()<<"     Dim 1 "<<dim1.toString();
+        yDebug()<<"     Dim 2 rot "<<dim2_rot.toString();
     }
 
 
-    bool equal=true;
+    Vector p1,p2,p3,p4;
+    p1.resize(3,0.0);
+    p2.resize(3,0.0);
+    p3.resize(3,0.0);
+    p4.resize(3,0.0);
+
+    deque<bool> equals;
 
     for (size_t i=0; i<3; i++)
     {
-        if (dim_rot[i]!= 0.0)
+        cout<<endl;
+        bool equal;
+
+        p1=v1.superq.subVector(5,7)+dim1[i]*R1.getRow(i);
+        p2=v1.superq.subVector(5,7)-dim1[i]*R1.getRow(i);
+
+        p3=v2.superq.subVector(5,7)+dim2_rot[i]*R2_rot.getRow(i);
+        p4=v2.superq.subVector(5,7)-dim2_rot[i]*R2_rot.getRow(i);
+
+        vector<double> distances;
+        deque<Vector> vectors;
+        vectors.push_back(p1 - p3);
+        vectors.push_back(p1 - p4);
+        vectors.push_back(p2 - p3);
+        vectors.push_back(p2 - p4);
+        distances.push_back(norm(vectors[0]));
+        distances.push_back(norm(vectors[1]));
+        distances.push_back(norm(vectors[2]));
+        distances.push_back(norm(vectors[3]));
+
+        yDebug()<<"Distances"<<distances[0]<<distances[1]<<distances[2]<<distances[3];
+
+        auto it=max_element(distances.begin(), distances.end());
+
+        yDebug()<<"Max distance "<<*it<<"index "<<it -distances.begin();
+
+        Vector max_dist;
+        max_dist=vectors[it -distances.begin()];
+
+        double ratio;
+        ratio=(norm(p1-p2) + norm(p3-p4))/(norm(max_dist));
+
+        cout<<endl;
+        yDebug()<<"ratio "<<ratio;
+        cout<<endl;
+
+        if (ratio >  threshold1)
         {
-            if ((abs(dim1[i] - dim_rot[i]) < threshold))
-                equal=equal && true;
-            else
-                equal=false;
+            equal=true;
+
+            for (size_t j=0; j<3; j++)
+            {
+                cout<<endl;
+                if ( i != j && dim2_rot[j]!= 0.0)
+                {
+                    yDebug()<<"dimensions "<<i<< "and "<<j;
+                    yDebug()<<abs(dim1[i] - dim2_rot[j]);
+
+                    if ((abs(dim1[i] - dim2_rot[j]) < threshold2))
+                    {
+                        equal=equal && true;
+                    }
+                    else
+                        equal=equal && false;
+                }
+            }
+
+
         }
+        else
+        {
+
+
+            if ( dim2_rot[i]!= 0.0)
+            {
+                yDebug()<<"dimensions "<<i<< "and "<<i;
+                yDebug()<<abs(dim1[i] - dim2_rot[i]);
+
+                if ((abs(dim1[i] - dim2_rot[i]) < threshold2))
+                {
+                    equal=true;
+                }
+                else
+                    equal=false;
+            }
+        }
+        equals.push_back(equal);
     }
 
-    return equal;
+
+    return equals[0] && equals[1] && equals[2];
 } 
 
 /****************************************************************/

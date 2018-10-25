@@ -288,6 +288,9 @@ public:
     /****************************************************************/
     bool sectionEqual(vertex_struct &v1, vertex_struct &v2, yarp::sig::Matrix &relations);
 
+    /****************************************************************/
+    bool sphereLike(vertex_struct &v1, vertex_struct &v2);
+
     /***********************************************************************/
     void splitPoints(node *leaf);
 
