@@ -1425,7 +1425,7 @@ void SuperqComputation::cutGraph()
 
     }
 
-    while (count < vertex_content.size()-3 )
+    while (count < vertex_content.size())
     {
 
        //for (int j1=0; j1<vertex_content.size(); j1++)
@@ -1505,8 +1505,8 @@ void SuperqComputation::cutGraph()
                                 j1=j2;
                                 cout<<endl;
                             }
-
-                            else if (  sin(acos(cos_jj2)) * sin(acos(cos_ij1))<0)
+                            // Forse si puo` eliminare questa
+                            /*else if (  sin(acos(cos_jj2)) * sin(acos(cos_ij1))<0)
                             {
                                 yDebug()<<"sin "<<sin(acos(cos_jj2)) * sin(acos(cos_ij1));
                                 adj_matrix(j1,j2)=0;
@@ -1522,7 +1522,7 @@ void SuperqComputation::cutGraph()
                                 }
                                 j1=j2;
                                 cout<<endl;
-                            }
+                            }*/
                             else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))>0)
                             {
                                 yDebug()<<"sin "<<sin(acos(cos_jj2)) * sin(acos(cos_ij1));
@@ -1541,13 +1541,13 @@ void SuperqComputation::cutGraph()
                                 j1=j2;
                                 cout<<endl;
                             }
-                            /*else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))<0 && acos(cos_jj2)< 1.7)
+                            /*else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))<0) // && acos(cos_jj2)< 1.2)
                             {
                                 yDebug()<<"acos(cos_jj2 "<<acos(cos_jj2);
                                 yDebug()<<"dot(line_jj2, line_ij)"<<dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij));
 
                                 adj_matrix(j2,j3)=0;
-                                i=j3;
+                                i=j2;
 
                                 yDebug()<<"||             Adj between "<<j2<<j3<<0;
 
@@ -1579,7 +1579,7 @@ void SuperqComputation::cutGraph()
                         }
                         else
                         {
-                            yDebug()<<"acos(cos_ij1)"<<acos(cos_ij1);
+                            yDebug()<<"Penultimo"<<acos(cos_ij1);
                             if (acos(cos_ij1)< 1.2)
                             {
                                 adj_matrix(i,j1)=0;
