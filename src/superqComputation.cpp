@@ -1523,7 +1523,7 @@ void SuperqComputation::cutGraph()
                                 j1=j2;
                                 cout<<endl;
                             }*/
-                            else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))>0)
+                            else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))>=-0.2)  // Piu` stringente questo e piu` accetta casi perpendicolari
                             {
                                 yDebug()<<"sin "<<sin(acos(cos_jj2)) * sin(acos(cos_ij1));
                                 yDebug()<<"dot(line_jj2, line_ij)"<<dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij));
