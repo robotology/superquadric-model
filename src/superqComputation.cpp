@@ -1402,111 +1402,202 @@ void SuperqComputation::cutGraph()
     deque<Vector> merged_point_cloud;
     Vector new_superq(11,0.0);
 
-    int vertex;
+    int i, j1, j2, j3;
 
-    for (size_t i=0; i<adj_matrix.rows(); i++)
+    for (size_t l=0; l<adj_matrix.rows(); l++)
     {
         for (int j=0; j<adj_matrix.cols(); j++)
         {
-            if (adj_matrix(i,j)==1 && norm(adj_matrix.getCol(i))==0)
+            if (adj_matrix(l,j)==1 && norm(adj_matrix.getCol(l))==0)
             {
-                vertex=i;
+                i=l;
             }
         }
     }
 
-    yDebug()<<"starting_vertex "<<vertex;
+    yDebug()<<"starting_vertex "<<i;
     int count=0;
 
-    while (count < vertex_content.size() )
+    for (int j=0; j<vertex_content.size(); j++)
     {
-        for (int j=0; j<vertex_content.size(); j++)
-        {
-            if (adj_matrix(vertex,j)==1)
-            {
-                Matrix relations(3,3);
-                relations.zero();
-                if (sphereLike(vertex_content[vertex], vertex_content[j])==false)
-                {
-                    cout<<endl;
-                    yInfo()<<vertex<<j<<"||    Condition 1: False - No sphere like objects";
-                    cout<<endl;
+        if (adj_matrix(i,j)==1)
+            j1=j;
 
-                    if (axisParallel(vertex_content[vertex], vertex_content[j], relations)==false)
+    }
+
+    while (count < vertex_content.size()-3 )
+    {
+
+       //for (int j1=0; j1<vertex_content.size(); j1++)
+        //{
+            if (adj_matrix(i,j1)==1)
+            {
+
+                Vector line_ij, line_jj1, line_jj2;
+                line_ij=vertex_content[j1].superq.subVector(5,7) - vertex_content[i].superq.subVector(5,7);
+
+                for (int l=0; l<vertex_content.size(); l++)
+                {
+                    if (adj_matrix(j1, l)==1)
+                        j2=l;
+                }
+
+                //yDebug()<<"Vertex "<<vertex<<"Next "<<j1<<"Next next "<<j2;
+
+                if (j2 != j1)
+                {
+                    line_jj1=vertex_content[j2].superq.subVector(5,7) - vertex_content[j1].superq.subVector(5,7);
+
+                    yDebug()<<"||            Vertex "<<i<<"Next "<<j1<<"Next next "<<j2;
+
+                    yDebug()<<"||            line_ij"<<line_ij.toString()<<"line_jj1"<<line_jj1.toString();
+
+                    double cos_ij1;
+                    cos_ij1=dot(line_ij/norm(line_ij), line_jj1/norm(line_jj1));
+
+                    yDebug()<<"||            cos between ij and jj1 "<<cos_ij1<<"angle "<<acos(cos_ij1);
+
+                    if (abs(cos_ij1)> 0.85)
                     {
+                        yDebug()<<"||             Parallel consecutive lines";
+                        i=j1;
+                        j1=j2;
                         cout<<endl;
-                        yDebug()<<vertex<<j<<"||    Condition 2: False:  All not axes parallel - to be separated!";
-                        cout<<endl;
-                        //adj_matrix(vertex,j)=0;
-                        //vertex_content_merged.push_back(vertex_content[vertex]);
+
                     }
                     else
                     {
-                        cout<<endl;
-                        yDebug()<<vertex<<j<<"||    Condition 2: True: At least one axis parallel";
-                        cout<<endl;
 
-                        if (sectionEqual(vertex_content[vertex], vertex_content[j], relations)==false)
+                        cout<<endl;
+                        yDebug()<<"||            Non Parallel consecutive lines";
+
+                        for (int l=0; l<vertex_content.size(); l++)
                         {
-                            cout<<endl;
-                            yDebug()<<vertex<<j<<"||    Condition 3: False: No similar dimensions - to be separated!";
-                            cout<<endl;
-                            //adj_matrix(vertex,j)=0;
-                            //vertex_content_merged.push_back(vertex_content[vertex]);
+                            if (adj_matrix(j2, l)==1)
+                                j3=l;
+                        }
+
+
+                        if (j3 != j2)
+                        {
+                            double cos_jj2;
+                            line_jj2=vertex_content[j3].superq.subVector(5,7) - vertex_content[j2].superq.subVector(5,7);
+                            cos_jj2=dot(line_jj1/norm(line_jj1), line_jj2/norm(line_jj2));
+
+                            yDebug()<<"||            cos between jj1 and jj2"<<cos_jj2<<"angle "<<acos(cos_jj2);
+
+
+                            if (abs(cos_jj2) > 0.85)
+                            {
+                                yDebug()<<"||            Parallel  the one later";
+                                adj_matrix(j1,j2)=0;
+                                //adj_matrix(i,j1)=0;
+
+                                yDebug()<<"||             Adj between "<<i<<j1<<0;
+                                i=j2;
+                                //i=j1;
+
+                                for (int l=0; l<vertex_content.size(); l++)
+                                {
+                                    if (adj_matrix(i, l)==1)
+                                        j2=l;
+                                }
+                                j1=j2;
+                                cout<<endl;
+                            }
+
+                            else if (  sin(acos(cos_jj2)) * sin(acos(cos_ij1))<0)
+                            {
+                                yDebug()<<"sin "<<sin(acos(cos_jj2)) * sin(acos(cos_ij1));
+                                adj_matrix(j1,j2)=0;
+                                i=j2;
+
+                                yDebug()<<"||             Adj between "<<j1<<j2<<0;
+
+
+                                for (int l=0; l<vertex_content.size(); l++)
+                                {
+                                    if (adj_matrix(i, l)==1)
+                                        j2=l;
+                                }
+                                j1=j2;
+                                cout<<endl;
+                            }
+                            else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))>0)
+                            {
+                                yDebug()<<"sin "<<sin(acos(cos_jj2)) * sin(acos(cos_ij1));
+                                yDebug()<<"dot(line_jj2, line_ij)"<<dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij));
+
+                                adj_matrix(j2,j3)=0;
+                                i=j3;
+
+                                yDebug()<<"||             Adj between "<<j2<<j3<<0;
+
+                                for (int l=0; l<vertex_content.size(); l++)
+                                {
+                                    if (adj_matrix(i, l)==1)
+                                        j2=l;
+                                }
+                                j1=j2;
+                                cout<<endl;
+                            }
+                            /*else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))<0 && acos(cos_jj2)< 1.7)
+                            {
+                                yDebug()<<"acos(cos_jj2 "<<acos(cos_jj2);
+                                yDebug()<<"dot(line_jj2, line_ij)"<<dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij));
+
+                                adj_matrix(j2,j3)=0;
+                                i=j3;
+
+                                yDebug()<<"||             Adj between "<<j2<<j3<<0;
+
+                                for (int l=0; l<vertex_content.size(); l++)
+                                {
+                                    if (adj_matrix(i, l)==1)
+                                        j2=l;
+                                }
+                                j1=j2;
+                                cout<<endl;
+                            }*/
+                            else
+                            {
+                                i=j1;
+
+                                for (int l=0; l<vertex_content.size(); l++)
+                                {
+                                    if (adj_matrix(i, l)==1)
+                                        j2=l;
+                                }
+                                j1=j2;
+                                cout<<endl;
+
+                            }
+
+                            yDebug()<<"sin "<<sin(acos(cos_jj2)) * sin(acos(cos_ij1));
+
+
                         }
                         else
                         {
-                            cout<<endl;
-                            yDebug()<<vertex<<j<<"||    Condition 3: True: Similar dimensions - to be merged!";
-                            cout<<endl;
-                            merged_point_cloud=mergePointClouds(vertex_content[vertex], vertex_content[j]);
-                            new_superq=computeMultipleSuperq(merged_point_cloud);
+                            yDebug()<<"acos(cos_ij1)"<<acos(cos_ij1);
+                            if (acos(cos_ij1)< 1.2)
+                            {
+                                adj_matrix(i,j1)=0;
 
-
-                            vertex_struct vertex_c;
-
-                            vertex_c.superq=new_superq;
-                            vertex_c.point_cloud=&merged_point_cloud;
-
-                            //vertex_content_merged.push_back(vertex_c);
-                            vertex_content[j]=vertex_c;
-
-                            computeSuperqAxis(vertex_content[j]);
-
+                                yDebug()<<"||             Adj between "<<i<<j1<<0;
+                            }
                         }
 
                     }
                 }
-                else
-                {
-                    cout<<endl;
-                    yInfo()<<vertex<<j<<"||    Condition 1: True - Sphere like objects - to be merged!";
-                    cout<<endl;
-
-                    merged_point_cloud=mergePointClouds(vertex_content[vertex], vertex_content[j]);
-                    new_superq=computeMultipleSuperq(merged_point_cloud);
-
-                    vertex_struct vertex_c;
-
-                    vertex_c.superq=new_superq;
-                    vertex_c.point_cloud=&merged_point_cloud;
-
-
-                    //vertex_content_merged.push_back(vertex_c);
-                    vertex_content[j]=vertex_c;
-
-                    computeSuperqAxis(vertex_content[j]);
-
-
-
-                }
-                vertex=j;
 
 
             }
 
+            //yDebug()<<"count "<<count;
 
-        }
+
+        //}
 
         count++;
 
