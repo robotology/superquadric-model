@@ -1435,7 +1435,7 @@ void SuperqComputation::cutGraph()
                     if (axisParallel(vertex_content[vertex], vertex_content[j], relations)==false)
                     {
                         cout<<endl;
-                        yDebug()<<vertex<<j<<"||    Condition 2: False: No all axis parallel - to be separated!";
+                        yDebug()<<vertex<<j<<"||    Condition 2: False:  All not axes parallel - to be separated!";
                         cout<<endl;
                         //adj_matrix(vertex,j)=0;
                         //vertex_content_merged.push_back(vertex_content[vertex]);
@@ -1443,7 +1443,7 @@ void SuperqComputation::cutGraph()
                     else
                     {
                         cout<<endl;
-                        yDebug()<<vertex<<j<<"||    Condition 2: True: All axis parallel";
+                        yDebug()<<vertex<<j<<"||    Condition 2: True: At least one axis parallel";
                         cout<<endl;
 
                         if (sectionEqual(vertex_content[vertex], vertex_content[j], relations)==false)
@@ -1613,7 +1613,7 @@ void SuperqComputation::computeSuperqAxis(vertex_struct &v1)
 bool SuperqComputation::axisParallel(vertex_struct &v1, vertex_struct &v2, Matrix &relations)
 {
     // No noise
-    double threshold=0.7;
+    double threshold=0.65;
     // Noisy
     //double threshold=0.7;
 
@@ -1672,7 +1672,7 @@ bool SuperqComputation::axisParallel(vertex_struct &v1, vertex_struct &v2, Matri
         yDebug()<<"rel "<<relations.toString();
 
 
-    if ((norm(relations.getRow(0)) > 0.0) && (norm(relations.getRow(1)) > 0.0) && (norm(relations.getRow(2)) > 0.0))
+    if ((norm(relations.getRow(0)) > 0.0) || (norm(relations.getRow(1)) > 0.0) || (norm(relations.getRow(2)) > 0.0))
         return true;
     else
         return false;
@@ -1721,8 +1721,8 @@ bool SuperqComputation::sphereLike(vertex_struct &v1, vertex_struct &v2)
 /****************************************************************/
 bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matrix &relations)
 {
-    double threshold1=1.1;
-    double threshold2=2.0;
+    double threshold1=0.9;
+    double threshold2=1.5;
 
     Matrix R1(3,3);
     R1.setRow(0,v1.axis_x);
@@ -1734,7 +1734,10 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
     R2.setRow(1,v2.axis_y);
     R2.setRow(2,v2.axis_z);
 
+
     cout<<endl;
+    yDebug()<<"R1 ";
+    yDebug()<<R1.toString();
     yDebug()<<"R2 ";
     yDebug()<<R2.toString();
     yDebug()<<"relations ";
@@ -1766,17 +1769,17 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
    // }
 
 
-    /*Vector p1,p2,p3,p4;
+    Vector p1,p2,p3,p4;
     p1.resize(3,0.0);
     p2.resize(3,0.0);
     p3.resize(3,0.0);
-    p4.resize(3,0.0);*/
+    p4.resize(3,0.0);
 
     deque<bool> equals;
 
     equals.clear();
 
-    deque<Vector> edges_1;
+    /*deque<Vector> edges_1;
     deque<Vector> edges_2;
 
     computeEdges(v1, edges_1);
@@ -1809,93 +1812,152 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
     else if (i_min==5 || i_min==6)
         axis_cont=2;
 
-    yDebug()<<"axis cont "<<axis_cont;
+    yDebug()<<"axis cont "<<axis_cont;*/
 
     for (size_t i=0; i<3; i++)
     {
-        cout<<endl;
         bool equal;
+        int other_index;
 
-        /*p1=v1.superq.subVector(5,7)+dim1[i]*R1.getRow(i);
-        p2=v1.superq.subVector(5,7)-dim1[i]*R1.getRow(i);
-
-        p3=v2.superq.subVector(5,7)+dim2_rot[i]*R2_rot.getRow(i);
-        p4=v2.superq.subVector(5,7)-dim2_rot[i]*R2_rot.getRow(i);
-
-        vector<double> distances;
-        deque<Vector> vectors;
-        vectors.push_back(p1 - p3);
-        vectors.push_back(p1 - p4);
-        vectors.push_back(p2 - p3);
-        vectors.push_back(p2 - p4);
-        distances.push_back(norm(vectors[0]));
-        distances.push_back(norm(vectors[1]));
-        distances.push_back(norm(vectors[2]));
-        distances.push_back(norm(vectors[3]));
-
-        yDebug()<<"p1p2"<<norm(p1-p2);
-         yDebug()<<"p3p4"<<norm(p3-p4);
-
-
-        yDebug()<<"Distances"<<distances[0]<<distances[1]<<distances[2]<<distances[3];
-
-        auto it=max_element(distances.begin(), distances.end());
-
-        yDebug()<<"Max distance "<<*it<<"index "<<it -distances.begin();
-
-        Vector max_dist;
-        max_dist=vectors[it -distances.begin()];
-
-        double ratio;
-        ratio=(norm(p1-p2) + norm(p3-p4))/(norm(max_dist));
-
-        cout<<endl;
-        yDebug()<<"ratio "<<ratio;
-        cout<<endl;*/
-
-        //if (ratio <  1*threshold1 && ratio > 1/threshold1)
-        //if (ratio < threshold1)
-        if (i==axis_cont)
+        if (norm(relations.getRow(i))> 0.0)
         {
-            equal=true;
+            yDebug()<<"Axis parallel to another";
+            cout<<endl;
+            other_index=i;
 
-            for (size_t j=0; j<3; j++)
+            p1=v1.superq.subVector(5,7)+dim1[i]*R1.getRow(i);
+            p2=v1.superq.subVector(5,7)-dim1[i]*R1.getRow(i);
+
+
+            p3=v2.superq.subVector(5,7)+dim2_rot[other_index]*R2_rot.getRow(i);
+            p4=v2.superq.subVector(5,7)-dim2_rot[other_index]*R2_rot.getRow(i);
+
+            vector<double> distances;
+            deque<Vector> vectors;
+            vectors.push_back(p1 - p3);
+            vectors.push_back(p1 - p4);
+            vectors.push_back(p2 - p3);
+            vectors.push_back(p2 - p4);
+            distances.push_back(norm(vectors[0]));
+            distances.push_back(norm(vectors[1]));
+            distances.push_back(norm(vectors[2]));
+            distances.push_back(norm(vectors[3]));
+
+            yDebug()<<"p1p2"<<norm(p1-p2);
+             yDebug()<<"p3p4"<<norm(p3-p4);
+
+
+            yDebug()<<"Distances"<<distances[0]<<distances[1]<<distances[2]<<distances[3];
+
+            auto it=max_element(distances.begin(), distances.end());
+
+            yDebug()<<"Max distance "<<*it<<"index "<<it -distances.begin();
+
+            Vector max_dist;
+            max_dist=vectors[it -distances.begin()];
+
+            double cos_max_dist1, cos_max_dist2;
+            cos_max_dist1=dot((p1 - p2)/norm(p1 - p2), (p1 - p4)/norm(p1 - p4));
+            yDebug()<<"cos max dist 1"<<cos_max_dist1;
+            cos_max_dist2=dot((p3 - p4)/norm(p3 - p4), (p1 - p4)/norm(p1 - p4));
+            yDebug()<<"cos max dist 2"<<cos_max_dist2;
+
+
+
+            if (abs(max(cos_max_dist1, cos_max_dist2)) > threshold1)
+            //if (ratio < threshold1)
+            //if (i==axis_cont)
             {
-                cout<<endl;
-                if ( i != j && dim2_rot[j]!= 0.0)
-                {
-                    yDebug()<<"dimensions "<<j<< "and "<<j;
-                    yDebug()<<dim1[j]/dim2_rot[j];
+                equal=true;
 
-                    if ( (dim1[j]/dim2_rot[j] < 1*threshold2) && (dim1[j]/dim2_rot[j] > 1/threshold2))
+                for (size_t j=0; j<3; j++)
+                {
+                    cout<<endl;
+                    if ( i != j && dim2_rot[j]!= 0.0)
                     {
-                        equal=equal && true;
+                        yDebug()<<"dimensions "<<j<< "and "<<j;
+                        yDebug()<<dim1[j]/dim2_rot[j];
+
+                        if ( (dim1[j]/dim2_rot[j] < 1*threshold2) && (dim1[j]/dim2_rot[j] > 1/threshold2))
+                        {
+                            equal=equal && true;
+                        }
+                        else
+                            equal=equal && false;
+                    }
+                }
+
+
+            }
+            else
+            {
+
+
+                if ( dim2_rot[i]!= 0.0)
+                {
+                    yDebug()<<"dimensions "<<i<< "and "<<i;
+                    yDebug()<<dim1[i]/dim2_rot[i];
+
+                    if ((dim1[i]/ dim2_rot[i] < 1*threshold2) && (dim1[i]/ dim2_rot[i] > 1/threshold2))
+                    {
+                        equal=true;
                     }
                     else
-                        equal=equal && false;
+                        equal=false;
                 }
             }
-
-
+            equals.push_back(equal);
         }
-        else
-        {
 
-
-            if ( dim2_rot[i]!= 0.0)
+       //else
+        //{
+            /*vector<double> coss;
+            for (size_t j=0; j<3; j++)
             {
-                yDebug()<<"dimensions "<<i<< "and "<<i;
-                yDebug()<<dim1[i]/dim2_rot[i];
+                if (j!=i)
+                    coss.push_back(abs(dot(R1.getRow(i), R2.getRow(j))));
 
-                if ((dim1[i]/ dim2_rot[i] < 1*threshold2) && (dim1[i]/ dim2_rot[i] > 1/threshold2))
-                {
-                    equal=true;
-                }
-                else
-                    equal=false;
             }
-        }
-        equals.push_back(equal);
+
+            yDebug()<<"coss "<<coss[0]<<coss[1];
+            auto more_parallel_to=max_element(coss.begin(), coss.end());
+            yDebug()<<"more parallale to "<<*more_parallel_to;
+
+            other_index=more_parallel_to - coss.begin();
+
+            yDebug()<<"other index "<<other_index;*/
+
+            /*double ratio02_2=dim2[0]/dim2[2];
+            double ratio01_2=dim2[0]/dim2[1];
+            double ratio12_2=dim2[1]/dim2[2];
+
+            yDebug()<<"is sphere? "<<dim2[0]<<dim2[1]<<dim2[2];
+
+
+            yDebug()<<"ratios 1 "<<ratio02_2<<ratio01_2<<ratio12_2;
+
+
+            if ( (ratio02_2 > 0.8) && (ratio02_2 < 1.5 )  &&                      // NUmber 1 is sphere like
+                    (ratio01_2 > 0.8) && (ratio01_2 < 1.5 ) &&
+                        (ratio12_2 > 0.8 ) && (ratio12_2 < 1.5 ))
+                equal=true;
+            else
+                equal=false;
+
+
+
+
+
+            /*if ((dim1[i]/ dim2[other_index] < 1*threshold2) && (dim1[i]/ dim2[other_index] > 1/threshold2))
+            {
+                equal=true;
+            }
+            else
+                equal=false;*/
+
+        //}
+        equals.push_back(true);
+
     }
 
     yDebug()<<"Similarity between axis"<<equals[0] << equals[1] << equals[2];

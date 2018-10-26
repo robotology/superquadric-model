@@ -108,7 +108,11 @@ void SuperQuadric_NLP::computeBounds()
     bounds(10,0)=0;
     bounds(8,1)=2*M_PI;
     bounds(9,1)=M_PI;
-    bounds(10,1)=2*M_PI;
+    //bounds(10,1)=2*M_PI;
+
+    bounds(10,1)=0;
+
+
 
     //yDebug()<<"Bounds "<<bounds.toString();
 }
