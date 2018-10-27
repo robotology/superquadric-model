@@ -1436,6 +1436,7 @@ void SuperqComputation::cutGraph()
                 Vector line_ij, line_jj1, line_jj2;
                 line_ij=vertex_content[j1].superq.subVector(5,7) - vertex_content[i].superq.subVector(5,7);
 
+                j2=j1;
                 for (int l=0; l<vertex_content.size(); l++)
                 {
                     if (adj_matrix(j1, l)==1)
@@ -1471,6 +1472,7 @@ void SuperqComputation::cutGraph()
                         cout<<endl;
                         yDebug()<<"||            Non Parallel consecutive lines";
 
+                        j3=j2;
                         for (int l=0; l<vertex_content.size(); l++)
                         {
                             if (adj_matrix(j2, l)==1)
@@ -1490,13 +1492,14 @@ void SuperqComputation::cutGraph()
                             if (abs(cos_jj2) > 0.85)
                             {
                                 yDebug()<<"||            Parallel  the one later";
-                                adj_matrix(j1,j2)=0;
+                                adj_matrix(i,j1)=0;
                                 //adj_matrix(i,j1)=0;
 
                                 yDebug()<<"||             Adj between "<<i<<j1<<0;
                                 i=j2;
                                 //i=j1;
 
+                                j1=i;
                                 for (int l=0; l<vertex_content.size(); l++)
                                 {
                                     if (adj_matrix(i, l)==1)
@@ -1533,6 +1536,7 @@ void SuperqComputation::cutGraph()
 
                                 yDebug()<<"||             Adj between "<<j2<<j3<<0;
 
+                                j1=i;
                                 for (int l=0; l<vertex_content.size(); l++)
                                 {
                                     if (adj_matrix(i, l)==1)
@@ -1561,16 +1565,44 @@ void SuperqComputation::cutGraph()
                             }*/
                             else
                             {
-                                i=j1;
 
+                                int j33=-1;
                                 for (int l=0; l<vertex_content.size(); l++)
                                 {
-                                    if (adj_matrix(i, l)==1)
-                                        j2=l;
+                                    if (adj_matrix(j3, l)==1)
+                                        j33=l;
                                 }
-                                j1=j2;
-                                cout<<endl;
 
+                                yDebug()<<"j1"<<j1<<"j2"<<j2<<"j3"<<j3<<"j33"<<j33;
+
+
+                                if (j33> -1)
+                                {
+                                    i=j1;
+
+                                    j1=i;
+                                    for (int l=0; l<vertex_content.size(); l++)
+                                    {
+                                        if (adj_matrix(i, l)==1)
+                                            j2=l;
+                                    }
+                                    j1=j2;
+                                    cout<<endl;
+
+                                }
+                                else
+                                {
+                                    i=j2;
+                                    j1=i;
+                                    yDebug()<<" -------------- Finshed with circle--------------";
+                                    for (int l=0; l<vertex_content.size(); l++)
+                                    {
+                                        if (adj_matrix(i, l)==1)
+                                            j2=l;
+                                    }
+                                    j1=j2;
+                                    cout<<endl;
+                                }
                             }
 
                             yDebug()<<"sin "<<sin(acos(cos_jj2)) * sin(acos(cos_ij1));
@@ -1580,12 +1612,12 @@ void SuperqComputation::cutGraph()
                         else
                         {
                             yDebug()<<"Penultimo"<<acos(cos_ij1);
-                            if (acos(cos_ij1)< 1.2)
-                            {
+                            //if (acos(cos_ij1)< 1.2)
+                            //{
                                 adj_matrix(i,j1)=0;
 
                                 yDebug()<<"||             Adj between "<<i<<j1<<0;
-                            }
+                            //}
                         }
 
                     }
