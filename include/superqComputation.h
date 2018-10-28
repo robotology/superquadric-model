@@ -127,6 +127,7 @@ public:
     std::vector<vertex_struct> vertex_content_merged;
     yarp::sig::Matrix adj_matrix;
     int num_vertices;
+    std::vector<int> starting_vertices;
 
 
     bool merge;
@@ -320,7 +321,10 @@ public:
    void cutGraph();
 
    /**********************************************************************/
-   std::deque<yarp::sig::Vector> mergePointClouds(vertex_struct &v1, vertex_struct &v2);
+   void mergePointClouds(vertex_struct &v1, vertex_struct &v2, std::deque<yarp::sig::Vector> &merged_pc);
+
+   /**********************************************************************/
+   void computeNewSuperqs();
 
 };
 

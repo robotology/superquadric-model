@@ -916,9 +916,11 @@ void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
 
     createGraphFromTree();
 
+    cutGraph();
+
     if (merge_model)
     {
-        cutGraph();
+        computeNewSuperqs();
         //vertex_content=vertex_content_merged;
 
         for (size_t i=0; i<vertex_content.size(); i++)
@@ -1399,10 +1401,8 @@ void SuperqComputation::createGraphFromTree()
 /****************************************************************/
 void SuperqComputation::cutGraph()
 {
-    deque<Vector> merged_point_cloud;
-    Vector new_superq(11,0.0);
-
     int i, j1, j2, j3;
+    starting_vertices.clear();
 
     for (size_t l=0; l<adj_matrix.rows(); l++)
     {
@@ -1418,6 +1418,8 @@ void SuperqComputation::cutGraph()
     yDebug()<<"starting_vertex "<<i;
     int count=0;
 
+    starting_vertices.push_back(i);
+
     for (int j=0; j<vertex_content.size(); j++)
     {
         if (adj_matrix(i,j)==1)
@@ -1428,225 +1430,314 @@ void SuperqComputation::cutGraph()
     while (count < vertex_content.size())
     {
 
-       //for (int j1=0; j1<vertex_content.size(); j1++)
-        //{
-            if (adj_matrix(i,j1)==1)
+        if (adj_matrix(i,j1)==1)
+        {
+
+            Vector line_ij, line_jj1, line_jj2;
+            line_ij=vertex_content[j1].superq.subVector(5,7) - vertex_content[i].superq.subVector(5,7);
+
+            j2=j1;
+
+            for (int l=0; l<vertex_content.size(); l++)
             {
+                if (adj_matrix(j1, l)==1)
+                    j2=l;
+            }
 
-                Vector line_ij, line_jj1, line_jj2;
-                line_ij=vertex_content[j1].superq.subVector(5,7) - vertex_content[i].superq.subVector(5,7);
+            if (j2 != j1)
+            {
+                line_jj1=vertex_content[j2].superq.subVector(5,7) - vertex_content[j1].superq.subVector(5,7);
 
-                j2=j1;
-                for (int l=0; l<vertex_content.size(); l++)
+                yDebug()<<"||            Vertex "<<i<<"Next "<<j1<<"Next next "<<j2;
+
+                yDebug()<<"||            line_ij"<<line_ij.toString()<<"line_jj1"<<line_jj1.toString();
+
+                double cos_ij1;
+                cos_ij1=dot(line_ij/norm(line_ij), line_jj1/norm(line_jj1));
+
+                yDebug()<<"||            cos between ij and jj1 "<<cos_ij1<<"angle "<<acos(cos_ij1);
+
+                //if (abs(cos_ij1)> 0.85)
+                if (cos_ij1> 0.9)
                 {
-                    if (adj_matrix(j1, l)==1)
-                        j2=l;
+                    yDebug()<<"||             Parallel consecutive lines";
+                    i=j1;
+                    j1=j2;
+                    cout<<endl;
+
                 }
-
-                //yDebug()<<"Vertex "<<vertex<<"Next "<<j1<<"Next next "<<j2;
-
-                if (j2 != j1)
+                else if (abs(cos_ij1)<0.9)
                 {
-                    line_jj1=vertex_content[j2].superq.subVector(5,7) - vertex_content[j1].superq.subVector(5,7);
 
-                    yDebug()<<"||            Vertex "<<i<<"Next "<<j1<<"Next next "<<j2;
+                    cout<<endl;
+                    yDebug()<<"||            Non Parallel consecutive lines";
 
-                    yDebug()<<"||            line_ij"<<line_ij.toString()<<"line_jj1"<<line_jj1.toString();
-
-                    double cos_ij1;
-                    cos_ij1=dot(line_ij/norm(line_ij), line_jj1/norm(line_jj1));
-
-                    yDebug()<<"||            cos between ij and jj1 "<<cos_ij1<<"angle "<<acos(cos_ij1);
-
-                    if (abs(cos_ij1)> 0.85)
+                    j3=j2;
+                    for (int l=0; l<vertex_content.size(); l++)
                     {
-                        yDebug()<<"||             Parallel consecutive lines";
-                        i=j1;
-                        j1=j2;
-                        cout<<endl;
+                        if (adj_matrix(j2, l)==1)
+                            j3=l;
+                    }
+
+
+                    if (j3 != j2)
+                    {
+                        double cos_jj2;
+                        line_jj2=vertex_content[j3].superq.subVector(5,7) - vertex_content[j2].superq.subVector(5,7);
+                        cos_jj2=dot(line_jj1/norm(line_jj1), line_jj2/norm(line_jj2));
+
+                        yDebug()<<"||            cos between jj1 and jj2"<<cos_jj2<<"angle "<<acos(cos_jj2);
+                        yDebug()<<"dot(line_jj2, line_ij)"<<dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij));
+
+
+                        if (abs(cos_jj2) > 0.9)
+                        //if (cos_jj2 > 0.85)
+                        {
+                            yDebug()<<"||            Parallel  the one later";
+                            adj_matrix(i,j1)=0;
+
+
+                            starting_vertices.push_back(j1);
+
+
+                            yDebug()<<"||             Adj between "<<i<<j1<<0;
+                            i=j2;
+
+                            j1=i;
+                            for (int l=0; l<vertex_content.size(); l++)
+                            {
+                                if (adj_matrix(i, l)==1)
+                                    j2=l;
+                            }
+                            j1=j2;
+                            cout<<endl;
+                        }
+                        else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))>=0.0)  // Piu` stringente questo e piu` accetta casi perpendicolari
+                        {
+                            yDebug()<<"sin "<<sin(acos(cos_jj2)) * sin(acos(cos_ij1));
+                            yDebug()<<"dot(line_jj2, line_ij)"<<dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij));
+
+
+                            adj_matrix(j2,j3)=0;
+                            //adj_matrix(j1,j2)=0;
+                            i=j3;
+
+
+                            starting_vertices.push_back(j3);
+
+
+                            yDebug()<<"||             Adj between "<<j2<<j3<<0;
+                            //yDebug()<<"||             Adj between "<<j1<<j2<<0;
+
+                            j1=i;
+                            for (int l=0; l<vertex_content.size(); l++)
+                            {
+                                if (adj_matrix(i, l)==1)
+                                    j2=l;
+                            }
+                            j1=j2;
+                            cout<<endl;
+                        }
+                        else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))>=-0.3)  // Piu` stringente questo e piu` accetta casi perpendicolari
+                        {
+                            yDebug()<<"sin "<<sin(acos(cos_jj2)) * sin(acos(cos_ij1));
+                            yDebug()<<"dot(line_jj2, line_ij)"<<dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij));
+
+
+                            //adj_matrix(j2,j3)=0;
+                            adj_matrix(j1,j2)=0;
+                            i=j3;
+
+
+                            starting_vertices.push_back(j2);
+
+
+                            //yDebug()<<"||             Adj between "<<j2<<j3<<0;
+                            yDebug()<<"||             Adj between "<<j1<<j2<<0;
+
+                            j1=i;
+                            for (int l=0; l<vertex_content.size(); l++)
+                            {
+                                if (adj_matrix(i, l)==1)
+                                    j2=l;
+                            }
+                            j1=j2;
+                            cout<<endl;
+                        }
+                        else
+                        {
+
+                            int j33=-1;
+                            for (int l=0; l<vertex_content.size(); l++)
+                            {
+                                if (adj_matrix(j3, l)==1)
+                                    j33=l;
+                            }
+
+                            yDebug()<<"j1"<<j1<<"j2"<<j2<<"j3"<<j3<<"j33"<<j33;
+
+
+                            if (j33> -1)
+                            {
+                                i=j1;
+
+                                j1=i;
+                                for (int l=0; l<vertex_content.size(); l++)
+                                {
+                                    if (adj_matrix(i, l)==1)
+                                        j2=l;
+                                }
+                                j1=j2;
+                                cout<<endl;
+
+                            }
+                            else
+                            {
+                                i=j2;
+                                j1=i;
+                                yDebug()<<" -------------- Finshed with circle--------------";
+                                for (int l=0; l<vertex_content.size(); l++)
+                                {
+                                    if (adj_matrix(i, l)==1)
+                                        j2=l;
+                                }
+                                j1=j2;
+                                cout<<endl;
+                            }
+                        }
 
                     }
                     else
                     {
-
-                        cout<<endl;
-                        yDebug()<<"||            Non Parallel consecutive lines";
-
-                        j3=j2;
-                        for (int l=0; l<vertex_content.size(); l++)
-                        {
-                            if (adj_matrix(j2, l)==1)
-                                j3=l;
-                        }
+                        yDebug()<<"j3==j2 "<<acos(cos_ij1);
 
 
-                        if (j3 != j2)
-                        {
-                            double cos_jj2;
-                            line_jj2=vertex_content[j3].superq.subVector(5,7) - vertex_content[j2].superq.subVector(5,7);
-                            cos_jj2=dot(line_jj1/norm(line_jj1), line_jj2/norm(line_jj2));
-
-                            yDebug()<<"||            cos between jj1 and jj2"<<cos_jj2<<"angle "<<acos(cos_jj2);
+                        adj_matrix(i,j1)=0;
 
 
-                            if (abs(cos_jj2) > 0.85)
-                            {
-                                yDebug()<<"||            Parallel  the one later";
-                                adj_matrix(i,j1)=0;
-                                //adj_matrix(i,j1)=0;
-
-                                yDebug()<<"||             Adj between "<<i<<j1<<0;
-                                i=j2;
-                                //i=j1;
-
-                                j1=i;
-                                for (int l=0; l<vertex_content.size(); l++)
-                                {
-                                    if (adj_matrix(i, l)==1)
-                                        j2=l;
-                                }
-                                j1=j2;
-                                cout<<endl;
-                            }
-                            // Forse si puo` eliminare questa
-                            /*else if (  sin(acos(cos_jj2)) * sin(acos(cos_ij1))<0)
-                            {
-                                yDebug()<<"sin "<<sin(acos(cos_jj2)) * sin(acos(cos_ij1));
-                                adj_matrix(j1,j2)=0;
-                                i=j2;
-
-                                yDebug()<<"||             Adj between "<<j1<<j2<<0;
+                        starting_vertices.push_back(j1);
 
 
-                                for (int l=0; l<vertex_content.size(); l++)
-                                {
-                                    if (adj_matrix(i, l)==1)
-                                        j2=l;
-                                }
-                                j1=j2;
-                                cout<<endl;
-                            }*/
-                            else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))>=-0.2)  // Piu` stringente questo e piu` accetta casi perpendicolari
-                            {
-                                yDebug()<<"sin "<<sin(acos(cos_jj2)) * sin(acos(cos_ij1));
-                                yDebug()<<"dot(line_jj2, line_ij)"<<dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij));
-
-                                adj_matrix(j2,j3)=0;
-                                i=j3;
-
-                                yDebug()<<"||             Adj between "<<j2<<j3<<0;
-
-                                j1=i;
-                                for (int l=0; l<vertex_content.size(); l++)
-                                {
-                                    if (adj_matrix(i, l)==1)
-                                        j2=l;
-                                }
-                                j1=j2;
-                                cout<<endl;
-                            }
-                            /*else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))<0) // && acos(cos_jj2)< 1.2)
-                            {
-                                yDebug()<<"acos(cos_jj2 "<<acos(cos_jj2);
-                                yDebug()<<"dot(line_jj2, line_ij)"<<dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij));
-
-                                adj_matrix(j2,j3)=0;
-                                i=j2;
-
-                                yDebug()<<"||             Adj between "<<j2<<j3<<0;
-
-                                for (int l=0; l<vertex_content.size(); l++)
-                                {
-                                    if (adj_matrix(i, l)==1)
-                                        j2=l;
-                                }
-                                j1=j2;
-                                cout<<endl;
-                            }*/
-                            else
-                            {
-
-                                int j33=-1;
-                                for (int l=0; l<vertex_content.size(); l++)
-                                {
-                                    if (adj_matrix(j3, l)==1)
-                                        j33=l;
-                                }
-
-                                yDebug()<<"j1"<<j1<<"j2"<<j2<<"j3"<<j3<<"j33"<<j33;
-
-
-                                if (j33> -1)
-                                {
-                                    i=j1;
-
-                                    j1=i;
-                                    for (int l=0; l<vertex_content.size(); l++)
-                                    {
-                                        if (adj_matrix(i, l)==1)
-                                            j2=l;
-                                    }
-                                    j1=j2;
-                                    cout<<endl;
-
-                                }
-                                else
-                                {
-                                    i=j2;
-                                    j1=i;
-                                    yDebug()<<" -------------- Finshed with circle--------------";
-                                    for (int l=0; l<vertex_content.size(); l++)
-                                    {
-                                        if (adj_matrix(i, l)==1)
-                                            j2=l;
-                                    }
-                                    j1=j2;
-                                    cout<<endl;
-                                }
-                            }
-
-                            yDebug()<<"sin "<<sin(acos(cos_jj2)) * sin(acos(cos_ij1));
-
-
-                        }
-                        else
-                        {
-                            yDebug()<<"Penultimo"<<acos(cos_ij1);
-                            //if (acos(cos_ij1)< 1.2)
-                            //{
-                                adj_matrix(i,j1)=0;
-
-                                yDebug()<<"||             Adj between "<<i<<j1<<0;
-                            //}
-                        }
+                        yDebug()<<"||             Adj between "<<i<<j1<<0;
 
                     }
+
                 }
+                else
+                {
+                    adj_matrix(j1,j2)=0;
 
 
+                    starting_vertices.push_back(j2);
+
+
+                    yDebug()<<"||             Adj between "<<i<<j1<<0;
+                    i=j2;
+
+                    j1=i;
+                    for (int l=0; l<vertex_content.size(); l++)
+                    {
+                        if (adj_matrix(i, l)==1)
+                            j2=l;
+                    }
+                    j1=j2;
+                    cout<<endl;
+                }
             }
 
-            //yDebug()<<"count "<<count;
 
+        }
 
-        //}
 
         count++;
 
     }
 
+    yDebug()<<"Starting vertices "<<starting_vertices;
+
+}
+
+/**********************************************************************/
+void SuperqComputation::computeNewSuperqs()
+{
+
+    deque<Vector> superqs;
+
+    for (size_t k=0; k<starting_vertices.size(); k++)
+    {
+        int i=starting_vertices[k];
+        deque<Vector> point_cloud;
+
+        yDebug()<<"starting "<<i;
+
+        point_cloud=*vertex_content[i].point_cloud;
+        int last=-1;
+
+        for (size_t l=0; l<adj_matrix.cols(); l++)
+        {
+            yDebug()<<"i"<<i<<"l"<<l;
+            if (adj_matrix(i,l)==1)
+            {
+                yDebug()<<i<<" connected to"<<l;
+                cout<<endl;
+                mergePointClouds(vertex_content[i], vertex_content[l], point_cloud);
+                i=l;
+                for (size_t p=0; p<adj_matrix.cols(); p++)
+                {
+                    if (adj_matrix(i,p)==1)
+                        last=p;
+                }
+                l=-1;
+
+            }
+        }
+
+        yDebug()<<"Node "<<last<< "is the last";
+
+        if (last>-1)
+        {
+            if(norm(adj_matrix.getRow(last))==0 && norm(adj_matrix.getCol(last))>0)
+            {
+
+                deque<Vector> pc;
+                pc=*vertex_content[last].point_cloud;
+                for (size_t i=0; i<pc.size(); i++)
+                {
+                    point_cloud.push_back(pc[i]);
+                }
+            }
+        }
+        yDebug()<<"pc size "<<point_cloud.size();
+        bounds_automatic=false;
+        superqs.push_back(computeMultipleSuperq(point_cloud));
+
+    }
+
+    yDebug()<<"FINAL SUPERQS NUM "<<superqs.size();
+
+    vertex_content.clear();
+
+    for (size_t k=0; k<superqs.size(); k++)
+    {
+        vertex_struct vertex_c;
+
+        vertex_c.superq=superqs[k];
+
+        vertex_content.push_back(vertex_c);
+    }
+
+    adj_matrix.zero();
+
+
 }
 
 
 /**********************************************************************/
-deque<Vector> SuperqComputation::mergePointClouds(vertex_struct &v1, vertex_struct &v2)
+void SuperqComputation::mergePointClouds(vertex_struct &v1, vertex_struct &v2, deque<Vector> &merged_point_cloud)
 {
-    deque<Vector> merged_point_cloud;
-    yDebug()<<__LINE__;
 
     deque<Vector> point_cloud1=*v1.point_cloud;
     deque<Vector> point_cloud2=*v2.point_cloud;
-    yDebug()<<"POINT CLOUD 1 SIZE "<<point_cloud1.size();
 
     for (size_t i=0; i<point_cloud1.size(); i++)
     {
@@ -1654,14 +1745,11 @@ deque<Vector> SuperqComputation::mergePointClouds(vertex_struct &v1, vertex_stru
         merged_point_cloud.push_back(point_cloud1[i]);
     }
 
-    yDebug()<<__LINE__;
 
     for (size_t i=0; i<point_cloud2.size(); i++)
     {
         merged_point_cloud.push_back(point_cloud2[i]);
     }
-
-    return merged_point_cloud;
 
 }
 

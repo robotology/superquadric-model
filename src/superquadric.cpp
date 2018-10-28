@@ -81,7 +81,7 @@ bool SuperQuadric_NLP::get_nlp_info(Ipopt::Index &n, Ipopt::Index &m,Ipopt::Inde
 /****************************************************************/
 void SuperQuadric_NLP::computeBounds()
 {
-    if (bounds_automatic==true)
+    /*if (bounds_automatic==true)
     {
         bounds(0,1)=x0[0]*1.3;
         bounds(1,1)=x0[1]*1.3;
@@ -101,16 +101,36 @@ void SuperQuadric_NLP::computeBounds()
         bounds(5,1)=x0[5]+bounds(0,1);
         bounds(6,1)=x0[6]+bounds(1,1);
         bounds(7,1)=x0[7]+bounds(2,1);
-    }
+    }*/
+
+    bounds(0,1)=x0[0]*1.3;
+    bounds(1,1)=x0[1]*1.3;
+    bounds(2,1)=x0[2]*1.3;
+
+    //bounds(0,0)=0.001;
+    //bounds(1,0)=0.001;
+    //bounds(2,0)=0.001;
+
+    bounds(0,0)=x0[0]*0.7;
+    bounds(1,0)=x0[1]*0.7;
+    bounds(2,0)=x0[2]*0.7;
+
+    bounds(5,0)=x0[5]-bounds(0,1);
+    bounds(6,0)=x0[6]-bounds(1,1);
+    bounds(7,0)=x0[7]-bounds(2,1);
+    bounds(5,1)=x0[5]+bounds(0,1);
+    bounds(6,1)=x0[6]+bounds(1,1);
+    bounds(7,1)=x0[7]+bounds(2,1);
 
     bounds(8,0)=0;
     bounds(9,0)=0;
     bounds(10,0)=0;
     bounds(8,1)=2*M_PI;
     bounds(9,1)=M_PI;
-    //bounds(10,1)=2*M_PI;
-
-    bounds(10,1)=0;
+    if (bounds_automatic==false)
+        bounds(10,1)=2*M_PI;
+    else
+        bounds(10,1)=0;
 
 
 
