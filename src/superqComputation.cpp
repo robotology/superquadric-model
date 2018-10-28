@@ -1663,6 +1663,9 @@ void SuperqComputation::computeNewSuperqs()
 
     deque<Vector> superqs;
 
+    //tol=tol*10;
+    optimizer_points=optimizer_points*2;
+
     for (size_t k=0; k<starting_vertices.size(); k++)
     {
         int i=starting_vertices[k];
@@ -1709,6 +1712,7 @@ void SuperqComputation::computeNewSuperqs()
         }
         yDebug()<<"pc size "<<point_cloud.size();
         bounds_automatic=false;
+
         superqs.push_back(computeMultipleSuperq(point_cloud));
 
     }
