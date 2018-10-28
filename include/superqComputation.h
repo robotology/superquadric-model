@@ -92,6 +92,7 @@ protected:
 
     int n_nodes;
     int h_tree;
+    int fraction_pc;
 
     double t_superq;
     int count_file;

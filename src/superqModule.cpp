@@ -615,7 +615,7 @@ bool SuperqModule::configure(ResourceFinder &rf)
 
     superqCom= new SuperqComputation(mutex_shared,rate, filter_points, filter_superq, single_superq, fixed_window, points, imgIn, tag_file,
                                      threshold_median,filter_points_par, x, x_filtered, filter_superq_par, ipopt_par, homeContextPath, save_points, this->rf, superq_tree,
-                                     merge_model, h_tree, vertex_content);
+                                     merge_model, fraction_pc, vertex_content);
 
     if (mode_online)
     {
@@ -816,7 +816,7 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     if (rf.find("nlp_scaling_method").isNull())
         nlp_scaling_method="none";
 
-    h_tree=rf.check("h_tree", Value(2)).asInt();
+    fraction_pc=rf.check("fraction_pc", Value(300)).asInt();
 
     ipopt_par.put("optimizer_points",optimizer_points);
     ipopt_par.put("max_cpu_time", max_cpu_time);
@@ -825,7 +825,7 @@ bool SuperqModule::configSuperq(ResourceFinder &rf)
     ipopt_par.put("max_iter",max_iter);
     ipopt_par.put("mu_strategy",mu_strategy);
     ipopt_par.put("nlp_scaling_method",nlp_scaling_method);
-    ipopt_par.put("h_tree",h_tree);
+    ipopt_par.put("fraction_pc",fraction_pc);
 
     yInfo()<<"[SuperqModule]: optimizer_points      "<<optimizer_points;
     yInfo()<<"[SuperqModule]: max_cpu_time          "<<max_cpu_time;

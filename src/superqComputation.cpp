@@ -70,10 +70,10 @@ vector<int>  SpatialDensityFilter::filter(const cv::Mat &data,const double radiu
 /***********************************************************************/
 SuperqComputation::SuperqComputation(Mutex &_mutex_shared, int _rate, bool _filter_points, bool _filter_superq, bool _single_superq, bool _fixed_window,deque<yarp::sig::Vector> &_points, ImageOf<PixelRgb> *_imgIn, string _tag_file, double _threshold_median,
                                 const Property &_filter_points_par, Vector &_x, Vector &_x_filtered, const Property &_filter_superq_par, const Property &_ipopt_par, const string &_homeContextPath, bool _save_points, ResourceFinder *_rf, superqTree *_superq_tree,
-                                bool _merge_model, int _h_tree, vector<vertex_struct> &_vertex_content):
+                                bool _merge_model, int _fraction_pc, vector<vertex_struct> &_vertex_content):
                                 mutex_shared(_mutex_shared),filter_points(_filter_points), filter_superq(_filter_superq), single_superq(_single_superq),fixed_window( _fixed_window),tag_file(_tag_file),  threshold_median(_threshold_median), save_points(_save_points), imgIn(_imgIn),
                                 filter_points_par(_filter_points_par),filter_superq_par(_filter_superq_par),ipopt_par(_ipopt_par), Thread(), homeContextPath(_homeContextPath), x(_x), x_filtered(_x_filtered), points(_points), rf(_rf), superq_tree(_superq_tree),
-                                merge_model(_merge_model), h_tree(_h_tree), vertex_content(_vertex_content)
+                                merge_model(_merge_model), fraction_pc(_fraction_pc), vertex_content(_vertex_content)
 {
 }
 
@@ -296,22 +296,21 @@ void SuperqComputation::setIpoptPar(const Property &newOptions, bool first_time)
         }
     }
 
-    h_tree=newOptions.find("h_tree").asInt();
-    if (newOptions.find("h_tree").isNull() && (first_time==true))
+    fraction_pc=newOptions.find("fraction_pc").asInt();
+    if (newOptions.find("fraction_pc").isNull() && (first_time==true))
     {
-        h_tree = 2;
-        n_nodes=pow(2,h_tree+1) - 1;
+        fraction_pc = 8;
+
     }
-    else if (!newOptions.find("n_nodes").isNull())
+    else if (!newOptions.find("fraction_pc").isNull())
     {
-        if ((h_tree>=1))
+        if ((fraction_pc>=16))
         {         
-            n_nodes=pow(2,h_tree+1) - 1;
+            fraction_pc = 16;
         }
-        else
+        else if (fraction_pc<2)
         {
-            h_tree = 2;
-            n_nodes=pow(2,h_tree+1) - 1;
+            fraction_pc = 2;
         }
     }
 
@@ -1151,6 +1150,24 @@ void SuperqComputation::sendPoints(const deque<Vector> &p)
 void SuperqComputation::iterativeModeling()
 {
     setIpoptPar(ipopt_par, true);
+
+    if (points.size()/fraction_pc>=150)
+
+        h_tree=(int)log2(fraction_pc);
+    else
+    {
+        while(points.size()/fraction_pc<150)
+        {
+            fraction_pc=fraction_pc-1;
+        }
+
+
+        h_tree=(int)log2(fraction_pc);
+
+    }
+
+
+    yDebug()<<"h tree for splitting "<<h_tree<<"n points "<<fraction_pc;
 
     superq_tree->setPoints(&points);
 
