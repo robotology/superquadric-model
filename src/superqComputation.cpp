@@ -1205,6 +1205,7 @@ void SuperqComputation::splitPointCloud(node *newnode)
         else if (newnode->height == h_tree + 1)
         {
             Vector superq(11,0.0);
+            bounds_automatic=false;
             superq=computeMultipleSuperq(*newnode->point_cloud);
 
             newnode->superq=superq;
@@ -1482,6 +1483,14 @@ void SuperqComputation::cutGraph()
                     j1=j2;
                     cout<<endl;
 
+                    Matrix relations(3,3);
+                    relations.zero();
+                    axisParallel(vertex_content[i], vertex_content[j1],relations);
+
+                    if(sectionEqual(vertex_content[i], vertex_content[j1],relations)==false)
+                        adj_matrix(i,j1)=0;
+
+
                 }
                 else if (abs(cos_ij1)<0.9)
                 {
@@ -1728,7 +1737,7 @@ void SuperqComputation::computeNewSuperqs()
             }
         }
         yDebug()<<"pc size "<<point_cloud.size();
-        bounds_automatic=false;
+        bounds_automatic=true;
 
         superqs.push_back(computeMultipleSuperq(point_cloud));
 
@@ -1954,7 +1963,7 @@ bool SuperqComputation::sphereLike(vertex_struct &v1, vertex_struct &v2)
 bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matrix &relations)
 {
     double threshold1=0.9;
-    double threshold2=1.5;
+    double threshold2=1.8;
 
     Matrix R1(3,3);
     R1.setRow(0,v1.axis_x);
