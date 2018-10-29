@@ -1552,6 +1552,8 @@ void SuperqComputation::cutGraph()
                         yDebug()<<"||             Different dimensions";
                         yDebug()<<"||             Graph cut: A(i,j1)=0";
                         adj_matrix(i,j1)=0;
+
+                        starting_vertices.push_back(j1);
                     }
 
                     cout<<endl;

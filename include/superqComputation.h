@@ -130,6 +130,11 @@ public:
     int num_vertices;
     std::vector<int> starting_vertices;
 
+    // Thresholds for cutting graph
+    double thre_cos_for_parall;
+    double thre_sim_dim;
+    double thre_cos_neg;
+
 
     bool merge;
     bool debug;
