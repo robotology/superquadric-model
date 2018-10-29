@@ -160,7 +160,11 @@ Property SuperqModule::get_superq(const vector<Vector> &p)
 
     p_aux.clear();
 
-    yDebug()<<"Sent superq "<<superq.toString();
+    yDebug()<<"[SuperquadricModule]  Sent superq: ";
+    cout<<endl;
+    cout<<superq.toString()<<endl;
+
+    cout<<endl;
 
     return superq;
 }
@@ -180,8 +184,6 @@ Matrix SuperqModule::get_adjacency_matrix()
     }
 
     matrix.put("matrix", bottle.get(0));*/
-
-    yDebug()<<"Matrix to be sent "<<superqCom->adj_matrix.toString();
 
     return superqCom->adj_matrix;
 }
@@ -275,7 +277,6 @@ void SuperqModule::addSuperqInProp(vector<vertex_struct> &graph,  Property &supe
 {
     Vector sup(11,0.0);
 
-    yDebug()<<"graph size "<<graph.size();
     for (size_t i=0; i<graph.size(); i++)
     {
         sup=graph[i].superq;

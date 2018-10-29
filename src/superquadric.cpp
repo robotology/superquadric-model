@@ -81,28 +81,6 @@ bool SuperQuadric_NLP::get_nlp_info(Ipopt::Index &n, Ipopt::Index &m,Ipopt::Inde
 /****************************************************************/
 void SuperQuadric_NLP::computeBounds()
 {
-    /*if (bounds_automatic==true)
-    {
-        bounds(0,1)=x0[0]*1.3;
-        bounds(1,1)=x0[1]*1.3;
-        bounds(2,1)=x0[2]*1.3;
-
-        //bounds(0,0)=0.001;
-        //bounds(1,0)=0.001;
-        //bounds(2,0)=0.001;
-
-        bounds(0,0)=x0[0]*0.7;
-        bounds(1,0)=x0[1]*0.7;
-        bounds(2,0)=x0[2]*0.7;
-
-        bounds(5,0)=x0[5]-bounds(0,1);
-        bounds(6,0)=x0[6]-bounds(1,1);
-        bounds(7,0)=x0[7]-bounds(2,1);
-        bounds(5,1)=x0[5]+bounds(0,1);
-        bounds(6,1)=x0[6]+bounds(1,1);
-        bounds(7,1)=x0[7]+bounds(2,1);
-    }*/
-
     bounds(0,1)=x0[0]*1.3;
     bounds(1,1)=x0[1]*1.3;
     bounds(2,1)=x0[2]*1.3;
@@ -127,14 +105,12 @@ void SuperQuadric_NLP::computeBounds()
     bounds(10,0)=0;
     bounds(8,1)=2*M_PI;
     bounds(9,1)=M_PI;
+
+    // This is for multiple-superquadric modeling
     if (bounds_automatic==true)
         bounds(10,1)=2*M_PI;
     else
         bounds(10,1)=0;
-
-
-
-    //yDebug()<<"Bounds "<<bounds.toString();
 }
 
 /****************************************************************/
@@ -328,14 +304,11 @@ void SuperQuadric_NLP::computeX0(Vector &x0, deque<Vector> &point_cloud)
     Matrix bounding_box(3,2);
     bounding_box=computeBoundingBox(point_cloud,x0);
 
-    yDebug()<<"bb "<<bounding_box.toString();
-
     x0[0]=(-bounding_box(0,0)+bounding_box(0,1))/2;
     x0[1]=(-bounding_box(1,0)+bounding_box(1,1))/2;
     x0[2]=(-bounding_box(2,0)+bounding_box(2,1))/2;
 
     // Let-s try to compute centroid from bounding box
-
     Matrix R = euler2dcm(x0.subVector(8,10));
     bounding_box = R.submatrix(0,2,0,2) * bounding_box;
     x0[5] = (bounding_box(0,0)+bounding_box(0,1))/2;
@@ -411,7 +384,7 @@ Matrix SuperQuadric_NLP::computeBoundingBox(deque<Vector> &points, const Vector 
         Vector point(4,1.0);
         point.setSubvector(0,points[i]);
         point = T * point;
-        //point=points[i];
+
         if(BB(0,0)>point[0])
            BB(0,0)=point[0];
 

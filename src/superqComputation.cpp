@@ -542,6 +542,9 @@ void SuperqComputation::run()
 
                 if (merge_model)
                 {
+                    cutGraph();
+
+                    computeNewSuperqs();
                     t_merge=Time::now() - t_merge;
 
                     yInfo()<<"[SuperqComputation]: Computation time for merging model: "<<t_merge;
@@ -787,7 +790,6 @@ Vector SuperqComputation::computeOneShot(const deque<Vector> &p)
     {
         points.push_back(p[i]);
     }
-    yDebug()<<"New points "<<points.size();
 
     yInfo()<<"[SuperqComputation]: Thread initing ... ";
 
@@ -920,23 +922,38 @@ void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
     if (merge_model)
     {
         computeNewSuperqs();
-        //vertex_content=vertex_content_merged;
 
+        cout<<endl;
         for (size_t i=0; i<vertex_content.size(); i++)
         {
-            yDebug()<<"Vertex "<< i << "Superq "<<vertex_content[i].superq.toString()<<" point cloud size "<<  vertex_content[i].point_cloud->size();
+            yDebug()<<"||         Vertex "<< i << "Superq: ";
+            cout<<"||               "<<vertex_content[i].superq.toString(2,2);
+            cout<<endl;
         }
         t_merge=Time::now() - t_merge;
-        yInfo()<<"[SuperqComputation]:  Computation time for merging model: "<<t_merge;
+
+        cout<<endl;
+        cout<<endl;
+        cout<<"-----------------------------------------------------------------------------------------------------";
+        cout<<endl;
+        yInfo()<<"[SuperqComputation]:  Computation time for merging model                 :"<<t_merge;
+        cout<<"-----------------------------------------------------------------------------------------------------";
+        cout<<endl;
     }
     else
         go_on=superq_computed=true;
 
     t_in=Time::now() - t0_in;
 
-    yInfo()<<"[SuperqComputation]: Computation time of multiple superquadrics model: "<<t_in;
+    cout<<endl;
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    cout<<endl;
+    yInfo()<<"[SuperqComputation]: Computation time of multiple superquadrics model    :"<<t_in;
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    cout<<endl;
+    cout<<endl;
 
-    yDebug()<<"[SuperqComputation]: The superquadric has been computed: "<<superq_computed;
+
 
 }
 
@@ -1163,15 +1180,24 @@ void SuperqComputation::iterativeModeling()
 
 
         h_tree=(int)log2(fraction_pc);
-
     }
 
-
-    yDebug()<<"h tree for splitting "<<h_tree<<"n points "<<fraction_pc;
+    cout<<endl;
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    yDebug()<<"     Number of point cloud splittings:  "<<h_tree<<" for getting:  "<<points.size()/fraction_pc<<"points for each point cloud";
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    cout<<endl;
 
     superq_tree->setPoints(&points);
 
+    cout<<endl;
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    yDebug()<<"                                   Splitting point cloud";
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    cout<<endl;
+
     splitPointCloud(superq_tree->root);
+
 }
 
 /***********************************************************************/
@@ -1301,13 +1327,22 @@ void SuperqComputation::splitPoints(node *leaf)
 void SuperqComputation::createGraphFromTree()
 {
     vertex_content.clear();
+
+    cout<<endl;
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    yDebug()<<"                                   Adding superqs in graph";
     addSuperqInGraph(superq_tree->root);
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    cout<<endl;
 
     if (debug)
     {
         for (size_t i=0; i<vertex_content.size(); i++)
         {
-            yDebug()<<"Vertex "<< i << "Superq "<<vertex_content[i].superq.toString()<<" point cloud size "<<  vertex_content[i].point_cloud->size();
+            yDebug()<<"||    Vertex:  "<< i << "Superq:";
+            cout<<"||          "<<vertex_content[i].superq.toString(2,2);
+            cout<<endl;
+            cout<<"||           point cloud size  :"<<  vertex_content[i].point_cloud->size()<<endl;
             vertex_content[i].visited=false;
         }
     }
@@ -1315,6 +1350,11 @@ void SuperqComputation::createGraphFromTree()
     num_vertices=vertex_content.size();
 
 
+    cout<<endl;
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    yDebug()<<"                     Connecting graph and computing weights (distances)";
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    cout<<endl;
     for (size_t i=0; i<num_vertices; i++)
     {
        for (int j=0; j<num_vertices; j++)
@@ -1334,7 +1374,7 @@ void SuperqComputation::createGraphFromTree()
     {
         for (size_t j=0; j<vertex_content[i].weigthed_edges.size(); j++)
         {
-            yDebug()<<"Vertex"<< i<<"connection with "<<vertex_content[i].weigthed_edges[j].first<<"weight "<<vertex_content[i].weigthed_edges[j].second;
+            yDebug()<<"||    Vertex"<< i<<"connection with "<<vertex_content[i].weigthed_edges[j].first<<"weight "<<vertex_content[i].weigthed_edges[j].second;
         }
     }
 
@@ -1343,9 +1383,14 @@ void SuperqComputation::createGraphFromTree()
     deque<Matrix> all_adj_matrs;
     deque<double> all_costs;
 
+    cout<<endl;
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    yDebug()<<"                             Computing minimum spanning path";
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    cout<<endl;
+
     for (size_t starting=0; starting<num_vertices; starting++)
     {
-        yDebug()<<"V "<<starting;
         int next_edge=0;
         int count=0;
         adj_matrix.resize(num_vertices, num_vertices);
@@ -1379,8 +1424,6 @@ void SuperqComputation::createGraphFromTree()
 
             if (min_weigth<1000000)
             {
-                cout<<"next edge "<<next_edge;
-                cout<<"min_weigth "<<min_weigth;
                 adj_matrix(v,next_edge)=1;
 
                 v=next_edge;
@@ -1391,8 +1434,7 @@ void SuperqComputation::createGraphFromTree()
 
         }
 
-        yDebug()<<"Matrix of connections based on distance "<<adj_matrix.toString(1,1);
-        yDebug()<<"Minimum weight "<<cost;
+        yDebug()<<"||    Weight:   "<<cost;
 
         all_adj_matrs.push_back(adj_matrix);
         all_costs.push_back(cost);
@@ -1410,8 +1452,16 @@ void SuperqComputation::createGraphFromTree()
 
     }
 
-    yDebug()<<"Final selected matrix is no "<<min_i<<"with minimum cost "<<min_cost;
+    cout<<endl;
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    yDebug()<<"||    Final selected matrix is no   :"<<min_i<<"with minimum cost   :"<<min_cost;
     adj_matrix=all_adj_matrs[min_i];
+    yDebug()<<"||    Matrix of connections based on distance ";
+    cout<<endl;
+    cout<<adj_matrix.toString(1,1);
+    cout<<endl;
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    cout<<endl;
 
 }
 
@@ -1421,6 +1471,12 @@ void SuperqComputation::cutGraph()
 {
     int i, j1, j2, j3;
     starting_vertices.clear();
+
+    cout<<endl;
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    yDebug()<<"                                          Cutting Graph            ";
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    cout<<endl;
 
     for (size_t l=0; l<adj_matrix.rows(); l++)
     {
@@ -1433,7 +1489,6 @@ void SuperqComputation::cutGraph()
         }
     }
 
-    yDebug()<<"starting_vertex "<<i;
     int count=0;
 
     starting_vertices.push_back(i);
@@ -1466,29 +1521,40 @@ void SuperqComputation::cutGraph()
             {
                 line_jj1=vertex_content[j2].superq.subVector(5,7) - vertex_content[j1].superq.subVector(5,7);
 
-                yDebug()<<"||            Vertex "<<i<<"Next "<<j1<<"Next next "<<j2;
+                cout<<endl;
+                yDebug()<<"||            Vertices              : i="<<i<<", j1=" <<j1<<", j2="<<j2;
 
-                yDebug()<<"||            line_ij"<<line_ij.toString()<<"line_jj1"<<line_jj1.toString();
 
                 double cos_ij1;
                 cos_ij1=dot(line_ij/norm(line_ij), line_jj1/norm(line_jj1));
 
-                yDebug()<<"||            cos between ij and jj1 "<<cos_ij1<<"angle "<<acos(cos_ij1);
+                yDebug()<<"||            Cos between ij and jj1:"<<cos_ij1<<"   angle:"<<acos(cos_ij1);
+
+                cout<<endl;
 
                 //if (abs(cos_ij1)> 0.85)
                 if (cos_ij1> 0.9)
                 {
-                    yDebug()<<"||             Parallel consecutive lines";
+                    cout<<endl;
+                    yDebug()<<"||            Parallel consecutive lines";
                     i=j1;
                     j1=j2;
                     cout<<endl;
 
                     Matrix relations(3,3);
                     relations.zero();
+
+                    yDebug()<<"||            Checking dimensions";
                     axisParallel(vertex_content[i], vertex_content[j1],relations);
 
                     if(sectionEqual(vertex_content[i], vertex_content[j1],relations)==false)
+                    {
+                        yDebug()<<"||             Different dimensions";
+                        yDebug()<<"||             Graph cut: A(i,j1)=0";
                         adj_matrix(i,j1)=0;
+                    }
+
+                    cout<<endl;
 
 
                 }
@@ -1512,24 +1578,28 @@ void SuperqComputation::cutGraph()
                         line_jj2=vertex_content[j3].superq.subVector(5,7) - vertex_content[j2].superq.subVector(5,7);
                         cos_jj2=dot(line_jj1/norm(line_jj1), line_jj2/norm(line_jj2));
 
-                        yDebug()<<"||            cos between jj1 and jj2"<<cos_jj2<<"angle "<<acos(cos_jj2);
-                        yDebug()<<"dot(line_jj2, line_ij)"<<dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij));
+                        cout<<endl;
+                        yDebug()<<"||            Cos between jj1 and jj2:"<<cos_jj2<<" angle:"<<acos(cos_jj2);
+                        yDebug()<<"||            dot(line_jj2, line_ij) :"<<dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij));
+
+                        cout<<endl;
 
 
                         if (abs(cos_jj2) > 0.9)
                         //if (cos_jj2 > 0.85)
                         {
+                            cout<<endl;
                             yDebug()<<"||            Parallel  the one later";
                             adj_matrix(i,j1)=0;
 
 
                             starting_vertices.push_back(j1);
 
+                            yDebug()<<"||             Graph cut: A(i,j1)=0";
 
-                            yDebug()<<"||             Adj between "<<i<<j1<<0;
                             i=j2;
-
                             j1=i;
+
                             for (int l=0; l<vertex_content.size(); l++)
                             {
                                 if (adj_matrix(i, l)==1)
@@ -1538,22 +1608,17 @@ void SuperqComputation::cutGraph()
                             j1=j2;
                             cout<<endl;
                         }
-                        else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))>=0.0)  // Piu` stringente questo e piu` accetta casi perpendicolari
+                        else if ( dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))>=0.0)  // Piu` stringente questo e piu` accetta casi perpendicolari
                         {
-                            yDebug()<<"sin "<<sin(acos(cos_jj2)) * sin(acos(cos_ij1));
-                            yDebug()<<"dot(line_jj2, line_ij)"<<dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij));
 
-
+                            cout<<endl;
+                            yDebug()<<"||            Non parallel  the one later: change of direction";
+                            yDebug()<<"||            Graph cut: A(j2,j3)=0";
                             adj_matrix(j2,j3)=0;
                             //adj_matrix(j1,j2)=0;
                             i=j3;
 
-
                             starting_vertices.push_back(j3);
-
-
-                            yDebug()<<"||             Adj between "<<j2<<j3<<0;
-                            //yDebug()<<"||             Adj between "<<j1<<j2<<0;
 
                             j1=i;
                             for (int l=0; l<vertex_content.size(); l++)
@@ -1566,20 +1631,15 @@ void SuperqComputation::cutGraph()
                         }
                         else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))>=-0.3)  // Piu` stringente questo e piu` accetta casi perpendicolari
                         {
-                            yDebug()<<"sin "<<sin(acos(cos_jj2)) * sin(acos(cos_ij1));
-                            yDebug()<<"dot(line_jj2, line_ij)"<<dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij));
-
-
+                            cout<<endl;
+                            yDebug()<<"||            Non parallel  the one later:  not change of direction, but not convex polygon";
+                            yDebug()<<"||            Graph cut: A(j1,j2)=0";
                             //adj_matrix(j2,j3)=0;
                             adj_matrix(j1,j2)=0;
                             i=j3;
 
 
                             starting_vertices.push_back(j2);
-
-
-                            //yDebug()<<"||             Adj between "<<j2<<j3<<0;
-                            yDebug()<<"||             Adj between "<<j1<<j2<<0;
 
                             j1=i;
                             for (int l=0; l<vertex_content.size(); l++)
@@ -1600,9 +1660,6 @@ void SuperqComputation::cutGraph()
                                     j33=l;
                             }
 
-                            yDebug()<<"j1"<<j1<<"j2"<<j2<<"j3"<<j3<<"j33"<<j33;
-
-
                             if (j33> -1)
                             {
                                 i=j1;
@@ -1621,7 +1678,7 @@ void SuperqComputation::cutGraph()
                             {
                                 i=j2;
                                 j1=i;
-                                yDebug()<<" -------------- Finshed with circle--------------";
+                                yDebug()<<"||            Finshed with circle";
                                 for (int l=0; l<vertex_content.size(); l++)
                                 {
                                     if (adj_matrix(i, l)==1)
@@ -1635,7 +1692,7 @@ void SuperqComputation::cutGraph()
                     }
                     else
                     {
-                        yDebug()<<"j3==j2 "<<acos(cos_ij1);
+                        yDebug()<<"||            j3==j2 "<<acos(cos_ij1);
 
 
                         adj_matrix(i,j1)=0;
@@ -1644,20 +1701,23 @@ void SuperqComputation::cutGraph()
                         starting_vertices.push_back(j1);
 
 
-                        yDebug()<<"||             Adj between "<<i<<j1<<0;
+                        yDebug()<<"||             Cut graph, since they are not parallel and we are at the end of the graph ";
+                        yDebug()<<"||             Graph cut: A(i,j1)=0";
 
                     }
 
                 }
                 else
                 {
+                    yDebug()<<"||            j2==j1 "<<acos(cos_ij1);
                     adj_matrix(j1,j2)=0;
 
 
                     starting_vertices.push_back(j2);
 
 
-                    yDebug()<<"||             Adj between "<<i<<j1<<0;
+                    yDebug()<<"||             Cut graph, since they are not parallel and we are at the end of the graph ";
+                    yDebug()<<"||             Graph cut: A(j1,j1j2)=0";
                     i=j2;
 
                     j1=i;
@@ -1679,17 +1739,19 @@ void SuperqComputation::cutGraph()
 
     }
 
-    yDebug()<<"Starting vertices "<<starting_vertices;
-
 }
 
 /**********************************************************************/
 void SuperqComputation::computeNewSuperqs()
 {
-
+    cout<<endl;
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    yDebug()<<"                             Computing Final Superquadrics            ";
+    cout<<"-----------------------------------------------------------------------------------------------------";
+    cout<<endl;
     deque<Vector> superqs;
 
-    //tol=tol*10;
+    // More points are subsampled for the final optimization
     optimizer_points=optimizer_points*2;
 
     for (size_t k=0; k<starting_vertices.size(); k++)
@@ -1697,18 +1759,13 @@ void SuperqComputation::computeNewSuperqs()
         int i=starting_vertices[k];
         deque<Vector> point_cloud;
 
-        yDebug()<<"starting "<<i;
-
         point_cloud=*vertex_content[i].point_cloud;
         int last=-1;
 
         for (size_t l=0; l<adj_matrix.cols(); l++)
         {
-            yDebug()<<"i"<<i<<"l"<<l;
             if (adj_matrix(i,l)==1)
             {
-                yDebug()<<i<<" connected to"<<l;
-                cout<<endl;
                 mergePointClouds(vertex_content[i], vertex_content[l], point_cloud);
                 i=l;
                 for (size_t p=0; p<adj_matrix.cols(); p++)
@@ -1720,8 +1777,6 @@ void SuperqComputation::computeNewSuperqs()
 
             }
         }
-
-        yDebug()<<"Node "<<last<< "is the last";
 
         if (last>-1)
         {
@@ -1736,14 +1791,16 @@ void SuperqComputation::computeNewSuperqs()
                 }
             }
         }
-        yDebug()<<"pc size "<<point_cloud.size();
+
         bounds_automatic=true;
 
+        cout<<endl;
         superqs.push_back(computeMultipleSuperq(point_cloud));
+        cout<<endl;
 
     }
 
-    yDebug()<<"FINAL SUPERQS NUM "<<superqs.size();
+    yDebug()<<"||             Final superquadrics are:  "<<superqs.size();
 
     vertex_content.clear();
 
@@ -1798,13 +1855,11 @@ void SuperqComputation::addSuperqInGraph(node *leaf)
 
             if (leaf->right!=NULL)
             {
-                yDebug()<<"Go on right ";
                 addSuperqInGraph(leaf->right);
             }
 
             if (leaf->left!=NULL)
             {
-                yDebug()<<"Go on left ";
                 addSuperqInGraph(leaf->left);
             }
 
@@ -1823,13 +1878,11 @@ void SuperqComputation::addSuperqInGraph(node *leaf)
         {
             if (leaf->right!=NULL)
             {
-                yDebug()<<"Go on right (root) ";
                 addSuperqInGraph(leaf->right);
 
             }
             if (leaf->left!=NULL)
             {
-                yDebug()<<"Go on left (root) ";
                 addSuperqInGraph(leaf->left);
             }
         }
@@ -1858,7 +1911,7 @@ bool SuperqComputation::axisParallel(vertex_struct &v1, vertex_struct &v2, Matri
     // Noisy
     //double threshold=0.7;
 
-    yDebug()<<"xx "<<dot(v1.axis_x, v2.axis_x);
+   /* yDebug()<<"xx "<<dot(v1.axis_x, v2.axis_x);
     yDebug()<<"xy "<<dot(v1.axis_x, v2.axis_y);
     yDebug()<<"xz "<<dot(v1.axis_x, v2.axis_z);
 
@@ -1868,7 +1921,7 @@ bool SuperqComputation::axisParallel(vertex_struct &v1, vertex_struct &v2, Matri
 
     yDebug()<<"zx "<<dot(v1.axis_z, v2.axis_x);
     yDebug()<<"zy "<<dot(v1.axis_z, v2.axis_y);
-    yDebug()<<"zz "<<dot(v1.axis_z, v2.axis_z);
+    yDebug()<<"zz "<<dot(v1.axis_z, v2.axis_z);*/
 
     if (abs(dot(v1.axis_x, v2.axis_x)) > threshold)
     {
@@ -1910,7 +1963,13 @@ bool SuperqComputation::axisParallel(vertex_struct &v1, vertex_struct &v2, Matri
     }
 
     if (debug)
-        yDebug()<<"rel "<<relations.toString();
+    {
+        yDebug()<<"||            Permutation matrix: ";
+        cout<<endl;
+        cout<<relations.toString();
+        cout<<endl;
+        cout<<endl;
+    }
 
 
     if ((norm(relations.getRow(0)) > 0.0) || (norm(relations.getRow(1)) > 0.0) || (norm(relations.getRow(2)) > 0.0))
@@ -1976,38 +2035,24 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
     R2.setRow(2,v2.axis_z);
 
 
-    cout<<endl;
-    yDebug()<<"R1 ";
-    yDebug()<<R1.toString();
-    yDebug()<<"R2 ";
-    yDebug()<<R2.toString();
-    yDebug()<<"relations ";
-    yDebug()<<relations.toString();
-
-
     if (norm(R2.getCol(0))>1 || norm(R2.getCol(1))>1 || norm(R2.getCol(2))>1)
         yError()<< "Something wrong in one column!!";
 
     Matrix R2_rot(3,3);
     R2_rot=relations*R2;
 
-    yDebug()<<"R2 rot";
-    yDebug()<<R2_rot.toString();
-    cout<<endl;
-
     Vector dim1=v1.superq.subVector(0,2);
     Vector dim2=v2.superq.subVector(0,2);
 
     Vector dim2_rot=relations*dim2;
 
-    yDebug()<<"super q "<<v2.superq.toString();
 
-    //if(debug)
-    //{
-        yDebug()<<"     Dim 1 "<<dim1.toString();
-        yDebug()<<"     Dim 2 "<<dim2.toString();
-        yDebug()<<"     Dim 2 rot "<<dim2_rot.toString();
-   // }
+    if(debug)
+    {
+        yDebug()<<"||            Dim 1     "<<dim1.toString();
+        yDebug()<<"||            Dim 2     "<<dim2.toString();
+        yDebug()<<"||            Dim 2 rot "<<dim2_rot.toString();
+    }
 
 
     Vector p1,p2,p3,p4;
@@ -2020,50 +2065,13 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
 
     equals.clear();
 
-    /*deque<Vector> edges_1;
-    deque<Vector> edges_2;
-
-    computeEdges(v1, edges_1);
-    computeEdges(v2, edges_2);
-
-    double distance_min=1000.0;
-    int i_min, axis_cont;
-    //double distance_min;
-
-    for (size_t i=0; i<edges_1.size(); i++)
-    {
-       for (size_t j=0; j<edges_2.size(); j++)
-       {
-           double distance=norm(edges_1[i]-edges_2[j]);
-
-           if (distance < distance_min)
-           {
-               distance_min=distance;
-               i_min=i;
-           }
-           //distance_min+=distance;
-       }
-
-    }
-
-    if (i_min==1 || i_min==2)
-        axis_cont=0;
-    else if (i_min==3 || i_min==4)
-        axis_cont=1;
-    else if (i_min==5 || i_min==6)
-        axis_cont=2;
-
-    yDebug()<<"axis cont "<<axis_cont;*/
-
-    for (size_t i=0; i<3; i++)
+     for (size_t i=0; i<3; i++)
     {
         bool equal;
         int other_index;
 
         if (norm(relations.getRow(i))> 0.0)
         {
-            yDebug()<<"Axis parallel to another";
-            cout<<endl;
             other_index=i;
 
             p1=v1.superq.subVector(5,7)+dim1[i]*R1.getRow(i);
@@ -2084,40 +2092,23 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
             distances.push_back(norm(vectors[2]));
             distances.push_back(norm(vectors[3]));
 
-            yDebug()<<"p1p2"<<norm(p1-p2);
-             yDebug()<<"p3p4"<<norm(p3-p4);
-
-
-            yDebug()<<"Distances"<<distances[0]<<distances[1]<<distances[2]<<distances[3];
-
             auto it=max_element(distances.begin(), distances.end());
-
-            yDebug()<<"Max distance "<<*it<<"index "<<it -distances.begin();
 
             Vector max_dist;
             max_dist=vectors[it -distances.begin()];
 
             double cos_max_dist1, cos_max_dist2;
             cos_max_dist1=dot((p1 - p2)/norm(p1 - p2), (p1 - p4)/norm(p1 - p4));
-            yDebug()<<"cos max dist 1"<<cos_max_dist1;
             cos_max_dist2=dot((p3 - p4)/norm(p3 - p4), (p1 - p4)/norm(p1 - p4));
-            yDebug()<<"cos max dist 2"<<cos_max_dist2;
-
-
 
             if (abs(max(cos_max_dist1, cos_max_dist2)) > threshold1)
-            //if (ratio < threshold1)
-            //if (i==axis_cont)
             {
                 equal=true;
 
                 for (size_t j=0; j<3; j++)
                 {
-                    cout<<endl;
                     if ( i != j && dim2_rot[j]!= 0.0)
                     {
-                        yDebug()<<"dimensions "<<j<< "and "<<j;
-                        yDebug()<<dim1[j]/dim2_rot[j];
 
                         if ( (dim1[j]/dim2_rot[j] < 1*threshold2) && (dim1[j]/dim2_rot[j] > 1/threshold2))
                         {
@@ -2132,12 +2123,8 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
             }
             else
             {
-
-
                 if ( dim2_rot[i]!= 0.0)
                 {
-                    yDebug()<<"dimensions "<<i<< "and "<<i;
-                    yDebug()<<dim1[i]/dim2_rot[i];
 
                     if ((dim1[i]/ dim2_rot[i] < 1*threshold2) && (dim1[i]/ dim2_rot[i] > 1/threshold2))
                     {
@@ -2148,60 +2135,11 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
                 }
             }
             equals.push_back(equal);
-        }
-
-       //else
-        //{
-            /*vector<double> coss;
-            for (size_t j=0; j<3; j++)
-            {
-                if (j!=i)
-                    coss.push_back(abs(dot(R1.getRow(i), R2.getRow(j))));
-
-            }
-
-            yDebug()<<"coss "<<coss[0]<<coss[1];
-            auto more_parallel_to=max_element(coss.begin(), coss.end());
-            yDebug()<<"more parallale to "<<*more_parallel_to;
-
-            other_index=more_parallel_to - coss.begin();
-
-            yDebug()<<"other index "<<other_index;*/
-
-            /*double ratio02_2=dim2[0]/dim2[2];
-            double ratio01_2=dim2[0]/dim2[1];
-            double ratio12_2=dim2[1]/dim2[2];
-
-            yDebug()<<"is sphere? "<<dim2[0]<<dim2[1]<<dim2[2];
-
-
-            yDebug()<<"ratios 1 "<<ratio02_2<<ratio01_2<<ratio12_2;
-
-
-            if ( (ratio02_2 > 0.8) && (ratio02_2 < 1.5 )  &&                      // NUmber 1 is sphere like
-                    (ratio01_2 > 0.8) && (ratio01_2 < 1.5 ) &&
-                        (ratio12_2 > 0.8 ) && (ratio12_2 < 1.5 ))
-                equal=true;
-            else
-                equal=false;
-
-
-
-
-
-            /*if ((dim1[i]/ dim2[other_index] < 1*threshold2) && (dim1[i]/ dim2[other_index] > 1/threshold2))
-            {
-                equal=true;
-            }
-            else
-                equal=false;*/
-
-        //}
+        }       
         equals.push_back(true);
 
     }
 
-    yDebug()<<"Similarity between axis"<<equals[0] << equals[1] << equals[2];
     return equals[0] && equals[1] && equals[2];
 } 
 
@@ -2226,11 +2164,9 @@ double SuperqComputation::edgesClose(vertex_struct &v1, vertex_struct &v2)
            {
                distance_min=distance;
            }
-           //distance_min+=distance;
        }
 
     }
-    //distance_min/=(edges_1.size() * edges_2.size());
 
     return distance_min;
 
@@ -2256,8 +2192,6 @@ bool SuperqComputation::computeEdges(vertex_struct &vertex, deque<Vector> &edges
     axis_y=vertex.axis_y;
     axis_z=vertex.axis_z;
 
-    //yDebug()<<"superq in copute edge "<<superq.toString();
-
     edges.push_back(superq.subVector(5,7));
     point = superq.subVector(5,7) + superq[0] * axis_x.subVector(0,2);
     edges.push_back(point);
@@ -2276,13 +2210,6 @@ bool SuperqComputation::computeEdges(vertex_struct &vertex, deque<Vector> &edges
 
     point = superq.subVector(5,7) - superq[2] * axis_z.subVector(0,2);
     edges.push_back(point);
-
-    if (debug)
-    {
-        yDebug()<<"Edges "<<edges.size();
-        for (size_t i=0; i< edges.size(); i++)
-            yDebug()<<edges[i].toString();
-    }
 
     return true;
 
