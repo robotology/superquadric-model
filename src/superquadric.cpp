@@ -108,9 +108,19 @@ void SuperQuadric_NLP::computeBounds()
 
     // This is for multiple-superquadric modeling
     if (bounds_automatic==true)
+    {
+
         bounds(10,1)=2*M_PI;
+        //bounds(8,1)=2*M_PI;
+        //bounds(9,1)=M_PI;
+    }
     else
+    {
+
         bounds(10,1)=0;
+        //bounds(8,1)=0;
+        //bounds(9,1)=0;
+    }
 }
 
 /****************************************************************/

@@ -2166,8 +2166,8 @@ double SuperqComputation::edgesClose(vertex_struct &v1, vertex_struct &v2)
            {
                distance_min=distance;
            }
-       }
 
+       }
     }
 
     return distance_min;
