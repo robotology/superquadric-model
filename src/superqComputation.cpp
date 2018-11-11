@@ -1618,6 +1618,7 @@ void SuperqComputation::cutGraph()
                             yDebug()<<"||            Graph cut: A(j2,j3)=0";
                             adj_matrix(j2,j3)=0;
                             //adj_matrix(j1,j2)=0;
+                            //i=j2;
                             i=j3;
 
                             starting_vertices.push_back(j3);
@@ -1631,13 +1632,13 @@ void SuperqComputation::cutGraph()
                             j1=j2;
                             cout<<endl;
                         }
-                        else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))>=-0.3)  // Piu` stringente questo e piu` accetta casi perpendicolari
+                        else if (  dot(line_jj2/norm(line_jj2), line_ij/norm(line_ij))>=-0.2)  // Piu` stringente questo e piu` accetta casi perpendicolari
                         {
                             cout<<endl;
                             yDebug()<<"||            Non parallel  the one later:  not change of direction, but not convex polygon";
                             yDebug()<<"||            Graph cut: A(j1,j2)=0";
-                            //adj_matrix(j2,j3)=0;
                             adj_matrix(j1,j2)=0;
+                            //adj_matrix(j1,j2)=0;
                             i=j3;
 
 
