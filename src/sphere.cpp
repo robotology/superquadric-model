@@ -288,7 +288,20 @@ void Sphere_NLP::computeX0(Vector &x0, deque<Vector> &point_cloud)
     Matrix bounding_box(3,2);
     bounding_box=computeBoundingBox(point_cloud,x0);
 
-    x0[0]=(-bounding_box(0,0)+bounding_box(0,1))/2;
+    double r1=(-bounding_box(0,0)+bounding_box(0,1))/2;
+    double r2=(-bounding_box(1,0)+bounding_box(1,1))/2;
+    double r3=(-bounding_box(2,0)+bounding_box(2,1))/2;
+
+    double tmp;
+
+    if (r1>r2)
+        tmp=r1;
+    else
+        tmp=r2;
+    if(tmp>r3)
+        x0[0]=tmp;
+    else
+        x0[0]=r3;
 
 
     // Let-s try to compute centroid from bounding box
