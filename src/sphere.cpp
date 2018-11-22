@@ -31,17 +31,17 @@ using namespace yarp::os;
 using namespace yarp::sig;
 using namespace yarp::math;
 
-#include "superquadric.h"
+#include "sphere.h"
 
 /****************************************************************/
-void SuperQuadric_NLP::init()
+void Sphere_NLP::init()
 {
     points_downsampled.clear();
     aux_objvalue=0.0;
 }
 
 /****************************************************************/
-void SuperQuadric_NLP::setPoints(const deque<Vector> &point_cloud, const int &optimizer_points)
+void Sphere_NLP::setPoints(const deque<Vector> &point_cloud, const int &optimizer_points)
 {
     if (point_cloud.size()<optimizer_points)
     {
@@ -60,18 +60,17 @@ void SuperQuadric_NLP::setPoints(const deque<Vector> &point_cloud, const int &op
         }
     }
 
-    yInfo("[Superquadric]: points actually used for modeling: %lu ",points_downsampled.size());
+    yInfo("[Sphere]: points actually used for modeling: %lu ",points_downsampled.size());
 
-    x0.resize(11,0.0);
+    x0.resize(7,0.0);
     computeX0(x0, points_downsampled);
 }
 
 /****************************************************************/
-bool SuperQuadric_NLP::get_nlp_info(Ipopt::Index &n, Ipopt::Index &m,Ipopt::Index &nnz_jac_g,
+bool Sphere_NLP::get_nlp_info(Ipopt::Index &n, Ipopt::Index &m,Ipopt::Index &nnz_jac_g,
                   Ipopt::Index &nnz_h_lag, Ipopt::TNLP::IndexStyleEnum &index_style)
 {
-    n=11;
-    n=11;
+    n=7;
     m=nnz_jac_g=nnz_h_lag=0;
     index_style=TNLP::C_STYLE;
     x_v.resize(n,0.0);
@@ -80,52 +79,31 @@ bool SuperQuadric_NLP::get_nlp_info(Ipopt::Index &n, Ipopt::Index &m,Ipopt::Inde
 }
 
 /****************************************************************/
-void SuperQuadric_NLP::computeBounds()
+void Sphere_NLP::computeBounds()
 {
     bounds(0,1)=x0[0]*1.3;
-    bounds(1,1)=x0[1]*1.3;
-    bounds(2,1)=x0[2]*1.3;
-
-    bounds(0,0)=0.001;
-    bounds(1,0)=0.001;
-    bounds(2,0)=0.001;
-
     bounds(0,0)=x0[0]*0.7;
-    bounds(1,0)=x0[1]*0.7;
-    bounds(2,0)=x0[2]*0.7;
 
-    bounds(5,0)=x0[5]-bounds(0,1);
-    bounds(6,0)=x0[6]-bounds(1,1);
-    bounds(7,0)=x0[7]-bounds(2,1);
-    bounds(5,1)=x0[5]+bounds(0,1);
-    bounds(6,1)=x0[6]+bounds(1,1);
-    bounds(7,1)=x0[7]+bounds(2,1);
+    bounds(1,0)=x0[1]-bounds(0,1);
+    bounds(2,0)=x0[2]-bounds(0,1);
+    bounds(3,0)=x0[3]-bounds(0,1);
+    bounds(1,1)=x0[1]+bounds(0,1);
+    bounds(2,1)=x0[2]+bounds(0,1);
+    bounds(3,1)=x0[3]+bounds(0,1);
 
-    bounds(8,0)=0;
-    bounds(9,0)=0;
-    bounds(10,0)=0;
-    bounds(8,1)=2*M_PI;
-    bounds(9,1)=M_PI;
+    bounds(4,0)=0;
+    bounds(5,0)=0;
+    bounds(6,0)=0;
+    bounds(4,1)=2*M_PI;
+    bounds(5,1)=M_PI;
+    bounds(6,1)=2*M_PI;
 
-    // This is for multiple-superquadric modeling
-    if (bounds_automatic==true)
-    {
+    yDebug()<<"bounds "<<bounds.toString();
 
-        bounds(10,1)=2*M_PI;
-        //bounds(8,1)=2*M_PI;
-        //bounds(9,1)=M_PI;
-    }
-    else
-    {
-
-        bounds(10,1)=0;
-        //bounds(8,1)=0;
-        //bounds(9,1)=0;
-    }
 }
 
 /****************************************************************/
-bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt::Number *x_u,
+bool Sphere_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt::Number *x_u,
                      Ipopt::Index m, Ipopt::Number *g_l, Ipopt::Number *g_u)
 {
     computeBounds();
@@ -140,7 +118,7 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
 }
 
 /****************************************************************/
- bool SuperQuadric_NLP::get_starting_point(Ipopt::Index n, bool init_x, Ipopt::Number *x,
+ bool Sphere_NLP::get_starting_point(Ipopt::Index n, bool init_x, Ipopt::Number *x,
                             bool init_z, Ipopt::Number *z_L, Ipopt::Number *z_U,
                             Ipopt::Index m, bool init_lambda, Ipopt::Number *lambda)
  {
@@ -152,7 +130,7 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
  }
 
  /****************************************************************/
- bool SuperQuadric_NLP::eval_f(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
+ bool Sphere_NLP::eval_f(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
                 Ipopt::Number &obj_value)
  {
      F(x,points_downsampled, new_x);
@@ -162,7 +140,7 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
  }
 
  /****************************************************************/
- void SuperQuadric_NLP::F(const Ipopt::Number *x, deque<Vector> &points, bool &new_x)
+ void Sphere_NLP::F(const Ipopt::Number *x, deque<Vector> &points, bool &new_x)
  {
      if (new_x)
      {
@@ -170,72 +148,71 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
 
          for(size_t i=0;i<points.size();i++)
          {
-             double tmp=pow(f(x,points[i]),x[3])-1;
+             double tmp=f(x,points[i])-1;
              value+=tmp*tmp;
          }
-         value*=x[0]*x[1]*x[2]/points.size();
+         value*=x[0]*x[0]*x[0]/points.size();
          aux_objvalue=value;
      }
  }
 
   /****************************************************************/
- double SuperQuadric_NLP::f(const Ipopt::Number *x, Vector &point_cloud)
+ double Sphere_NLP::f(const Ipopt::Number *x, Vector &point_cloud)
  {
      Vector euler(3,0.0);
-     euler[0]=x[8];
-     euler[1]=x[9];
-     euler[2]=x[10];
+     euler[0]=x[4];
+     euler[1]=x[5];
+     euler[2]=x[6];
      Matrix R=euler2dcm(euler);
 
      // Required for VTK visualization
      R=R.transposed();
 
-     double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
-     double num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[5]*R(1,0)-x[6]*R(1,1)-x[7]*R(1,2);
-     double num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[5]*R(2,0)-x[6]*R(2,1)-x[7]*R(2,2);
-     double tmp=pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
+     double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[1]*R(0,0)-x[2]*R(0,1)-x[3]*R(0,2);
+     double num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[1]*R(1,0)-x[2]*R(1,1)-x[3]*R(1,2);
+     double num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[1]*R(2,0)-x[2]*R(2,1)-x[3]*R(2,2);
+     double tmp=pow(abs(num1/x[0]),2.0) + pow(abs(num2/x[0]),2.0) + pow(abs(num3/x[0]),2.0);
 
-     return pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]));
+     return tmp;
  }
 
  /****************************************************************/
- double SuperQuadric_NLP::F_v(const Vector &x, const deque<Vector> &points)
+ double Sphere_NLP::F_v(const Vector &x, const deque<Vector> &points)
  {
      double value=0.0;
 
      for (size_t i=0;i<points.size();i++)
      {
-          double tmp=pow(f_v(x,points[i]),x[3])-1;
+          double tmp=f_v(x,points[i])-1;
           value+=tmp*tmp;
      }
 
-     value*=x[0]*x[1]*x[2]/points.size();
+     value*=x[0]*x[0]*x[0]/points.size();
      return value;
  }
 
   /****************************************************************/
- double SuperQuadric_NLP::f_v(const Vector &x, const Vector &point_cloud)
+ double Sphere_NLP::f_v(const Vector &x, const Vector &point_cloud)
  {
      Vector euler(3,0.0);
-
-     euler[0]=x[8];
-     euler[1]=x[9];
-     euler[2]=x[10];
+     euler[0]=x[4];
+     euler[1]=x[5];
+     euler[2]=x[6];
      Matrix R=euler2dcm(euler);
 
      // Required for VTK visualization
      R=R.transposed();
 
-     double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[5]*R(0,0)-x[6]*R(0,1)-x[7]*R(0,2);
-     double num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[5]*R(1,0)-x[6]*R(1,1)-x[7]*R(1,2);
-     double num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[5]*R(2,0)-x[6]*R(2,1)-x[7]*R(2,2);
-     double tmp=pow(abs(num1/x[0]),2.0/x[4]) + pow(abs(num2/x[1]),2.0/x[4]);
+     double num1=R(0,0)*point_cloud[0]+R(0,1)*point_cloud[1]+R(0,2)*point_cloud[2]-x[1]*R(0,0)-x[2]*R(0,1)-x[3]*R(0,2);
+     double num2=R(1,0)*point_cloud[0]+R(1,1)*point_cloud[1]+R(1,2)*point_cloud[2]-x[1]*R(1,0)-x[2]*R(1,1)-x[3]*R(1,2);
+     double num3=R(2,0)*point_cloud[0]+R(2,1)*point_cloud[1]+R(2,2)*point_cloud[2]-x[1]*R(2,0)-x[2]*R(2,1)-x[3]*R(2,2);
+     double tmp=pow(abs(num1/x[0]),2.0) + pow(abs(num2/x[0]),2.0) + pow(abs(num3/x[0]),2.0);
 
-     return pow( abs(tmp),x[4]/x[3]) + pow( abs(num3/x[2]),(2.0/x[3]) );
+     return tmp;
  }
 
  /****************************************************************/
- bool SuperQuadric_NLP::eval_grad_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
+ bool Sphere_NLP::eval_grad_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
                   Ipopt::Number *grad_f)
  {
      Vector x_tmp(n,0.0);
@@ -262,14 +239,14 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
  }
 
  /****************************************************************/
- bool SuperQuadric_NLP::eval_g(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
+ bool Sphere_NLP::eval_g(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
              Ipopt::Index m, Ipopt::Number *g)
  {
      return false;
  }
 
  /****************************************************************/
- bool SuperQuadric_NLP::eval_jac_g(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
+ bool Sphere_NLP::eval_jac_g(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
                  Ipopt::Index m, Ipopt::Index nele_jac, Ipopt::Index *iRow,
                  Ipopt::Index *jCol, Ipopt::Number *values)
  {
@@ -277,24 +254,20 @@ bool SuperQuadric_NLP::get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt
  }
 
 /****************************************************************/
-void SuperQuadric_NLP::configure(ResourceFinder *rf, bool b_automatic, const string &object_class)
+void Sphere_NLP::configure(ResourceFinder *rf, bool b_automatic, const string &object_class)
 {
-    bounds.resize(11,2);
+    bounds.resize(7,2);
 
-    bounds_automatic=b_automatic;
-    obj_class=object_class;
-
-    readMatrix("bounds_"+object_class,bounds, 11, rf);
+    bounds.zero();
 }
 
 /****************************************************************/
-void SuperQuadric_NLP::computeX0(Vector &x0, deque<Vector> &point_cloud)
+void Sphere_NLP::computeX0(Vector &x0, deque<Vector> &point_cloud)
 {
-    x0[3]=1.0;
-    x0[4]=1.0;
+
+    x0[4]=0.0;
     x0[5]=0.0;
     x0[6]=0.0;
-    x0[7]=0.0;
 
     // Let-s try to compute centroid from bounding box and skip the following lines
     /*for (size_t i=0; i<point_cloud.size();i++)
@@ -316,19 +289,18 @@ void SuperQuadric_NLP::computeX0(Vector &x0, deque<Vector> &point_cloud)
     bounding_box=computeBoundingBox(point_cloud,x0);
 
     x0[0]=(-bounding_box(0,0)+bounding_box(0,1))/2;
-    x0[1]=(-bounding_box(1,0)+bounding_box(1,1))/2;
-    x0[2]=(-bounding_box(2,0)+bounding_box(2,1))/2;
+
 
     // Let-s try to compute centroid from bounding box
-    Matrix R = euler2dcm(x0.subVector(8,10));
+    Matrix R = euler2dcm(x0.subVector(4,6));
     bounding_box = R.submatrix(0,2,0,2) * bounding_box;
-    x0[5] = (bounding_box(0,0)+bounding_box(0,1))/2;
-    x0[6] = (bounding_box(1,0)+bounding_box(1,1))/2;
-    x0[7] = (bounding_box(2,0)+bounding_box(2,1))/2;
+    x0[1] = (bounding_box(0,0)+bounding_box(0,1))/2;
+    x0[2] = (bounding_box(1,0)+bounding_box(1,1))/2;
+    x0[3] = (bounding_box(2,0)+bounding_box(2,1))/2;
 }
 
 /****************************************************************/
-void SuperQuadric_NLP::computeInitialOrientation(Vector &x0,deque<Vector> &point_cloud)
+void Sphere_NLP::computeInitialOrientation(Vector &x0,deque<Vector> &point_cloud)
 {
     Matrix M=zeros(3,3);
     Matrix R(3,3);
@@ -343,12 +315,12 @@ void SuperQuadric_NLP::computeInitialOrientation(Vector &x0,deque<Vector> &point
     for (size_t i=0;i<point_cloud.size(); i++)
     {
         Vector &point=point_cloud[i];
-        M(0,0)= M(0,0) + (point[1]-x0[6])*(point[1]-x0[6]) + (point[2]-x0[7])*(point[2]-x0[7]);
-        M(0,1)= M(0,1) - (point[1]-x0[6])*(point[0]-x0[5]);
-        M(0,2)= M(0,2) - (point[2]-x0[7])*(point[0]-x0[5]);
-        M(1,1)= M(1,1) + (point[0]-x0[5])*(point[0]-x0[5]) + (point[2]-x0[7])*(point[2]-x0[7]);
-        M(2,2)= M(2,2) + (point[1]-x0[6])*(point[1]-x0[6]) + (point[0]-x0[5])*(point[0]-x0[5]);
-        M(1,2)= M(1,2) - (point[2]-x0[7])*(point[1]-x0[6]);
+        M(0,0)= M(0,0) + (point[1]-x0[2])*(point[1]-x0[2]) + (point[2]-x0[3])*(point[2]-x0[3]);
+        M(0,1)= M(0,1) - (point[1]-x0[2])*(point[0]-x0[1]);
+        M(0,2)= M(0,2) - (point[2]-x0[3])*(point[0]-x0[1]);
+        M(1,1)= M(1,1) + (point[0]-x0[1])*(point[0]-x0[1]) + (point[2]-x0[3])*(point[2]-x0[3]);
+        M(2,2)= M(2,2) + (point[1]-x0[2])*(point[1]-x0[2]) + (point[0]-x0[1])*(point[0]-x0[1]);
+        M(1,2)= M(1,2) - (point[2]-x0[3])*(point[1]-x0[2]);
     }
 
     M(0,0)= M(0,0)/point_cloud.size();
@@ -375,7 +347,7 @@ void SuperQuadric_NLP::computeInitialOrientation(Vector &x0,deque<Vector> &point
 }
 
 /****************************************************************/
-Matrix SuperQuadric_NLP::computeBoundingBox(deque<Vector> &points, const Vector &x0)
+Matrix Sphere_NLP::computeBoundingBox(deque<Vector> &points, const Vector &x0)
 {
     Matrix BB(3,2);
 
@@ -386,15 +358,15 @@ Matrix SuperQuadric_NLP::computeBoundingBox(deque<Vector> &points, const Vector 
     BB(1,1)=-numeric_limits<double>::infinity();
     BB(2,1)=-numeric_limits<double>::infinity();
 
-    Matrix T=euler2dcm((x0.subVector(8,10)));
-    T.setCol(3,x0.subVector(5,7));
-    T = SE3inv(T);
+    //Matrix T=euler2dcm((x0.subVector(8,10)));
+    //T.setCol(3,x0.subVector(1,3));
+    //T = SE3inv(T);
 
     for (size_t i=0; i<points.size();i++)
     {
         Vector point(4,1.0);
         point.setSubvector(0,points[i]);
-        point = T * point;
+        //point = T * point;
 
         if(BB(0,0)>point[0])
            BB(0,0)=point[0];
@@ -419,7 +391,7 @@ Matrix SuperQuadric_NLP::computeBoundingBox(deque<Vector> &points, const Vector 
 }
 
 /****************************************************************/
-bool SuperQuadric_NLP::readMatrix(const string &tag, Matrix &matrix, const int &dimension, ResourceFinder *rf)
+bool Sphere_NLP::readMatrix(const string &tag, Matrix &matrix, const int &dimension, ResourceFinder *rf)
 {
    string tag_x=tag+"_x";
    string tag_y=tag+"_y";
@@ -481,7 +453,7 @@ bool SuperQuadric_NLP::readMatrix(const string &tag, Matrix &matrix, const int &
 }
 
 /****************************************************************/
-void SuperQuadric_NLP::finalize_solution(Ipopt::SolverReturn status, Ipopt::Index n,
+void Sphere_NLP::finalize_solution(Ipopt::SolverReturn status, Ipopt::Index n,
                       const Ipopt::Number *x, const Ipopt::Number *z_L,
                       const Ipopt::Number *z_U, Ipopt::Index m,
                       const Ipopt::Number *g, const Ipopt::Number *lambda,
@@ -494,7 +466,7 @@ void SuperQuadric_NLP::finalize_solution(Ipopt::SolverReturn status, Ipopt::Inde
 }
 
 /****************************************************************/
-Vector SuperQuadric_NLP::get_result() const
+Vector Sphere_NLP::get_result() const
 {
     return solution;
 }

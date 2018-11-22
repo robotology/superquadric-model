@@ -30,8 +30,8 @@ icubcontrib_set_default_prefix()
 
 find_package(IPOPT REQUIRED)
 
-set(headers   include/superquadric.h include/superqModule.h include/superqComputation.h include/superqVisualization.h include/tree.h)
-set(sources src/superqModule.cpp  src/main.cpp src/superquadric.cpp src/superqComputation.cpp src/superqVisualization.cpp src/tree.cpp)
+set(headers   include/superquadric.h include/superqModule.h include/superqComputation.h include/superqVisualization.h include/tree.h include/sphere.h)
+set(sources src/superqModule.cpp  src/main.cpp src/superquadric.cpp src/superqComputation.cpp src/superqVisualization.cpp src/tree.cpp src/sphere.cpp)
 yarp_add_idl(IDL_GEN_FILES src/idl.thrift)
 source_group("IDL Files" FILES src/idl.thrift)
 source_group("DOC Files" FILES ${PROJECT_NAME}.xml)

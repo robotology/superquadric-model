@@ -27,6 +27,7 @@
 
 #include "superquadric.h"
 #include "tree.h"
+#include "sphere.h"
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -331,6 +332,9 @@ public:
 
    /**********************************************************************/
    void computeNewSuperqs();
+
+   /***********************************************************************/
+   yarp::sig::Vector computeMultipleSphere(const std::deque<yarp::sig::Vector> &points_splitted);
 
 };
 

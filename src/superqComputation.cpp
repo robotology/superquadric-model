@@ -917,7 +917,7 @@ void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
 
     createGraphFromTree();
 
-    cutGraph();
+    //cutGraph();
 
     if (merge_model)
     {
@@ -1057,6 +1057,60 @@ Vector SuperqComputation::computeMultipleSuperq(const deque<Vector> &points_spli
     else if(status==Ipopt::Maximum_CpuTime_Exceeded)
     {
         x=superQ_nlp->get_result();
+        yWarning("[SuperqComputation]: Solution after maximum time exceeded: %s", x.toString(3,3).c_str());
+        return x;
+    }
+    else
+    {
+        x.resize(11,0.0);
+        return x;
+    }
+}
+
+/***********************************************************************/
+Vector SuperqComputation::computeMultipleSphere(const deque<Vector> &points_splitted)
+{
+    Vector colors(3,0.0);
+    colors[1]=255;
+
+    Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
+    app->Options()->SetNumericValue("tol",tol);
+    app->Options()->SetIntegerValue("acceptable_iter",acceptable_iter);
+    app->Options()->SetStringValue("mu_strategy",mu_strategy);
+    app->Options()->SetIntegerValue("max_iter",max_iter);
+    app->Options()->SetNumericValue("max_cpu_time",max_cpu_time);
+    app->Options()->SetStringValue("nlp_scaling_method",nlp_scaling_method);
+    app->Options()->SetStringValue("hessian_approximation","limited-memory");
+    app->Options()->SetIntegerValue("print_level",0);
+    app->Initialize();
+
+    Ipopt::SmartPtr<Sphere_NLP> sphere_nlp= new Sphere_NLP;
+
+    sphere_nlp->init();
+    sphere_nlp->configure(this->rf,bounds_automatic, ob_class);
+
+    sphere_nlp->setPoints(points_splitted, optimizer_points);
+
+    double t0_superq=Time::now();
+
+    yDebug()<<"[SuperqComputation]: Start IPOPT ";
+
+    Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(sphere_nlp));
+
+    yDebug()<<"[SuperqComputation]: Finish IPOPT ";
+
+    double t_s=Time::now()-t0_superq;
+
+    if (status==Ipopt::Solve_Succeeded)
+    {
+        x=sphere_nlp->get_result();
+        yInfo("[SuperqComputation]: Solution of the optimization problem: %s", x.toString(3,3).c_str());
+        yInfo("[SuperqComputation]: Execution time : %f", t_s);
+        return x;
+    }
+    else if(status==Ipopt::Maximum_CpuTime_Exceeded)
+    {
+        x=sphere_nlp->get_result();
         yWarning("[SuperqComputation]: Solution after maximum time exceeded: %s", x.toString(3,3).c_str());
         return x;
     }
@@ -1230,9 +1284,10 @@ void SuperqComputation::splitPointCloud(node *newnode)
         }
         else if (newnode->height == h_tree + 1)
         {
-            Vector superq(11,0.0);
+            Vector superq(7,0.0);
             bounds_automatic=false;
-            superq=computeMultipleSuperq(*newnode->point_cloud);
+            //superq=computeMultipleSuperq(*newnode->point_cloud);
+            superq=computeMultipleSphere(*newnode->point_cloud);
 
             newnode->superq=superq;
         }
@@ -1854,7 +1909,21 @@ void SuperqComputation::addSuperqInGraph(node *leaf)
         {
             stringstream ss;
 
-            sup=leaf->superq;
+            if (leaf->superq.size()==11)
+                sup=leaf->superq;
+            else
+            {
+                sup[0]=sup[1]=sup[2]=leaf->superq[0];
+                sup[3]=sup[4]=1.0;
+                sup[5]=leaf->superq[1];
+                sup[6]=leaf->superq[2];
+                sup[7]=leaf->superq[3];
+                sup[8]=leaf->superq[4];
+                sup[9]=leaf->superq[5];
+                sup[10]=leaf->superq[6];
+            }
+
+            yDebug()<<"sup in creating "<<sup.toString();
 
             if (leaf->right!=NULL)
             {
@@ -2183,6 +2252,7 @@ bool SuperqComputation::computeEdges(vertex_struct &vertex, deque<Vector> &edges
     Vector point(3,0.0);
 
     Vector superq(11,0.0);
+    //Vector sphere(7,0.0);
     superq=vertex.superq;
 
     computeSuperqAxis(vertex);
