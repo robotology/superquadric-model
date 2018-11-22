@@ -81,8 +81,8 @@ bool Sphere_NLP::get_nlp_info(Ipopt::Index &n, Ipopt::Index &m,Ipopt::Index &nnz
 /****************************************************************/
 void Sphere_NLP::computeBounds()
 {
-    bounds(0,1)=x0[0]*1.3;
-    bounds(0,0)=x0[0]*0.7;
+    bounds(0,1)=x0[0]*1.5;
+    bounds(0,0)=x0[0]*0.02;
 
     bounds(1,0)=x0[1]-bounds(0,1);
     bounds(2,0)=x0[2]-bounds(0,1);

@@ -1286,8 +1286,8 @@ void SuperqComputation::splitPointCloud(node *newnode)
         {
             Vector superq(7,0.0);
             bounds_automatic=false;
-            //superq=computeMultipleSuperq(*newnode->point_cloud);
-            superq=computeMultipleSphere(*newnode->point_cloud);
+            superq=computeMultipleSuperq(*newnode->point_cloud);
+            //superq=computeMultipleSphere(*newnode->point_cloud);
 
             newnode->superq=superq;
         }
@@ -1416,9 +1416,10 @@ void SuperqComputation::createGraphFromTree()
        {
            if (i!=j)
            {
-               double w=edgesClose(vertex_content[i],vertex_content[j]);
-               pair<int, double> p=make_pair(j,w);
+               deque<double> w=edgesClose(vertex_content[i],vertex_content[j]);
+               pair<int, double> p=make_pair(j,w[0]);
                vertex_content[i].weigthed_edges.push_back(p);
+               vertex_content[i].sum_radius.push_back(w[1]);
 
            }
       }
@@ -1440,77 +1441,29 @@ void SuperqComputation::createGraphFromTree()
 
     cout<<endl;
     cout<<"-----------------------------------------------------------------------------------------------------";
-    yDebug()<<"                             Computing minimum spanning path";
+    yDebug()<<"                             Connecting graph";
     cout<<"-----------------------------------------------------------------------------------------------------";
     cout<<endl;
 
-    for (size_t starting=0; starting<num_vertices; starting++)
-    {
-        int next_edge=0;
-        int count=0;
-        adj_matrix.resize(num_vertices, num_vertices);
-        adj_matrix.zero();
+    adj_matrix.resize(num_vertices, num_vertices);
 
-        double cost=0.0;
-
-        int v=starting;
-
-        for (size_t i=0; i<num_vertices; i++)
-            vertex_content[i].visited=false;
-
-        while (count<num_vertices)
-        {
-            double min_weigth=1000000;
-
-            vertex_content[v].visited=true;
-            for (size_t j=0; j<vertex_content[v].weigthed_edges.size(); j++)
-            {
-                if (vertex_content[vertex_content[v].weigthed_edges[j].first].visited==false)
-                {
-                    if (vertex_content[v].weigthed_edges[j].second < min_weigth)
-                    {
-                        min_weigth=vertex_content[v].weigthed_edges[j].second;
-
-                        next_edge=vertex_content[v].weigthed_edges[j].first;
-                    }
-                }
-
-            }
-
-            if (min_weigth<1000000)
-            {
-                adj_matrix(v,next_edge)=1;
-
-                v=next_edge;
-
-                cost+=min_weigth;
-            }
-            count ++;
-
-        }
-
-        yDebug()<<"||    Weight:   "<<cost;
-
-        all_adj_matrs.push_back(adj_matrix);
-        all_costs.push_back(cost);
-    }
-
-    double min_cost=all_costs[0];
-    int min_i=0;
     for (size_t i=0; i<num_vertices; i++)
     {
-        if (all_costs[i]<min_cost)
+        for (size_t j=0; j<vertex_content[i].weigthed_edges.size(); j++)
         {
-            min_cost=all_costs[i];
-            min_i=i;
-        }
+            yDebug()<<"vertex_content[i].weigthed_edges[j].second"<<vertex_content[i].weigthed_edges[j].second;
+            yDebug()<<"vertex_content[i].radius"<<vertex_content[i].sum_radius[j];
 
+
+            if (vertex_content[i].weigthed_edges[j].second<= vertex_content[i].sum_radius[j])
+                adj_matrix(i,j)=1;
+            else
+                adj_matrix(i,j)=0;
+
+        }
     }
 
-    cout<<endl;
-    cout<<"-----------------------------------------------------------------------------------------------------";
-    yDebug()<<"||    Final selected matrix is no   :"<<min_i<<"with minimum cost   :"<<min_cost;
-    adj_matrix=all_adj_matrs[min_i];
+
     yDebug()<<"||    Matrix of connections based on distance ";
     cout<<endl;
     cout<<adj_matrix.toString(1,1);
@@ -2216,7 +2169,7 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
 } 
 
 /****************************************************************/
-double SuperqComputation::edgesClose(vertex_struct &v1, vertex_struct &v2)
+deque<double> SuperqComputation::edgesClose(vertex_struct &v1, vertex_struct &v2)
 {
     deque<Vector> edges_1;
     deque<Vector> edges_2;
@@ -2226,8 +2179,13 @@ double SuperqComputation::edgesClose(vertex_struct &v1, vertex_struct &v2)
 
     double distance_min=1000.0;
 
+    int i_min, j_min;
+    i_min=0;
+    j_min=0;
+
     for (size_t i=0; i<edges_1.size(); i++)
     {
+
        for (size_t j=0; j<edges_2.size(); j++)
        {
            double distance=norm(edges_1[i]-edges_2[j]);
@@ -2235,12 +2193,46 @@ double SuperqComputation::edgesClose(vertex_struct &v1, vertex_struct &v2)
            if (distance < distance_min)
            {
                distance_min=distance;
+               i_min=i;
+               j_min=j;
            }
 
        }
     }
 
-    return distance_min;
+    double sum_radius_min;
+    double r1, r2;
+
+    if (i_min==0)
+        r1=0;
+    else if (i_min>0 && i_min<3)
+        r1=v1.superq[0];
+    else if (i_min>3 && i_min<6)
+        r1=v1.superq[1];
+    else if (i_min>6 && i_min<9)
+        r1=v1.superq[2];
+
+    if (j_min==0)
+        r2=0;
+    else if (j_min>0 && j_min<3)
+        r2=v2.superq[0];
+    else if (j_min>3 && j_min<6)
+        r2=v2.superq[1];
+    else if (j_min>6 && j_min<9)
+        r2=v2.superq[2];
+
+    sum_radius_min=r1+r2;
+
+    //double distance_centers;
+
+    //distance_centers=norm(v1.superq.subVector(5,7) - v2.superq.subVector(5,7));
+
+    //return distance_centers;
+    deque<double> data;
+    data.push_back(distance_min);
+    data.push_back(sum_radius_min);
+
+    return data;
 
 }
 
