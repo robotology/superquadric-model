@@ -256,6 +256,8 @@ public:
     /****************************************************************/
     bool readMatrix(const std::string &tag, yarp::sig::Matrix &matrix, const int &dimension, yarp::os::ResourceFinder *rf);
 
+    /****************************************************************/
+    double F_euclidean(const yarp::sig::Vector &x, const yarp::sig::Vector &points);
 };
 
 #endif

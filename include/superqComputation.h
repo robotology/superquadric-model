@@ -316,7 +316,7 @@ public:
    bool computeEdges(vertex_struct &v1,  std::deque<yarp::sig::Vector> &edges);
 
    /****************************************************************/
-   std::deque<double> edgesClose(vertex_struct &v1, vertex_struct &v2);
+   double edgesClose(vertex_struct &v1, vertex_struct &v2);
 
    /****************************************************************/
    void createGraphFromTree();

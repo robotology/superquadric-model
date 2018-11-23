@@ -499,4 +499,15 @@ Vector SuperQuadric_NLP::get_result() const
     return solution;
 }
 
+/****************************************************************/
+double SuperQuadric_NLP::F_euclidean(const Vector &x, const Vector &point)
+{
+    double distance_OP=norm(point - x.subVector(5,7));
+
+    yDebug()<<"Distance OP "<<distance_OP;
+    double tmp=(pow(f_v(x,point),x[3]/2.0)-1)*distance_OP;
+
+    return tmp;
+}
+
 

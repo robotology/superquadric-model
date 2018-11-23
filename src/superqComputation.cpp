@@ -1416,11 +1416,9 @@ void SuperqComputation::createGraphFromTree()
        {
            if (i!=j)
            {
-               deque<double> w=edgesClose(vertex_content[i],vertex_content[j]);
-               pair<int, double> p=make_pair(j,w[0]);
+               double w=edgesClose(vertex_content[i],vertex_content[j]);
+               pair<int, double> p=make_pair(j,w);
                vertex_content[i].weigthed_edges.push_back(p);
-               vertex_content[i].sum_radius.push_back(w[1]);
-
            }
       }
 
@@ -1446,19 +1444,19 @@ void SuperqComputation::createGraphFromTree()
     cout<<endl;
 
     adj_matrix.resize(num_vertices, num_vertices);
+    adj_matrix.zero();
 
     for (size_t i=0; i<num_vertices; i++)
     {
         for (size_t j=0; j<vertex_content[i].weigthed_edges.size(); j++)
         {
-            yDebug()<<"vertex_content[i].weigthed_edges[j].second"<<vertex_content[i].weigthed_edges[j].second;
-            yDebug()<<"vertex_content[i].radius"<<vertex_content[i].sum_radius[j];
-
-
-            if (vertex_content[i].weigthed_edges[j].second<= vertex_content[i].sum_radius[j])
-                adj_matrix(i,j)=1;
-            else
-                adj_matrix(i,j)=0;
+            if (adj_matrix(i,j)==0)
+            {
+                if (vertex_content[i].weigthed_edges[j].second>= 0.0)
+                    adj_matrix(i,j)=1;
+                else
+                    adj_matrix(i,j)=0;
+            }
 
         }
     }
@@ -1923,6 +1921,8 @@ void SuperqComputation::computeSuperqAxis(vertex_struct &v1)
 {
     Matrix R=euler2dcm(v1.superq.subVector(8,10));
 
+    //R=R.transposed();
+
     v1.axis_x = R.getCol(0).subVector(0,2);
     v1.axis_y = R.getCol(1).subVector(0,2);
     v1.axis_z = R.getCol(2).subVector(0,2);
@@ -2169,18 +2169,22 @@ bool SuperqComputation::sectionEqual(vertex_struct &v1, vertex_struct &v2, Matri
 } 
 
 /****************************************************************/
-deque<double> SuperqComputation::edgesClose(vertex_struct &v1, vertex_struct &v2)
+double SuperqComputation::edgesClose(vertex_struct &v1, vertex_struct &v2)
 {
     deque<Vector> edges_1;
     deque<Vector> edges_2;
 
-    computeEdges(v1, edges_1);
+    //computeEdges(v1, edges_1);
+    computeSuperqAxis(v1);
     computeEdges(v2, edges_2);
+
+    edges_1.push_back(v1.superq.subVector(5,7));
 
     double distance_min=1000.0;
 
-    int i_min, j_min;
-    i_min=0;
+   // int i_min, j_min;
+   // i_min=0;
+    int j_min;
     j_min=0;
 
     for (size_t i=0; i<edges_1.size(); i++)
@@ -2193,46 +2197,55 @@ deque<double> SuperqComputation::edgesClose(vertex_struct &v1, vertex_struct &v2
            if (distance < distance_min)
            {
                distance_min=distance;
-               i_min=i;
+              // i_min=i;
                j_min=j;
+
+               yDebug()<<"distance "<<distance;
+               yDebug()<<"j"<<j;
            }
 
        }
     }
 
-    double sum_radius_min;
-    double r1, r2;
+    /*double in_out;
 
-    if (i_min==0)
-        r1=0;
-    else if (i_min>0 && i_min<3)
-        r1=v1.superq[0];
-    else if (i_min>3 && i_min<6)
-        r1=v1.superq[1];
-    else if (i_min>6 && i_min<9)
-        r1=v1.superq[2];
+    Ipopt::SmartPtr<SuperQuadric_NLP> superq_nlp= new SuperQuadric_NLP;
 
-    if (j_min==0)
-        r2=0;
-    else if (j_min>0 && j_min<3)
-        r2=v2.superq[0];
-    else if (j_min>3 && j_min<6)
-        r2=v2.superq[1];
-    else if (j_min>6 && j_min<9)
-        r2=v2.superq[2];
+    superq_nlp->init();
+    superq_nlp->configure(this->rf,bounds_automatic, ob_class);
 
-    sum_radius_min=r1+r2;
+    in_out=superq_nlp->F_euclidean(v1.superq, edges_2[j_min]);
 
-    //double distance_centers;
+    yDebug()<<"In out distance with Euclidean distance "<<in_out;
 
-    //distance_centers=norm(v1.superq.subVector(5,7) - v2.superq.subVector(5,7));
 
-    //return distance_centers;
-    deque<double> data;
-    data.push_back(distance_min);
-    data.push_back(sum_radius_min);
+    return in_out;*/
 
-    return data;
+    Vector OP;
+    OP=edges_2[j_min]-v1.superq.subVector(5,7);
+
+    double dim_along_x=abs(dot(OP, v1.axis_x));
+    double dim_along_y=abs(dot(OP, v1.axis_y));
+    double dim_along_z=abs(dot(OP, v1.axis_z));
+
+    double dist_x=(v1.superq[0] - dim_along_x)/v1.superq[0];
+    double dist_y=(v1.superq[1] - dim_along_y)/v1.superq[1];
+    double dist_z=(v1.superq[2] - dim_along_z)/v1.superq[2];
+
+    yDebug()<<"dim_along_x "<<dim_along_x<<"dim_along_y"<<dim_along_y<<"dim_along_z"<<dim_along_z;
+
+    yDebug()<<"v1.superq[0] "<<v1.superq[0]<<"v1.superq[1]"<<v1.superq[1]<<"v1.superq[2]"<<v1.superq[2];
+
+    yDebug()<<"dist_x "<<dist_x<<"dist_y"<<dist_y<<"dist_z"<<dist_z;
+
+    if (dist_x>-0.0 && dist_y>-0.0 && dist_z>-0.0)
+        return 0.0;
+    else
+    {
+
+
+        return  (dist_x - abs(dist_x))/2.0 + (dist_y - abs(dist_y))/2.0 + (dist_z - abs(dist_z))/2.0;
+    }
 
 }
 
@@ -2257,7 +2270,7 @@ bool SuperqComputation::computeEdges(vertex_struct &vertex, deque<Vector> &edges
     axis_y=vertex.axis_y;
     axis_z=vertex.axis_z;
 
-    edges.push_back(superq.subVector(5,7));
+    //edges.push_back(superq.subVector(5,7));
     point = superq.subVector(5,7) + superq[0] * axis_x.subVector(0,2);
     edges.push_back(point);
 

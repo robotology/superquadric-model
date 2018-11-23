@@ -35,7 +35,6 @@ struct vertex_struct
     yarp::sig::Vector axis_y;
     yarp::sig::Vector axis_z;
     std::vector<std::pair<int, double>> weigthed_edges;
-    std::vector<double> sum_radius;
     bool visited;
 };
 
