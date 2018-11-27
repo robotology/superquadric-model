@@ -1303,13 +1303,13 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
         computeSuperqAxis(current_node->left);
         computeSuperqAxis(current_node->right);
 
-        //if (debug)
+        if (debug)
             yDebug()<<"node->height "<<current_node->height;
 
         if (axisParallel(current_node->left, current_node->right, relations) && sectionEqual(current_node->left, current_node->right, relations))
         {
-            //if (debug)
-            yDebug()<<"|| To be merged, no plane important ";
+            if (debug)
+                yDebug()<<"|| To be merged, no plane important ";
             cout<<endl;
 
             current_node->plane_important=false;
@@ -1396,15 +1396,17 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
         computeSuperqAxis(current_node->left);
         computeSuperqAxis(current_node->right);
 
-        if (!(axisParallel(current_node->left, current_node->right, relations) && !sectionEqual(current_node->left, current_node->right, relations)))
+        /*if (!(axisParallel(current_node->left, current_node->right, relations) && !sectionEqual(current_node->left, current_node->right, relations)))
         {
              yDebug()<<__LINE__;
             current_node->plane_important=true;
-        }
+        }*/
 
         if ((superq_tree->searchPlaneImportant(current_node->left)==false
                 && superq_tree->searchPlaneImportant(current_node->right)==false))
             current_node->plane_important=true;
+        //else
+        //    current_node->plane_important=false;
 
         //if (current_node->left->plane_important==true
           //      && current_node->right->plane_important==true)
@@ -1612,10 +1614,10 @@ void SuperqComputation::computeSuperqAxis(node *node)
 /****************************************************************/
 bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations)
 {
-    // No noise
-    //double threshold=0.8;
-    // Noisy
+    // Noise
     double threshold=0.7;
+    // No Noisy
+    //double threshold=0.75;
 
     if (abs(dot(node1->axis_x, node2->axis_x)) > threshold)
     {
@@ -1667,6 +1669,9 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
 /****************************************************************/
 bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations)
 {
+    // No noise
+    //double threshold=0.02;
+    // Noise
     double threshold=0.03;
     Vector dim1=node1->superq.subVector(0,2);
     Vector dim2=node2->superq.subVector(0,2);
