@@ -307,6 +307,9 @@ public:
    /***********************************************************************/
    void copySuperqChildren(node *old_node, node *newnode);
 
+   /***********************************************************************/
+   bool leftCloseToLeft(node *old_node, node *newnode);
+
 
 
 };

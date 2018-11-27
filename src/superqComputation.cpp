@@ -1306,6 +1306,8 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
         if (debug)
             yDebug()<<"node->height "<<current_node->height;
 
+
+
         if (axisParallel(current_node->left, current_node->right, relations) && sectionEqual(current_node->left, current_node->right, relations))
         {
             if (debug)
@@ -1323,6 +1325,9 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
             {
                 current_node->left=NULL;
                 current_node->right=NULL;
+
+                if (debug)
+                    yDebug()<<"leaves set equal to NULL";
             }
 
         }
@@ -1360,16 +1365,16 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
 
                 if (current_node->left->uncle_close!=NULL)
                 {
-                    parallel_to_uncle=(axisParallel(current_node->left, node_uncle, relations)
-                                       && sectionEqual(current_node->left, node_uncle, relations));
+
+                    parallel_to_uncle=(axisParallel(current_node->left, node_uncle, relations) && sectionEqual(current_node->left, node_uncle, relations));
                     if (parallel_to_uncle && debug)
                         yDebug()<<"Left is parallel and with same dimensions of its uncle";
 
                 }
                 else if (current_node->right->uncle_close!=NULL)
                 {
-                    parallel_to_uncle=(axisParallel(current_node->right, node_uncle, relations)
-                                       && sectionEqual(current_node->right, node_uncle, relations));
+
+                    parallel_to_uncle=(axisParallel(current_node->right, node_uncle, relations) && sectionEqual(current_node->right, node_uncle, relations));
                     if (parallel_to_uncle && debug)
                         yDebug()<<"Right is parallel and with same dimensions of its uncle";
                 }
@@ -1396,11 +1401,15 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
         computeSuperqAxis(current_node->left);
         computeSuperqAxis(current_node->right);
 
-        /*if (!(axisParallel(current_node->left, current_node->right, relations) && !sectionEqual(current_node->left, current_node->right, relations)))
+        yDebug()<<"|| Plane of root is important:  "<<current_node->plane_important;
+
+        if ( axisParallel(current_node->left, current_node->right, relations) && !sectionEqual(current_node->left, current_node->right, relations))
+            //if (!(axisParallel(current_node->left, current_node->right, relations) && !sectionEqual(current_node->left, current_node->right, relations)))
+            //{
         {
              yDebug()<<__LINE__;
             current_node->plane_important=true;
-        }*/
+        }
 
         if ((superq_tree->searchPlaneImportant(current_node->left)==false
                 && superq_tree->searchPlaneImportant(current_node->right)==false))
@@ -1411,8 +1420,6 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
         //if (current_node->left->plane_important==true
           //      && current_node->right->plane_important==true)
             //current_node->plane_important=true;
-
-        yDebug()<<__LINE__;
 
         yDebug()<<"|| Plane of root is important:  "<<current_node->plane_important;
     }
@@ -1447,6 +1454,35 @@ void SuperqComputation::copySuperqChildren(node *old_node, node *newnode)
 }
 
 /***********************************************************************/
+bool SuperqComputation::leftCloseToLeft(node *old_node, node *newnode)
+{
+    /*Vector barycenter(3,0.0);
+
+    deque<Vector> point=*old_node->left->point_cloud;
+
+
+    for (size_t i=0; i<old_node->left->point_cloud->size(); i++)
+    {
+        barycenter+=point[i].subVector(0,2);
+    }
+
+    barycenter/=old_node->left->point_cloud->size();
+
+    yDebug()<<"barycenter "<<barycenter.toString();*/
+    yDebug()<<"old  left "<<  old_node->left->superq.toString();
+    yDebug()<<"old  right "<< old_node->right->superq.toString();
+
+    yDebug()<<"mew  right "<< newnode->right->superq.toString();
+    yDebug()<<"mew  left "<< newnode->left->superq.toString();
+
+
+    if (norm(newnode->left->superq.subVector(5,7) - old_node->left->superq.subVector(5,7)) < norm(newnode->right->superq.subVector(5,7) - old_node->left->superq.subVector(5,7)))
+        return true;
+    else
+        return false;
+}
+
+/***********************************************************************/
 bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
 {
     if (old_node!=NULL && old_node->height <= h_tree)
@@ -1463,10 +1499,21 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
                 yDebug()<<"|| Current plane is important";
                 superqUsingPlane(old_node,old_node->father->point_cloud, old_node->plane, newnode);
 
-                //if (newnode->right->superq==old_node->right->superq || newnode->right->superq==old_node->left->superq)
-                //{
+                if (leftCloseToLeft(old_node, newnode))
+                {
                     generateFinalTree(old_node->left, newnode->left);
                     generateFinalTree(old_node->right, newnode->right);
+                }
+                else
+                {
+                    generateFinalTree(old_node->left, newnode->right);
+                    generateFinalTree(old_node->right, newnode->left);
+                }
+
+                //if (newnode->right->superq==old_node->right->superq || newnode->right->superq==old_node->left->superq)
+                //{
+                    //generateFinalTree(old_node->left, newnode->left);
+                    //generateFinalTree(old_node->right, newnode->right);
                 //}
                 //else if (newnode->left->superq==old_node->right->superq || newnode->left->superq==old_node->left->superq)
                 //{
@@ -1483,6 +1530,7 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
                 // I can just copy the superq -> faster
                 copySuperqChildren(old_node, newnode);
 
+
                 generateFinalTree(old_node->left, newnode->left);
                 generateFinalTree(old_node->right, newnode->right);
             }
@@ -1494,6 +1542,10 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
                 if (superq_tree->searchPlaneImportant(old_node->left)==true && superq_tree->searchPlaneImportant(old_node->right)==true)
                 {
                     copySuperqChildren(old_node, newnode);
+
+                    // Copy to have structure but not to save superq
+                    newnode->left->superq.zero();
+                    newnode->right->superq.zero();
 
                     generateFinalTree(old_node->left, newnode->left);
                     generateFinalTree(old_node->right, newnode->right);
@@ -1528,6 +1580,10 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
             else if (superq_tree->searchPlaneImportant(old_node->left)==true && superq_tree->searchPlaneImportant(old_node->right)==true)
             {
                 copySuperqChildren(old_node, newnode);
+
+                // Copy to have structure but not to save superq
+                newnode->left->superq.zero();
+                newnode->right->superq.zero();
 
                 generateFinalTree(old_node->left, newnode->left);
                 generateFinalTree(old_node->right, newnode->right);
@@ -1615,9 +1671,9 @@ void SuperqComputation::computeSuperqAxis(node *node)
 bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations)
 {
     // Noise
-    double threshold=0.7;
+    //double threshold=0.7;
     // No Noisy
-    //double threshold=0.75;
+    double threshold=0.75;
 
     if (abs(dot(node1->axis_x, node2->axis_x)) > threshold)
     {
@@ -1656,7 +1712,7 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
         relations(2,2) = 1;
     }
 
-    if (debug)
+    //if (debug)
         yDebug()<<"rel "<<relations.toString();
 
 
@@ -1666,13 +1722,172 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
         return false;
 
 }
+
+/****************************************************************/
+/*bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations)
+{
+    double threshold1=0.85;
+    double threshold2=1.4;
+
+    Matrix R1(3,3);
+    R1.setRow(0,node1->axis_x);
+    R1.setRow(1,node1->axis_y);
+    R1.setRow(2,node1->axis_z);
+
+    Matrix R2(3,3);
+    R2.setRow(0,node2->axis_x);
+    R2.setRow(1,node2->axis_y);
+    R2.setRow(2,node2->axis_z);
+
+
+    if (norm(R2.getCol(0))>1 || norm(R2.getCol(1))>1 || norm(R2.getCol(2))>1)
+        yError()<< "Something wrong in one column!!";
+
+    Matrix R2_rot(3,3);
+    R2_rot=relations*R2;
+
+    Vector dim1=node1->superq.subVector(0,2);
+    Vector dim2=node2->superq.subVector(0,2);
+
+    Vector dim2_rot=relations*dim2;
+
+
+    //if(debug)
+    //{
+        yDebug()<<"||            Dim 1     "<<dim1.toString();
+        yDebug()<<"||            Dim 2     "<<dim2.toString();
+        yDebug()<<"||            Dim 2 rot "<<dim2_rot.toString();
+   // }
+
+
+    Vector p1,p2,p3,p4;
+    p1.resize(3,0.0);
+    p2.resize(3,0.0);
+    p3.resize(3,0.0);
+    p4.resize(3,0.0);
+
+    deque<bool> equals;
+
+    equals.clear();
+
+     for (size_t i=0; i<3; i++)
+    {
+        bool equal;
+        int other_index;
+
+        if (norm(relations.getRow(i))> 0.0)
+        {
+            other_index=i;
+
+            p1=node1->superq.subVector(5,7)+dim1[i]*R1.getRow(i);
+            p2=node1->superq.subVector(5,7)-dim1[i]*R1.getRow(i);
+
+
+            p3=node2->superq.subVector(5,7)+dim2_rot[other_index]*R2_rot.getRow(i);
+            p4=node2->superq.subVector(5,7)-dim2_rot[other_index]*R2_rot.getRow(i);
+
+            vector<double> distances;
+            deque<Vector> vectors;
+            vectors.push_back(p1 - p3);
+            vectors.push_back(p1 - p4);
+            vectors.push_back(p2 - p3);
+            vectors.push_back(p2 - p4);
+            distances.push_back(norm(vectors[0]));
+            distances.push_back(norm(vectors[1]));
+            distances.push_back(norm(vectors[2]));
+            distances.push_back(norm(vectors[3]));
+
+            auto it=max_element(distances.begin(), distances.end());
+
+            Vector max_dist;
+            max_dist=vectors[it -distances.begin()];
+
+            double cos_max_dist1, cos_max_dist2;
+            cos_max_dist1=dot((p1 - p2)/norm(p1 - p2), (p1 - p4)/norm(p1 - p4));
+            cos_max_dist2=dot((p3 - p4)/norm(p3 - p4), (p1 - p4)/norm(p1 - p4));
+
+            yDebug()<<"cos_max_dist1"<<cos_max_dist1;
+            yDebug()<<"cos_max_dist2"<<cos_max_dist2;
+
+            if (abs(max(cos_max_dist1, cos_max_dist2)) > threshold1)
+            {
+                equal=true;
+                int count_true=0;
+
+                for (size_t j=0; j<3; j++)
+                {
+                    /*if ( i != j && dim2_rot[j]!= 0.0)
+                    {
+
+                        if ( (dim1[j]/dim2_rot[j] < 1*threshold2) && (dim1[j]/dim2_rot[j] > 1/threshold2))
+                        {
+                            equal=equal && true;
+                        }
+                        else
+                            equal=equal && false;
+                    }*/
+
+                   /* if( dim2[j]!=dim2_rot[i])
+                    {
+
+
+                        for (size_t k=0; k<3; k++)
+                        {
+
+                            if (k != i)
+                            {
+                                yDebug()<<"Comparing "<<dim1[k]<<" with "<<dim2[j];
+                                if ( (dim1[k]/dim2[j] < 1*threshold2) && (dim1[k]/dim2[j] > 1/threshold2))
+                                {
+                                    //equal=equal && true;
+                                    yDebug()<<"ok";
+                                    count_true++;
+                                }
+
+                            }
+                        }
+                    }
+                }
+                yDebug()<<"count_true "<<count_true;
+                if (count_true < 2)
+                    equal=false;
+
+            }
+            else
+            {
+                if ( dim2_rot[i]!= 0.0)
+                {
+                    yDebug()<<"Comparing "<<dim1[i]<<" with "<<dim2_rot[i];
+
+                    if ((dim1[i]/ dim2_rot[i] < 1*threshold2) && (dim1[i]/ dim2_rot[i] > 1/threshold2))
+                    {
+                        yDebug()<<"ok";
+                        equal=true;
+                    }
+                    else
+                        equal=false;
+                }
+            }
+            equals.push_back(equal);
+        }
+        equals.push_back(true);
+
+    }
+
+     yDebug()<<"equals[0]"<<equals[0]<<equals[1]<<equals[2];
+    return equals[0] && equals[1] && equals[2];
+}*/
+
+
 /****************************************************************/
 bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations)
 {
     // No noise
-    //double threshold=0.02;
+    double threshold=0.02;
     // Noise
-    double threshold=0.03;
+    //double threshold=0.03;
+
+
     Vector dim1=node1->superq.subVector(0,2);
     Vector dim2=node2->superq.subVector(0,2);
 
@@ -1692,6 +1907,7 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
         if (dim_rot[i]!= 0.0)
         {
             if ((abs(dim1[i] - dim_rot[i]) < threshold))
+            //if ((abs(dim1[i] - dim_rot[i])/dim1[i] < threshold))
                 equal=equal && true;
             else
                 equal=false;
@@ -1699,7 +1915,7 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
     }
 
     return equal;
-} 
+}
 
 /****************************************************************/
 double SuperqComputation::edgesClose(node *node1, node *node2)

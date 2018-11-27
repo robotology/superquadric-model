@@ -116,7 +116,7 @@ void superqTree::insert(nodeContent &node_content1, nodeContent &node_content2, 
 /***********************************************************************/
 bool superqTree::searchPlaneImportant(node *leaf)
 {
-
+    double one_false=false;
     if (leaf!=NULL)
     {
         searchPlaneImportant(leaf->left);
@@ -127,8 +127,10 @@ bool superqTree::searchPlaneImportant(node *leaf)
         yDebug()<<"Searching plane true.. "<<leaf->plane_important;
 
         if (leaf->plane_important==true)
-            return leaf->plane_important;
+            one_false=one_false || leaf->plane_important;
     }
+
+    return one_false;
 
 
 }
