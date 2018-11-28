@@ -1310,7 +1310,6 @@ bool SuperqComputation::findImportantPlanes(node *current_node)
             yDebug()<<"node->height "<<current_node->height;
 
 
-
         if (axisParallel(current_node->left, current_node->right, relations) && sectionEqual(current_node->left, current_node->right, relations))
         {
             if (debug)
@@ -1691,15 +1690,19 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
         if(abs(dot(node1->axis_x, node2->axis_x)) < abs(dot(node1->axis_x, node2->axis_y)))
         {
             max=abs(dot(node1->axis_x, node2->axis_y));
+            i_max=1;
         }
         else
             max=abs(dot(node1->axis_x, node2->axis_x));
 
          if (max<abs(dot(node1->axis_x, node2->axis_z)))
+         {
             max=abs(dot(node1->axis_x, node2->axis_z));
+            i_max=2;
+         }
 
          relations(0,0)=relations(0,1)=relations(0,2)=0.0;
-         relations(0,max)=1.0;
+         relations(0,i_max)=1.0;
     }
 
     if (norm(relations.getRow(1))> 1.0)
@@ -1709,15 +1712,19 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
         if(abs(dot(node1->axis_y, node2->axis_x)) < abs(dot(node1->axis_y, node2->axis_y)))
         {
             max=abs(dot(node1->axis_y, node2->axis_y));
+            i_max=1;
         }
         else
             max=abs(dot(node1->axis_y, node2->axis_x));
 
          if (max<abs(dot(node1->axis_y, node2->axis_z)))
+         {
             max=abs(dot(node1->axis_y, node2->axis_z));
+            i_max=2;
+         }
 
          relations(1,0)=relations(1,1)=relations(1,2)=0.0;
-         relations(1,max)=1.0;
+         relations(1,i_max)=1.0;
     }
 
     if (norm(relations.getRow(2))> 1.0)
@@ -1727,15 +1734,19 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
         if(abs(dot(node1->axis_z, node2->axis_x)) < abs(dot(node1->axis_z, node2->axis_y)))
         {
             max=abs(dot(node1->axis_z, node2->axis_y));
+            i_max=1;
         }
         else
             max=abs(dot(node1->axis_z, node2->axis_x));
 
          if (max<abs(dot(node1->axis_z, node2->axis_z)))
+         {
             max=abs(dot(node1->axis_z, node2->axis_z));
+            i_max=2;
+         }
 
          relations(2,0)=relations(2,1)=relations(2,2)=0.0;
-         relations(2,max)=1.0;
+         relations(2,i_max)=1.0;
     }
 
     yDebug()<<"rel "<<relations.toString();
@@ -1887,7 +1898,7 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
     double threshold1=0.6;
     //double threshold2=2.0;
 
-    double threshold2=0.01;
+    double threshold2=0.015;
 
     Matrix R1(3,3);
     R1.setRow(0,node1->axis_x);
