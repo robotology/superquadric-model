@@ -1512,8 +1512,8 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
                     copySuperqChildren(old_node, newnode);
 
                     // Copy to have structure but not to save superq
-                    newnode->left->superq.zero();
-                    newnode->right->superq.zero();
+                    //newnode->left->superq.zero();
+                    //newnode->right->superq.zero();
 
                     generateFinalTree(old_node->left, newnode->left);
                     generateFinalTree(old_node->right, newnode->right);
@@ -1550,8 +1550,8 @@ bool SuperqComputation::generateFinalTree(node *old_node, node *newnode)
                 copySuperqChildren(old_node, newnode);
 
                 // Copy to have structure but not to save superq
-                newnode->left->superq.zero();
-                newnode->right->superq.zero();
+                //newnode->left->superq.zero();
+                //newnode->right->superq.zero();
 
                 generateFinalTree(old_node->left, newnode->left);
                 generateFinalTree(old_node->right, newnode->right);
@@ -1682,7 +1682,7 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
     }
 
     //if (debug)
-        yDebug()<<"rel "<<relations.toString();
+       // yDebug()<<"rel "<<relations.toString();
 
     if (norm(relations.getRow(0))> 1.0)
     {
@@ -1698,7 +1698,7 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
          if (max<abs(dot(node1->axis_x, node2->axis_z)))
             max=abs(dot(node1->axis_x, node2->axis_z));
 
-         relations(0,0)=relations(0,1)=relations(0,2);
+         relations(0,0)=relations(0,1)=relations(0,2)=0.0;
          relations(0,max)=1.0;
     }
 
@@ -1716,7 +1716,7 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
          if (max<abs(dot(node1->axis_y, node2->axis_z)))
             max=abs(dot(node1->axis_y, node2->axis_z));
 
-         relations(1,0)=relations(1,1)=relations(1,2);
+         relations(1,0)=relations(1,1)=relations(1,2)=0.0;
          relations(1,max)=1.0;
     }
 
@@ -1734,9 +1734,11 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
          if (max<abs(dot(node1->axis_z, node2->axis_z)))
             max=abs(dot(node1->axis_z, node2->axis_z));
 
-         relations(2,0)=relations(2,1)=relations(2,2);
+         relations(2,0)=relations(2,1)=relations(2,2)=0.0;
          relations(2,max)=1.0;
     }
+
+    yDebug()<<"rel "<<relations.toString();
 
     if ((norm(relations.getRow(0)) > 0.0) || (norm(relations.getRow(1)) > 0.0) || (norm(relations.getRow(2)) > 0.0))
     {
@@ -1882,8 +1884,10 @@ bool SuperqComputation::axisParallel(node *node1, node *node2, Matrix &relations
 /****************************************************************/
 bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations)
 {
-    double threshold1=0.9;
-    double threshold2=2.0;
+    double threshold1=0.6;
+    //double threshold2=2.0;
+
+    double threshold2=0.01;
 
     Matrix R1(3,3);
     R1.setRow(0,node1->axis_x);
@@ -1977,7 +1981,8 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
                         yDebug()<<"dim1[j]/dim2_rot[j] "<< dim1[j]/dim2_rot[j] <<"dim2[j]/dim1[j] "<<dim2_rot[j]/dim1[j];
                         yDebug()<<"threshold "<<1*threshold2<< " "<<1/threshold2;
 
-                        if ( (dim1[j] > dim2_rot[j] && (dim1[j]/dim2_rot[j] < 1*threshold2)) || (dim1[j] < dim2_rot[j]  && dim1[j]/dim2_rot[j] > 1/threshold2))
+                        //if ( (dim1[j] > dim2_rot[j] && (dim1[j]/dim2_rot[j] < 1*threshold2)) || (dim1[j] < dim2_rot[j]  && dim1[j]/dim2_rot[j] > 1/threshold2))
+                        if (abs(dim1[j] - dim2_rot[j])< threshold2)
                         {
                             equal=equal && true;
                         }
@@ -1994,7 +1999,8 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
                 {
                     yDebug()<<"dim1[i]/dim2_rot[i] "<< dim1[i]/dim2_rot[i] <<"dim2[i]/dim1[i] "<<dim2_rot[i]/dim1[i];
                     yDebug()<<"threshold "<<1*threshold2<< " "<<1/threshold2;
-                    if ( (dim1[i] > dim2_rot[i] && (dim1[i]/dim2_rot[i] < 1*threshold2)) || (dim1[i] < dim2_rot[i]  && dim1[i]/dim2_rot[i] > 1/threshold2))
+                    //if ( (dim1[i] > dim2_rot[i] && (dim1[i]/dim2_rot[i] < 1*threshold2)) || (dim1[i] < dim2_rot[i]  && dim1[i]/dim2_rot[i] > 1/threshold2))
+                    if (abs(dim1[i] - dim2_rot[i])< threshold2)
                     {
                         equal=true;
                     }
