@@ -1898,7 +1898,7 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
     double threshold1=0.6;
     //double threshold2=2.0;
 
-    double threshold2=0.015;
+    double threshold2=0.03;
 
     Matrix R1(3,3);
     R1.setRow(0,node1->axis_x);
@@ -1911,8 +1911,8 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
     R2.setRow(2,node2->axis_z);
 
 
-    if (norm(R2.getCol(0))>1 || norm(R2.getCol(1))>1 || norm(R2.getCol(2))>1)
-        yError()<< "Something wrong in one column!!";
+    //if (norm(R2.getCol(0))>1 || norm(R2.getCol(1))>1 || norm(R2.getCol(2))>1)
+    //    yError()<< "Something wrong in one column!!";
 
     Matrix R2_rot(3,3);
     R2_rot=relations*R2;
@@ -1957,7 +1957,7 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
             p3=node2->superq.subVector(5,7)+dim2_rot[other_index]*R2_rot.getRow(i);
             p4=node2->superq.subVector(5,7)-dim2_rot[other_index]*R2_rot.getRow(i);
 
-            vector<double> distances;
+            /*vector<double> distances;
             deque<Vector> vectors;
             vectors.push_back(p1 - p3);
             vectors.push_back(p1 - p4);
@@ -1971,7 +1971,7 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
             auto it=max_element(distances.begin(), distances.end());
 
             Vector max_dist;
-            max_dist=vectors[it -distances.begin()];
+            max_dist=vectors[it -distances.begin()];*/
 
             double cos_max_dist1, cos_max_dist2;
             cos_max_dist1=dot((p1 - p2)/norm(p1 - p2), (p1 - p4)/norm(p1 - p4));
@@ -1988,10 +1988,6 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
                 {
                     if ( i != j && dim2_rot[j]!= 0.0)
                     {
-
-                        yDebug()<<"dim1[j]/dim2_rot[j] "<< dim1[j]/dim2_rot[j] <<"dim2[j]/dim1[j] "<<dim2_rot[j]/dim1[j];
-                        yDebug()<<"threshold "<<1*threshold2<< " "<<1/threshold2;
-
                         //if ( (dim1[j] > dim2_rot[j] && (dim1[j]/dim2_rot[j] < 1*threshold2)) || (dim1[j] < dim2_rot[j]  && dim1[j]/dim2_rot[j] > 1/threshold2))
                         if (abs(dim1[j] - dim2_rot[j])< threshold2)
                         {
@@ -2001,15 +1997,11 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
                             equal=equal && false;
                     }
                 }
-
-
             }
             else
             {
                 if ( dim2_rot[i]!= 0.0)
                 {
-                    yDebug()<<"dim1[i]/dim2_rot[i] "<< dim1[i]/dim2_rot[i] <<"dim2[i]/dim1[i] "<<dim2_rot[i]/dim1[i];
-                    yDebug()<<"threshold "<<1*threshold2<< " "<<1/threshold2;
                     //if ( (dim1[i] > dim2_rot[i] && (dim1[i]/dim2_rot[i] < 1*threshold2)) || (dim1[i] < dim2_rot[i]  && dim1[i]/dim2_rot[i] > 1/threshold2))
                     if (abs(dim1[i] - dim2_rot[i])< threshold2)
                     {
@@ -2021,7 +2013,8 @@ bool SuperqComputation::sectionEqual(node *node1, node *node2, Matrix &relations
             }
             equals.push_back(equal);
         }
-        equals.push_back(true);
+        else
+            equals.push_back(true);
 
     }
 
