@@ -89,6 +89,10 @@ protected:
     int optimizer_points;
     std::string mu_strategy,nlp_scaling_method;
     int h_tree;
+    int fraction_pc;
+    double threshold_axisparll;
+    double threshold_section1;
+    double threshold_section2;
 
     yarp::sig::Vector x;
     yarp::sig::Vector x_filtered;
