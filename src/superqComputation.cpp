@@ -1258,7 +1258,6 @@ void SuperqComputation::computeNestedSuperq(node *newnode)
         {
             splitPoints(newnode);
 
-
             superq1=computeMultipleSuperq(points_splitted1);
             superq2=computeMultipleSuperq(points_splitted2);
 

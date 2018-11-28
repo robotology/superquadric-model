@@ -109,8 +109,6 @@ void SuperQuadric_NLP::computeBounds()
     bounds(8,1)=2*M_PI;
     bounds(9,1)=M_PI;
     bounds(10,1)=2*M_PI;
-
-    yDebug()<<"Bounds "<<bounds.toString();
 }
 
 /****************************************************************/
@@ -285,33 +283,17 @@ void SuperQuadric_NLP::computeX0(Vector &x0, deque<Vector> &point_cloud)
     x0[6]=0.0;
     x0[7]=0.0;
 
-    // Let-s try to compute centroid from bounding box and skip the following lines
-    /*for (size_t i=0; i<point_cloud.size();i++)
-    {
-        Vector &point=point_cloud[i];
-        x0[5]+=point[0];
-        x0[6]+=point[1];
-        x0[7]+=point[2];
-    }
-    x0[5]/=point_cloud.size();
-    x0[6]/=point_cloud.size();
-    x0[7]/=point_cloud.size();*/
-
-
     // Let's try not to use initial orientation
     computeInitialOrientation(x0,point_cloud);
 
     Matrix bounding_box(3,2);
     bounding_box=computeBoundingBox(point_cloud,x0);
 
-    yDebug()<<"bb "<<bounding_box.toString();
-
     x0[0]=(-bounding_box(0,0)+bounding_box(0,1))/2;
     x0[1]=(-bounding_box(1,0)+bounding_box(1,1))/2;
     x0[2]=(-bounding_box(2,0)+bounding_box(2,1))/2;
 
     // Let-s try to compute centroid from bounding box
-
     Matrix R = euler2dcm(x0.subVector(8,10));
     bounding_box = R.submatrix(0,2,0,2) * bounding_box;
     x0[5] = (bounding_box(0,0)+bounding_box(0,1))/2;
