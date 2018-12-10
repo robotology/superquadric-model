@@ -970,30 +970,65 @@ void SuperqComputation::computeOneShotMultiple(const deque<Vector> &p)
 
     superq_tree->reset();
 
+    double t_0=Time::now();
+
     iterativeModeling();
+
+    double t_1=Time::now()- t_0;
 
     if (debug)
         superq_tree->printTree(superq_tree->root);
 
+    cout<<"--------------------------------------------------------------------";
+    cout<<endl;
+    yInfo()<<"             Computation time for generting the tree: "<<t_1;
+    cout<<"--------------------------------------------------------------------";
+    cout<<endl;
+
     if (merge_model)
     {
-        double t_merge;
-        t_merge=Time::now();
+        double t_2;
+        t_2=Time::now();
 
         go_on=superq_computed=findImportantPlanes(superq_tree->root);
+        double t_3 = Time::now() - t_2;
+
+        cout<<"--------------------------------------------------------------------";
+        cout<<endl;
+        yInfo()<<"                Computation time for finding planes: "<<t_3;
+        cout<<"--------------------------------------------------------------------";
+        cout<<endl;
 
         superq_tree_new= new superqTree();
 
+        t_2=Time::now();
+
         go_on=superq_computed=generateFinalTree(superq_tree->root, superq_tree_new->root);
+
+        t_3 = Time::now() - t_2;
+
+        cout<<"--------------------------------------------------------------------";
+        cout<<endl;
+        yInfo()<<"                Computation time for generating final superq : "<<t_3;
+        cout<<"--------------------------------------------------------------------";
+        cout<<endl;
+
+
 
         superq_tree->root=superq_tree_new->root;
 
         //if (debug)
             superq_tree->printTree(superq_tree->root);
 
-        t_merge=Time::now() - t_merge;
+        double t_final=Time::now() - t_0;
 
-        yInfo()<<">>>>>>>>>>>>>> Computation time for merging model: "<<t_merge;
+        cout<<"--------------------------------------------------------------------";
+        cout<<endl;
+        yInfo()<<"                Total time : "<<t_final;
+        cout<<"--------------------------------------------------------------------";
+        cout<<endl;
+
+
     }
     else
         go_on=superq_computed=true;

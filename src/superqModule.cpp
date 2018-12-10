@@ -275,7 +275,7 @@ void SuperqModule::addSuperqInProp(node *leaf, int &count, Property &superq_pr)
                 addSuperqInProp(leaf->left, count, superq_pr);
             }
 
-            if (leaf->right==NULL && leaf->left==NULL)
+            if (leaf->right==NULL && leaf->left==NULL && leaf->height > 1)
             {
                 count++;
                 ss<<count;
@@ -300,6 +300,29 @@ void SuperqModule::addSuperqInProp(node *leaf, int &count, Property &superq_pr)
 
 
              }
+            else if (leaf->right==NULL && leaf->left==NULL && leaf->height == 1)
+            {
+                count++;
+                ss<<count;
+                string count_str=ss.str();
+                Bottle bottle;
+                Bottle &b1=bottle.addList();
+                b1.addDouble(sup[0]); b1.addDouble(sup[1]); b1.addDouble(sup[2]);
+                superq_pr.put("dimensions", bottle.get(0));
+
+                Bottle &b2=bottle.addList();
+                b2.addDouble(sup[3]); b2.addDouble(sup[4]);
+                superq_pr.put("exponent", bottle.get(1));
+
+                Bottle &b3=bottle.addList();
+                b3.addDouble(sup[5]); b3.addDouble(sup[6]); b3.addDouble(sup[7]);
+                superq_pr.put("center", bottle.get(2));
+
+                Bottle &b4=bottle.addList();
+                Vector orient=dcm2axis(euler2dcm(sup.subVector(8,10)));
+                b4.addDouble(orient[0]); b4.addDouble(orient[1]); b4.addDouble(orient[2]); b4.addDouble(orient[3]);
+                superq_pr.put("orientation", bottle.get(3));
+            }
         }
         else
         {
