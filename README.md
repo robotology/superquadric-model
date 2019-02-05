@@ -1,9 +1,11 @@
 # superquadric-model
 Framework for modeling, detecting and visualizing objects through superquadric functions.
 
+:warning: **Note:** a new and improved implementation is available in [`superquadric-lib`](https://github.com/robotology/superquadric-lib).
+
 #### Overview:
 - [Theoretical background](#theoretical-background)
-- [Dendenciens & how to compile](#dependencies)
+- [Dependencies & how to compile](#dependencies)
 - [Module structure](#module-structure)
 - [Use case & results](#use-case)
 - [Documentaion & more](#more-information)
